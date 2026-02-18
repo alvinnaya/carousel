@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Prevent scrollbars from the browser */
+}
+
+#root {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    /* Prevent scrollbars from the root */
+}
+
+.no-browser-zoom {
+    touch-action: none;
+}
