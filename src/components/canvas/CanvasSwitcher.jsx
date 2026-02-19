@@ -1,4 +1,4 @@
-import { useCanvasContext } from '../context/CanvasContext';
+import { useCanvasContext } from '../../context/CanvasContext';
 
 
 

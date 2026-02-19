@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useCanvasContext } from '../context/CanvasContext';
+import { useCanvasContext } from '../../context/CanvasContext';
 
 const CanvasStateHandler = () => {
     const { canvas, updateCanvasState, activeCanvasIndex } = useCanvasContext();

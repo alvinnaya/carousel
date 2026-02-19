@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { useCanvasContext } from '../context/CanvasContext';
+import { useCanvasContext } from '../../context/CanvasContext';
 import * as fabric from 'fabric';
 
 export default function CanvasConfig() {

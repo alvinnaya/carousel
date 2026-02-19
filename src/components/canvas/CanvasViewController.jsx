@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useCanvasContext } from '../context/CanvasContext';
+import { useCanvasContext } from '../../context/CanvasContext';
 
 export default function CanvasViewController() {
     const { setScale, setTranslate } = useCanvasContext();

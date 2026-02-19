@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import * as fabric from 'fabric';
-import { useCanvasContext } from '../context/CanvasContext';
+import { useCanvasContext } from '../../context/CanvasContext';
 
 /**
  * Component that manages the styling of Fabric.js object controls (handles).

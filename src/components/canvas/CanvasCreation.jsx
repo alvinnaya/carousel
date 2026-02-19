@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
-import { useCanvasContext } from '../context/CanvasContext';
+import { useCanvasContext } from '../../context/CanvasContext';
 import { CanvasDefaultControllerStyling } from './CanvasControllerStyling';
 
 const CanvasCreation = ({ width, height }) => {
