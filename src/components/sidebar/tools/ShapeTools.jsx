@@ -1,9 +1,14 @@
 import React from 'react';
-import { changeColor, deleteObject, updateObjectProperty } from '../../Helper/FabricHelper';
+import { changeColor, updateObjectProperty } from '../../Helper/FabricHelper';
+import TransformTools from './shared/TransformTools';
+import OpacityTool from './shared/OpacityTool';
+import CommonActionTools from './shared/CommonActionTools';
 
 const ShapeTools = ({ canvas, activeObject }) => {
     return (
         <div className="space-y-6">
+            <TransformTools canvas={canvas} activeObject={activeObject} />
+
             <section>
                 <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Shape Style</h3>
                 <div className="space-y-4 pt-2">
@@ -33,12 +38,9 @@ const ShapeTools = ({ canvas, activeObject }) => {
                 </div>
             </section>
 
-            <button
-                onClick={() => deleteObject(activeObject, canvas)}
-                className="w-full py-2 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold hover:bg-red-100 transition-colors"
-            >
-                Delete Shape
-            </button>
+            <OpacityTool canvas={canvas} activeObject={activeObject} />
+
+            <CommonActionTools canvas={canvas} activeObject={activeObject} objectTypeLabel="Shape" />
         </div>
     );
 };

@@ -12,6 +12,7 @@
 export const updateObjectProperty = (obj, property, value, canvas) => {
     if (!obj || !canvas) return;
     obj.set(property, value);
+    obj.setCoords();
     canvas.fire('object:modified', { target: obj });
     canvas.requestRenderAll();
 };
@@ -25,6 +26,7 @@ export const updateObjectProperty = (obj, property, value, canvas) => {
 export const updateObjectProperties = (obj, properties, canvas) => {
     if (!obj || !canvas) return;
     obj.set(properties);
+    obj.setCoords();
     canvas.fire('object:modified', { target: obj });
     canvas.requestRenderAll();
 };
@@ -124,4 +126,136 @@ export const deleteObject = (obj, canvas) => {
     if (!obj || !canvas) return;
     canvas.remove(obj);
     canvas.requestRenderAll();
+};
+
+// ─── Alignment helpers ──────────────────────────────────────────────────────
+export const alignLeft = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    const bound = obj.getBoundingRect();
+    updateObjectProperty(obj, 'left', obj.left - bound.left, canvas);
+};
+
+export const alignCenterH = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    const bound = obj.getBoundingRect();
+    const newLeft = obj.left + (canvas.width / 2 - (bound.left + bound.width / 2));
+    updateObjectProperty(obj, 'left', newLeft, canvas);
+};
+
+export const alignRight = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    const bound = obj.getBoundingRect();
+    const newLeft = obj.left + (canvas.width - (bound.left + bound.width));
+    updateObjectProperty(obj, 'left', newLeft, canvas);
+};
+
+export const alignTop = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    const bound = obj.getBoundingRect();
+    updateObjectProperty(obj, 'top', obj.top - bound.top, canvas);
+};
+
+export const alignCenterV = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    const bound = obj.getBoundingRect();
+    const newTop = obj.top + (canvas.height / 2 - (bound.top + bound.height / 2));
+    updateObjectProperty(obj, 'top', newTop, canvas);
+};
+
+export const alignBottom = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    const bound = obj.getBoundingRect();
+    const newTop = obj.top + (canvas.height - (bound.top + bound.height));
+    updateObjectProperty(obj, 'top', newTop, canvas);
+};
+
+// ─── Flip helpers ───────────────────────────────────────────────────────────
+export const flipHorizontal = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    updateObjectProperty(obj, 'flipX', !obj.flipX, canvas);
+};
+
+export const flipVertical = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    updateObjectProperty(obj, 'flipY', !obj.flipY, canvas);
+};
+
+// ─── Dimension helpers (set rendered W/H via scale) ─────────────────────────
+export const changeWidth = (obj, newWidth, canvas, lockRatio = false) => {
+    if (!obj || !canvas || !obj.width) return;
+    const newScaleX = newWidth / obj.width;
+    if (lockRatio) {
+        updateObjectProperties(obj, { scaleX: newScaleX, scaleY: newScaleX }, canvas);
+    } else {
+        updateObjectProperty(obj, 'scaleX', newScaleX, canvas);
+    }
+};
+
+export const changeHeight = (obj, newHeight, canvas, lockRatio = false) => {
+    if (!obj || !canvas || !obj.height) return;
+    const newScaleY = newHeight / obj.height;
+    if (lockRatio) {
+        updateObjectProperties(obj, { scaleX: newScaleY, scaleY: newScaleY }, canvas);
+    } else {
+        updateObjectProperty(obj, 'scaleY', newScaleY, canvas);
+    }
+};
+
+// ─── Rotate 90° ─────────────────────────────────────────────────────────────
+export const rotate90 = (obj, canvas) => {
+    if (!obj || !canvas) return;
+    updateObjectProperty(obj, 'angle', (obj.angle + 90) % 360, canvas);
+};
+
+// ─── Text helpers ──────────────────────────────────────────────────────────
+export const changeFontSize = (obj, size, canvas) => {
+    if (!obj || !canvas) return;
+    updateObjectProperty(obj, 'fontSize', size, canvas);
+};
+
+export const changeFontFamily = (obj, family, canvas) => {
+    if (!obj || !canvas) return;
+    updateObjectProperty(obj, 'fontFamily', family, canvas);
+};
+
+export const changeFontWeight = (obj, weight, canvas) => {
+    if (!obj || !canvas) return;
+    updateObjectProperty(obj, 'fontWeight', weight, canvas);
+};
+
+/**
+ * Returns the current text selection range of an IText/Textbox object.
+ * @returns {{ start: number, end: number, hasSelection: boolean }}
+ */
+export const getTextSelection = (obj) => {
+    if (!obj || !obj.isEditing) return { start: 0, end: 0, hasSelection: false };
+    const start = obj.selectionStart ?? 0;
+    const end = obj.selectionEnd ?? 0;
+    return { start, end, hasSelection: start !== end };
+};
+
+/**
+ * Applies a text style property to the selected character range only (when
+ * text is in editing mode and has an active selection), otherwise applies it
+ * to the entire object.
+ *
+ * @param {fabric.IText|fabric.Textbox} obj  - The active fabric text object.
+ * @param {string} property                  - CSS-style property key (e.g. 'fontWeight', 'fill').
+ * @param {*} value                          - The new property value.
+ * @param {fabric.Canvas} canvas
+ */
+export const changeSelectedTextProperty = (obj, property, value, canvas) => {
+    if (!obj || !canvas) return;
+
+    const { start, end, hasSelection } = getTextSelection(obj);
+
+    if (hasSelection) {
+        // Apply style only to the selected range
+        obj.setSelectionStyles({ [property]: value }, start, end);
+        obj.dirty = true;
+        canvas.requestRenderAll();
+    } else {
+        // Fall back to whole-object change
+        updateObjectProperty(obj, property, value, canvas);
+    }
 };

@@ -17,3 +17,25 @@ body {
 .no-browser-zoom {
     touch-action: none;
 }
+
+/* Custom Scrollbar Styling - High Visibility */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888888;
+    /* Darker gray for high contrast */
+    border-radius: 10px;
+    border: 2px solid #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+    /* Even darker on hover */
+}

@@ -11,6 +11,7 @@ import ShapeTools from './tools/ShapeTools';
 const EditTool = () => {
     const { canvas } = useCanvasContext();
     const [selectedObject, setSelectedObject] = useState(null);
+    const [, setUpdateTick] = useState(0);
 
     useEffect(() => {
         if (!canvas) {
@@ -18,15 +19,24 @@ const EditTool = () => {
             return;
         }
 
+        const forceUpdate = () => setUpdateTick(tick => tick + 1);
+
         // Handler to update the local state when selection changes
         const handleSelection = () => {
             setSelectedObject(canvas.getActiveObject());
+            forceUpdate();
         };
 
         // Listen to Fabric.js selection events
         canvas.on('selection:created', handleSelection);
         canvas.on('selection:updated', handleSelection);
         canvas.on('selection:cleared', handleSelection);
+
+        // Listen to modification events to sync properties (position, rotation, etc.)
+        canvas.on('object:moving', forceUpdate);
+        canvas.on('object:scaling', forceUpdate);
+        canvas.on('object:rotating', forceUpdate);
+        canvas.on('object:modified', forceUpdate);
 
         // Finalize initial state
         setSelectedObject(canvas.getActiveObject());
@@ -36,6 +46,10 @@ const EditTool = () => {
             canvas.off('selection:created', handleSelection);
             canvas.off('selection:updated', handleSelection);
             canvas.off('selection:cleared', handleSelection);
+            canvas.off('object:moving', forceUpdate);
+            canvas.off('object:scaling', forceUpdate);
+            canvas.off('object:rotating', forceUpdate);
+            canvas.off('object:modified', forceUpdate);
         };
     }, [canvas]);
 

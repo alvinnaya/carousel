@@ -5,7 +5,6 @@ import CanvasConfig from "./CanvasConfig"
 import CanvasStateHandler from "./CanvasStateHandler"
 import CanvasCopyPasteHandler from "./CanvasCopyPasteHandler"
 import { useEffect } from "react";
-import CanvasSwitcher from "./CanvasSwitcher"
 
 
 export default function Canvas() {
@@ -22,7 +21,6 @@ export default function Canvas() {
             <CanvasConfig />
             <CanvasStateHandler />
             <CanvasCopyPasteHandler />
-            <CanvasSwitcher />
             <CanvasCreation
                 width={1080}
                 height={1080}

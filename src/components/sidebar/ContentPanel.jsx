@@ -24,7 +24,7 @@ const ContentPanel = ({ activeTab, onClose }) => {
     }[activeTab] || (() => <p className="text-xs text-zinc-500">Section for {activeTab} content will go here.</p>);
 
     return (
-        <aside className="w-64 h-full bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 animate-in slide-in-from-left-4 fade-in">
+        <aside className="w-80 h-full bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 animate-in slide-in-from-left-4 fade-in">
             <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-zinc-900">{activeTab}</h2>
                 <button

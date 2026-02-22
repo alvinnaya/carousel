@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 
 const CanvasStateHandler = () => {
-    const { canvas, updateCanvasState, activeCanvasIndex } = useCanvasContext();
+    const { canvas, updateCanvasState, updatePreview, activeCanvasIndex } = useCanvasContext();
     const debounceTimerRef = useRef(null);
+    const lastJsonRef = useRef(null);
 
     useEffect(() => {
         if (!canvas) return;
@@ -14,28 +15,47 @@ const CanvasStateHandler = () => {
             }
 
             debounceTimerRef.current = setTimeout(() => {
-                const json = canvas.toJSON();
+                const currentJson = canvas.toJSON();
+                const jsonString = JSON.stringify(currentJson);
+
+                // Only update if the content actually changed
+                if (jsonString === lastJsonRef.current) {
+                    return;
+                }
+
+                lastJsonRef.current = jsonString;
+
+                const stateUpdate = {
+                    ...currentJson,
+                    width: canvas.width,
+                    height: canvas.height
+                };
+
                 console.log('Syncing canvas state for index:', activeCanvasIndex);
-                updateCanvasState(activeCanvasIndex, json);
-            }, 500); // 500ms debounce
+                updateCanvasState(activeCanvasIndex, stateUpdate);
+
+                // Generate preview
+                const previewDataUrl = canvas.toDataURL({
+                    format: 'png',
+                    multiplier: 0.2, // Small preview for performance
+                    quality: 0.5
+                });
+                updatePreview(activeCanvasIndex, previewDataUrl);
+            }, 250); // 250ms debounce
         };
 
-        // Events that trigger a state update
+        // Structural and content change events
         const events = [
             'object:modified',
             'object:added',
             'object:removed',
             'path:created',
-            'text:changed',
-            'selection:updated' // Optional: if you want to save selection state? probably not needed for persistence
+            'text:changed'
         ];
 
         events.forEach(eventName => {
             canvas.on(eventName, syncState);
         });
-
-        // Initial sync if the canvas is empty or newly loaded
-        // syncState(); 
 
         return () => {
             events.forEach(eventName => {
