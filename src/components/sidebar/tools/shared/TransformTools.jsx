@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DelayedInput from './DelayedInput';
+import { useCanvasContext } from '../../../../context/CanvasContext';
 import {
     updateObjectProperty,
     alignLeft, alignCenterH, alignRight,
@@ -9,7 +10,8 @@ import {
     changeRotation, rotate90,
 } from '../../../Helper/FabricHelper';
 
-const TransformTools = ({ canvas, activeObject }) => {
+const TransformTools = ({ activeObject }) => {
+    const { canvas } = useCanvasContext();
     const [lockRatio, setLockRatio] = useState(false);
 
     if (!activeObject) return null;

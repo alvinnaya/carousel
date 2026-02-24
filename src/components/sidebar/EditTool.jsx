@@ -64,22 +64,22 @@ const EditTool = () => {
 
     // Case: No object selected - Show Canvas Settings
     if (!selectedObject) {
-        return <CanvasTools canvas={canvas} />;
+        return <CanvasTools />;
     }
 
     // Case: Object selected - Determine which toolset to show
     const type = selectedObject.type;
 
     if (type === 'image') {
-        return <ImageTools canvas={canvas} activeObject={selectedObject} />;
+        return <ImageTools activeObject={selectedObject} />;
     }
 
     if (['textbox', 'text', 'i-text'].includes(type)) {
-        return <TextTools canvas={canvas} activeObject={selectedObject} />;
+        return <TextTools activeObject={selectedObject} />;
     }
 
     // Default: Basic shapes (rect, circle, etc.)
-    return <ShapeTools canvas={canvas} activeObject={selectedObject} />;
+    return <ShapeTools activeObject={selectedObject} />;
 };
 
 export default EditTool;

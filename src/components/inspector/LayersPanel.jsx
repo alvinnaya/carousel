@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 import LayerThumbnail from './LayerThumbnail';
 
@@ -7,11 +7,42 @@ import LayerThumbnail from './LayerThumbnail';
  */
 const LayersPanel = () => {
     const { canvas, canvases, setCanvases, previews, setPreviews, activeCanvasIndex, setActiveCanvasIndex } = useCanvasContext();
+    const [draggedIndex, setDraggedIndex] = useState(null);
+    const [dropTargetIndex, setDropTargetIndex] = useState(null);
 
     const addCanvas = () => {
         setCanvases([...canvases, {}]);
         setPreviews([...previews, '']);
         setActiveCanvasIndex(canvases.length);
+    };
+
+    const moveItem = (arr, fromIndex, toIndex) => {
+        const next = [...arr];
+        const [movedItem] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, movedItem);
+        return next;
+    };
+
+    const getReorderedActiveIndex = (currentActiveIndex, fromIndex, toIndex) => {
+        if (currentActiveIndex === fromIndex) return toIndex;
+        if (fromIndex < toIndex && currentActiveIndex > fromIndex && currentActiveIndex <= toIndex) {
+            return currentActiveIndex - 1;
+        }
+        if (fromIndex > toIndex && currentActiveIndex >= toIndex && currentActiveIndex < fromIndex) {
+            return currentActiveIndex + 1;
+        }
+        return currentActiveIndex;
+    };
+
+    const handleDrop = (targetIndex) => {
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+        setCanvases((prev) => moveItem(prev, draggedIndex, targetIndex));
+        setPreviews((prev) => moveItem(prev, draggedIndex, targetIndex));
+        setActiveCanvasIndex((prev) => getReorderedActiveIndex(prev, draggedIndex, targetIndex));
+
+        setDraggedIndex(null);
+        setDropTargetIndex(null);
     };
 
     // Calculate aspect ratio from the active canvas or fallback to 1/1
@@ -28,7 +59,33 @@ const LayersPanel = () => {
                         : aspectRatio;
 
                     return (
-                        <div key={index} className="relative group" onClick={() => setActiveCanvasIndex(index)}>
+                        <div
+                            key={index}
+                            draggable
+                            className="relative group"
+                            onClick={() => setActiveCanvasIndex(index)}
+                            onDragStart={(event) => {
+                                event.dataTransfer.setData('text/plain', `${index}`);
+                                event.dataTransfer.effectAllowed = 'move';
+                                setDraggedIndex(index);
+                            }}
+                            onDragOver={(event) => {
+                                event.preventDefault();
+                                event.dataTransfer.dropEffect = 'move';
+                                setDropTargetIndex(index);
+                            }}
+                            onDragLeave={() => {
+                                setDropTargetIndex((current) => (current === index ? null : current));
+                            }}
+                            onDrop={(event) => {
+                                event.preventDefault();
+                                handleDrop(index);
+                            }}
+                            onDragEnd={() => {
+                                setDraggedIndex(null);
+                                setDropTargetIndex(null);
+                            }}
+                        >
                             <div className="absolute top-2 left-2 z-10 text-[10px] font-bold text-zinc-900 bg-white/80 px-1 rounded shadow-sm">
                                 {index}
                             </div>
@@ -37,6 +94,7 @@ const LayersPanel = () => {
                                 className={`
                                     w-full rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all cursor-pointer bg-white
                                     ${activeCanvasIndex === index ? 'border-indigo-500 ring-4 ring-indigo-50 shadow-lg' : 'border-zinc-100 hover:border-zinc-300'}
+                                    ${dropTargetIndex === index ? 'border-zinc-400 bg-zinc-50' : ''}
                                 `}
                                 style={{ aspectRatio: itemAspectRatio }}
                             >

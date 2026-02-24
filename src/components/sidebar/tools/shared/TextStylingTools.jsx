@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DelayedInput from './DelayedInput';
 import ColorPaletteSelector from './ColorPaletteSelector';
+import { useCanvasContext } from '../../../../context/CanvasContext';
 import {
     changeFontSize,
     changeFontFamily,
@@ -9,13 +10,19 @@ import {
     getTextSelection
 } from '../../../Helper/FabricHelper';
 
-const TextStylingTools = ({ canvas, activeObject }) => {
-    if (!activeObject) return null;
+const TextStylingTools = ({ activeObject }) => {
+    const { canvas, canvases } = useCanvasContext();
 
+    const selection = activeObject ? getTextSelection(activeObject) : { hasSelection: false };
 
-    const selection = getTextSelection(activeObject);
+    const [fontSize, setFontSize] = useState(24);
+    const [fontFamily, setFontFamily] = useState('Arial');
+    const [fontWeight, setFontWeight] = useState('normal');
+    const [fill, setFill] = useState('#000000');
+
     // If text is selected, try to read the style of the first selected char for display
     const getDisplayProp = (prop, fallback) => {
+        if (!activeObject) return fallback;
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {
             const styles = activeObject.getSelectionStyles(selection.start, selection.start + 1);
@@ -26,55 +33,84 @@ const TextStylingTools = ({ canvas, activeObject }) => {
         return activeObject[prop] ?? fallback;
     };
 
-    const fontSize = getDisplayProp('fontSize', 24);
-    const fontFamily = getDisplayProp('fontFamily', 'Arial');
-    const fontWeight = getDisplayProp('fontWeight', 'normal');
-    const fill = getDisplayProp('fill', '#000000');
+
+    useEffect(() => {
+        if (!activeObject) return;
+        console.log("changing")
+        const fontSize = getDisplayProp('fontSize', 24);
+        const fontFamily = getDisplayProp('fontFamily', 'Arial');
+        const fontWeight = getDisplayProp('fontWeight', 'normal');
+        const fill = getDisplayProp('fill', '#000000');
+        setFontSize(fontSize);
+        setFontFamily(fontFamily);
+        setFontWeight(fontWeight);
+        setFill(fill);
+    }, [canvas, activeObject, canvases])
+
+
 
     const fonts = [
         'Montserrat', 'Inter', 'Roboto', 'Open Sans', 'Playfair Display', 'Lora', 'Arial', 'Times New Roman'
     ];
 
     const weights = [
-        { label: 'Regular', value: 'normal' },
+        { label: 'Regular', value: '300' },
         { label: 'Medium', value: '500' },
         { label: 'SemiBold', value: '600' },
-        { label: 'Bold', value: 'bold' }
+        { label: 'Bold', value: '800' }
     ];
 
     const selectClass = "w-full px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer shadow-sm";
 
     const applyFontFamily = (family) => {
+        if (!activeObject) return;
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {
             changeSelectedTextProperty(activeObject, 'fontFamily', family, canvas);
+            const newFontFamily = getDisplayProp('fontFamily', 'Arial');
+            setFontFamily(newFontFamily);
         } else {
             changeFontFamily(activeObject, family, canvas);
+            const newFontFamily = getDisplayProp('fontFamily', 'Arial');
+            setFontFamily(newFontFamily);
         }
     };
 
     const applyFontWeight = (weight) => {
+        if (!activeObject) return;
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {
             changeSelectedTextProperty(activeObject, 'fontWeight', weight, canvas);
+            const newFontWeight = getDisplayProp('fontWeight', 'normal');
+            setFontWeight(newFontWeight);
         } else {
             changeFontWeight(activeObject, weight, canvas);
+            const newFontWeight = getDisplayProp('fontWeight', 'normal');
+            setFontWeight(newFontWeight);
         }
     };
 
     const applyFontSize = (size) => {
+        if (!activeObject) return;
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {
             changeSelectedTextProperty(activeObject, 'fontSize', size, canvas);
+            const newFontSize = getDisplayProp('fontSize', 24);
+            setFontSize(newFontSize);
         } else {
             changeFontSize(activeObject, size, canvas);
+            const newFontSize = getDisplayProp('fontSize', 24);
+            setFontSize(newFontSize);
         }
     };
 
     const applyFill = (color) => {
+        if (!activeObject) return;
 
         changeSelectedTextProperty(activeObject, 'fill', color, canvas);
     };
+
+    if (!activeObject) return null;
 
     return (
         <section className="bg-white p-5 rounded-xl border border-zinc-100 shadow-sm space-y-6">

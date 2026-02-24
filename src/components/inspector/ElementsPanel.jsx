@@ -1,79 +1,130 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
+
+const ensureStableId = (obj) => {
+    if (!obj.__elementsPanelId) {
+        obj.__elementsPanelId = `el-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
+    return obj.__elementsPanelId;
+};
+
+const buildElementNode = (obj, parentRef = null) => {
+    let preview = '';
+    try {
+        const padding = 10;
+        const size = 64;
+        const scale = (size - padding * 2) / Math.max(obj.width * obj.scaleX, obj.height * obj.scaleY, 1);
+        const tempCanvas = obj.toCanvasElement({
+            multiplier: scale,
+        });
+        preview = tempCanvas.toDataURL();
+    } catch (e) {
+        console.warn('Could not generate preview for object:', obj.type, e);
+    }
+
+    const children = obj.type === 'group' && typeof obj.getObjects === 'function'
+        ? [...obj.getObjects()]
+            .reverse()
+            .map((child) => buildElementNode(child, obj))
+        : [];
+
+    return {
+        id: ensureStableId(obj),
+        type: obj.type,
+        preview,
+        ref: obj,
+        parentRef,
+        children,
+    };
+};
 
 /**
  * ElementsPanel - Lists and manages individual objects on the current canvas.
  */
 const ElementsPanel = () => {
-    const { canvas, canvases, activeCanvasIndex } = useCanvasContext();
-    const [elements, setElements] = useState([]);
+    const { canvas } = useCanvasContext();
+    const [draggedItem, setDraggedItem] = useState(null);
+    const [dropTargetId, setDropTargetId] = useState(null);
 
-    useEffect(() => {
-        if (!canvas) {
-            setElements([]);
-            return;
-        }
+    const elements = canvas
+        ? [...canvas.getObjects()].reverse().map((obj) => buildElementNode(obj, null))
+        : [];
 
-        const refreshElements = () => {
-            const objects = canvas.getObjects();
-            // Reverse to show topmost elements first (z-order)
-            const elementsData = [...objects].reverse().map((obj) => {
-                let preview = '';
-                try {
-                    // Generate a small preview
-                    const padding = 10;
-                    const size = 64;
-                    const scale = (size - padding * 2) / Math.max(obj.width * obj.scaleX, obj.height * obj.scaleY, 1);
+    const handleDrop = (targetItem) => {
+        if (!canvas || !draggedItem || draggedItem.ref === targetItem.ref) return;
 
-                    const tempCanvas = obj.toCanvasElement({
-                        multiplier: scale,
-                    });
-                    preview = tempCanvas.toDataURL();
-                } catch (e) {
-                    console.warn('Could not generate preview for object:', obj.type, e);
-                }
+        const sourceParent = draggedItem.parentRef || canvas;
+        const targetParent = targetItem.parentRef || canvas;
 
-                return {
-                    id: obj.id || Math.random().toString(36).substr(2, 9),
-                    type: obj.type,
-                    preview: preview,
-                    ref: obj
-                };
-            });
-            setElements(elementsData);
-        };
+        // Keep behavior predictable: reordering is only allowed inside same parent container.
+        if (sourceParent !== targetParent) return;
 
-        refreshElements();
+        const siblings = sourceParent.getObjects();
+        const targetIndex = siblings.indexOf(targetItem.ref);
+        if (targetIndex < 0) return;
 
-        // Note: CanvasStateHandler updates `canvases` in context on every modification (debounced).
-        // This useEffect depends on `canvases`, so it will re-run and refresh the previews.
+        sourceParent.moveObjectTo(draggedItem.ref, targetIndex);
+        canvas.fire('object:modified', { target: draggedItem.ref });
+        canvas.requestRenderAll();
+    };
 
-    }, [canvas, canvases, activeCanvasIndex]);
+    const renderElementItem = (el, depth = 0) => (
+        <React.Fragment key={el.id}>
+            <div
+                draggable
+                className={`flex items-center p-2 rounded-lg border hover:border-zinc-300 hover:bg-white cursor-pointer transition-all group shadow-sm ${dropTargetId === el.id ? 'bg-zinc-100 border-zinc-400' : 'bg-zinc-50 border-zinc-100'
+                    }`}
+                style={{ marginLeft: `${depth * 16}px` }}
+                onClick={() => {
+                    const selectableTarget = el.parentRef ? el.parentRef : el.ref;
+                    canvas.setActiveObject(selectableTarget);
+                    canvas.requestRenderAll();
+                }}
+                onDragStart={(event) => {
+                    event.dataTransfer.setData('text/plain', el.id);
+                    event.dataTransfer.effectAllowed = 'move';
+                    setDraggedItem(el);
+                }}
+                onDragOver={(event) => {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = 'move';
+                    setDropTargetId(el.id);
+                }}
+                onDragLeave={() => {
+                    setDropTargetId((current) => (current === el.id ? null : current));
+                }}
+                onDrop={(event) => {
+                    event.preventDefault();
+                    setDropTargetId(null);
+                    handleDrop(el);
+                }}
+                onDragEnd={() => {
+                    setDropTargetId(null);
+                    setDraggedItem(null);
+                }}
+            >
+                <div className="w-10 h-10 rounded-md bg-white border border-zinc-100 flex items-center justify-center mr-3 overflow-hidden shadow-inner">
+                    {el.preview ? (
+                        <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
+                    ) : (
+                        <div className="text-[10px] text-zinc-400 font-bold uppercase">{el.type.charAt(0)}</div>
+                    )}
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{el.type}</span>
+                    <span className="text-xs font-semibold text-zinc-800">
+                        {el.type === 'group' ? `Group (${el.children.length})` : 'Element'}
+                    </span>
+                </div>
+            </div>
+
+            {el.children.map((child) => renderElementItem(child, depth + 1))}
+        </React.Fragment>
+    );
 
     return (
         <div className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-            {elements.map((el, index) => (
-                <div
-                    key={`${el.type}-${index}`}
-                    className="flex items-center p-2 rounded-lg bg-zinc-50 border border-zinc-100 hover:border-zinc-300 hover:bg-white cursor-pointer transition-all group shadow-sm"
-                    onClick={() => {
-                        canvas.setActiveObject(el.ref);
-                        canvas.requestRenderAll();
-                    }}
-                >
-                    <div className="w-10 h-10 rounded-md bg-white border border-zinc-100 flex items-center justify-center mr-3 overflow-hidden shadow-inner">
-                        {el.preview ? (
-                            <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
-                        ) : (
-                            <div className="text-[10px] text-zinc-400 font-bold uppercase">{el.type.charAt(0)}</div>
-                        )}
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{el.type}</span>
-                        <span className="text-xs font-semibold text-zinc-800">Element {elements.length - index}</span>
-                    </div>
-                </div>
-            ))}
+            {elements.map((el) => renderElementItem(el))}
 
             {elements.length === 0 && (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-2 opacity-30">

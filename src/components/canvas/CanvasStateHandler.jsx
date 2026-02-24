@@ -34,13 +34,13 @@ const CanvasStateHandler = () => {
                 console.log('Syncing canvas state for index:', activeCanvasIndex);
                 updateCanvasState(activeCanvasIndex, stateUpdate);
 
-                // Generate preview
-                const previewDataUrl = canvas.toDataURL({
-                    format: 'png',
-                    multiplier: 0.2, // Small preview for performance
-                    quality: 0.5
-                });
-                updatePreview(activeCanvasIndex, previewDataUrl);
+                // // Generate preview
+                // const previewDataUrl = canvas.toDataURL({
+                //     format: 'png',
+                //     multiplier: 0.2, // Small preview for performance
+                //     quality: 0.5
+                // });
+                // updatePreview(activeCanvasIndex, previewDataUrl);
             }, 250); // 250ms debounce
         };
 

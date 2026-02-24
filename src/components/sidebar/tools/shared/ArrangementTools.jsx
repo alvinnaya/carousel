@@ -1,7 +1,10 @@
 import React from 'react';
 import { bringToFront, sendToBack } from '../../../Helper/FabricHelper';
+import { useCanvasContext } from '../../../../context/CanvasContext';
 
-const ArrangementTools = ({ canvas, activeObject }) => {
+const ArrangementTools = ({ activeObject }) => {
+    const { canvas } = useCanvasContext();
+
     if (!activeObject) return null;
 
     const btnClass = "flex-1 py-2.5 rounded-lg bg-zinc-50 border border-zinc-100 text-[10px] font-bold text-zinc-600 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm";

@@ -4,6 +4,8 @@ import CanvasControllerStyling from "./CanvasControllerStyling"
 import CanvasConfig from "./CanvasConfig"
 import CanvasStateHandler from "./CanvasStateHandler"
 import CanvasCopyPasteHandler from "./CanvasCopyPasteHandler"
+import CanvasTextScaleNormalizer from "./CanvasTextScaleNormalizer"
+import CanvasPreviewSyncronizer from "./CanvasPreviewSyncronizer"
 import { useEffect } from "react";
 
 
@@ -20,7 +22,9 @@ export default function Canvas() {
             <CanvasControllerStyling />
             <CanvasConfig />
             <CanvasStateHandler />
+            <CanvasPreviewSyncronizer />
             <CanvasCopyPasteHandler />
+            <CanvasTextScaleNormalizer />
             <CanvasCreation
                 width={1080}
                 height={1080}

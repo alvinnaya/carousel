@@ -4,18 +4,18 @@ import TextStylingTools from './shared/TextStylingTools';
 import OpacityTool from './shared/OpacityTool';
 import CommonActionTools from './shared/CommonActionTools';
 
-const TextTools = ({ canvas, activeObject }) => {
+const TextTools = ({ activeObject }) => {
     if (!activeObject) return null;
 
     return (
         <div className="space-y-6">
-            <TransformTools canvas={canvas} activeObject={activeObject} />
+            <TransformTools activeObject={activeObject} />
 
-            <TextStylingTools canvas={canvas} activeObject={activeObject} />
+            <TextStylingTools activeObject={activeObject} />
 
-            <OpacityTool canvas={canvas} activeObject={activeObject} />
+            <OpacityTool activeObject={activeObject} />
 
-            <CommonActionTools canvas={canvas} activeObject={activeObject} objectTypeLabel="Text" />
+            <CommonActionTools activeObject={activeObject} objectTypeLabel="Text" />
         </div>
     );
 };

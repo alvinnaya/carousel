@@ -5,7 +5,14 @@ import { CanvasDefaultControllerStyling } from './CanvasControllerStyling';
 
 const CanvasCreation = ({ width, height }) => {
     const canvasRef = useRef(null);
-    const { setCanvas, scale, translate, canvases, activeCanvasIndex } = useCanvasContext();
+    const {
+        setCanvas,
+        scale,
+        translate,
+        canvases,
+        activeCanvasIndex,
+        updateCanvasState
+    } = useCanvasContext();
 
 
     console.log("canvas creation", activeCanvasIndex)
@@ -20,6 +27,15 @@ const CanvasCreation = ({ width, height }) => {
             height: height,
             backgroundColor: '#ffffff',
         });
+
+        const syncCanvasState = () => {
+            const currentJson = fabricCanvas.toJSON();
+            updateCanvasState(activeCanvasIndex, {
+                ...currentJson,
+                width: fabricCanvas.width,
+                height: fabricCanvas.height
+            });
+        };
 
         const loadContent = async () => {
             const savedState = canvases[activeCanvasIndex];
@@ -85,20 +101,27 @@ const CanvasCreation = ({ width, height }) => {
 
                     fabricCanvas.add(img);
                     fabricCanvas.renderAll();
+                    syncCanvasState();
                 });
             }
 
+            syncCanvasState();
             setCanvas(fabricCanvas);
         };
 
         loadContent();
 
+        // Generate preview
+     
+  
         // Cleanup on unmount or when activeCanvasIndex changes
         return () => {
             console.log("disposed canvas for index:", activeCanvasIndex);
             fabricCanvas.dispose();
             setCanvas(null);
         };
+
+        
     }, [setCanvas, activeCanvasIndex, width, height]);
 
     return (

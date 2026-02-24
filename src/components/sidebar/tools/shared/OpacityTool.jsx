@@ -1,7 +1,10 @@
 import React from 'react';
 import { changeOpacity } from '../../../Helper/FabricHelper';
+import { useCanvasContext } from '../../../../context/CanvasContext';
 
-const OpacityTool = ({ canvas, activeObject }) => {
+const OpacityTool = ({ activeObject }) => {
+    const { canvas } = useCanvasContext();
+
     if (!activeObject) return null;
 
     const opacityVal = Math.round((activeObject.opacity || 0) * 100);

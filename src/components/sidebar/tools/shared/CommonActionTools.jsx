@@ -1,7 +1,10 @@
 import React from 'react';
 import { deleteObject } from '../../../Helper/FabricHelper';
+import { useCanvasContext } from '../../../../context/CanvasContext';
 
-const CommonActionTools = ({ canvas, activeObject, objectTypeLabel = "Object" }) => {
+const CommonActionTools = ({ activeObject, objectTypeLabel = "Object" }) => {
+    const { canvas } = useCanvasContext();
+
     if (!activeObject) return null;
 
     return (

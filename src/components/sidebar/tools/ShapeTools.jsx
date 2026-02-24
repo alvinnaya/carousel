@@ -1,26 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { changeColor, updateObjectProperty } from '../../Helper/FabricHelper';
+import { useCanvasContext } from '../../../context/CanvasContext';
 import TransformTools from './shared/TransformTools';
 import OpacityTool from './shared/OpacityTool';
 import CommonActionTools from './shared/CommonActionTools';
+import ColorPaletteSelector from './shared/ColorPaletteSelector';
 
-const ShapeTools = ({ canvas, activeObject }) => {
+const ShapeTools = ({ activeObject }) => {
+    const { canvas } = useCanvasContext();
+    const [fillColor, setFillColor] = useState('#000000');
+
+    useEffect(() => {
+        if (!activeObject) return;
+        setFillColor(activeObject.fill || '#000000');
+    }, [activeObject]);
+
+    const handleFillColor = (color) => {
+        setFillColor(color);
+        changeColor(activeObject, color, canvas);
+    };
+
     return (
         <div className="space-y-6">
-            <TransformTools canvas={canvas} activeObject={activeObject} />
+            <TransformTools activeObject={activeObject} />
 
             <section>
                 <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Shape Style</h3>
                 <div className="space-y-4 pt-2">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-medium text-zinc-500">Fill Color</span>
-                        <input
-                            type="color"
-                            defaultValue={activeObject.fill}
-                            onInput={(e) => changeColor(activeObject, e.target.value, canvas)}
-                            className="w-6 h-6 rounded border-none cursor-pointer"
+                        <div
+                            className="w-6 h-6 rounded-full border border-zinc-200 shadow-sm"
+                            style={{ backgroundColor: fillColor }}
                         />
                     </div>
+                    <ColorPaletteSelector color={fillColor} onChange={handleFillColor} />
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-medium text-zinc-500">Corner Radius</span>
                         <input
@@ -38,9 +52,9 @@ const ShapeTools = ({ canvas, activeObject }) => {
                 </div>
             </section>
 
-            <OpacityTool canvas={canvas} activeObject={activeObject} />
+            <OpacityTool activeObject={activeObject} />
 
-            <CommonActionTools canvas={canvas} activeObject={activeObject} objectTypeLabel="Shape" />
+            <CommonActionTools activeObject={activeObject} objectTypeLabel="Shape" />
         </div>
     );
 };

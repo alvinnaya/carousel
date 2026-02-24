@@ -4,16 +4,16 @@ import OpacityTool from './shared/OpacityTool';
 import ArrangementTools from './shared/ArrangementTools';
 import CommonActionTools from './shared/CommonActionTools';
 
-const ImageTools = ({ canvas, activeObject }) => {
+const ImageTools = ({ activeObject }) => {
     return (
         <div className="space-y-6">
-            <TransformTools canvas={canvas} activeObject={activeObject} />
+            <TransformTools activeObject={activeObject} />
 
-            <OpacityTool canvas={canvas} activeObject={activeObject} />
+            <OpacityTool activeObject={activeObject} />
 
-            <ArrangementTools canvas={canvas} activeObject={activeObject} />
+            <ArrangementTools activeObject={activeObject} />
 
-            <CommonActionTools canvas={canvas} activeObject={activeObject} objectTypeLabel="Image" />
+            <CommonActionTools activeObject={activeObject} objectTypeLabel="Image" />
         </div>
     );
 };
