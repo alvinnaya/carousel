@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 import * as fabric from 'fabric';
+import {
+    groupSelectedObjects,
+    ungroupSelectedObjects,
+    deleteSelectedObjects
+} from '../Helper/FabricGroupHelper';
 
 const CanvasContextMenu = () => {
     const { canvas, clipboard, setClipboard } = useCanvasContext();
@@ -107,7 +112,9 @@ const CanvasContextMenu = () => {
                     });
                     if (cloned instanceof fabric.ActiveSelection) {
                         cloned.canvas = canvas;
-                        cloned.forEachObject((obj) => canvas.add(obj));
+                        cloned.forEachObject((obj) => {
+                            canvas.add(obj);
+                        });
                         cloned.setCoords();
                     } else {
                         canvas.add(cloned);
@@ -117,45 +124,36 @@ const CanvasContextMenu = () => {
                 break;
             case 'delete':
                 if (activeObject) {
-                    if (isSelection) {
-                        activeObject.forEachObject(obj => canvas.remove(obj));
-                        canvas.discardActiveObject();
-                    } else {
-                        canvas.remove(activeObject);
-                    }
+                    // removeAll() restores coordinates AND adds objects to canvas 
+                    // if selection has a canvas. We need to catch that.
+                    const toDelete = isSelection ? activeObject.removeAll() : [activeObject];
+
+                    // 1. Collect all groups for cleanup
+                    const allGroups = canvas.getObjects().filter(obj => obj.type === 'group');
+
+                    // 2. Remove objects from groups and canvas
+                    toDelete.forEach(obj => {
+                        // Remove from any group it might be in
+                        allGroups.forEach(g => {
+                            if (g.contains && g.contains(obj)) {
+                                g.remove(obj);
+                                canvas.fire('object:modified', { target: g });
+                            }
+                        });
+                        // IMPORTANT: remove from canvas as well
+                        canvas.remove(obj);
+                    });
+
+                    // Remove the selection container if it's still there
+                    if (isSelection) canvas.remove(activeObject);
+                    canvas.discardActiveObject();
                 }
                 break;
             case 'group':
-                if (isSelection) {
-                    console.log("Grouping in Fabric 7 - Interactive");
-                    const objects = activeObject.getObjects();
-                    // In Fabric 7, we create a new Group and add it to canvas
-                    // set interactive: true and subTargetCheck: true to allow member selection
-                    const group = new fabric.Group(objects, {
-                        interactive: true,
-                        subTargetCheck: true
-                    });
-
-                    // Remove individual objects and active selection
-                    canvas.discardActiveObject();
-                    objects.forEach(obj => canvas.remove(obj));
-
-                    canvas.add(group);
-                    canvas.setActiveObject(group);
-                }
+                groupSelectedObjects(canvas);
                 break;
             case 'ungroup':
-                if (isGroup) {
-                    console.log("Ungrouping in Fabric 7");
-                    // removeAll returns the objects that were in the group
-                    const objects = activeObject.removeAll();
-                    canvas.remove(activeObject);
-                    canvas.add(...objects);
-
-                    // Select the objects again
-                    const activeSelection = new fabric.ActiveSelection(objects, { canvas });
-                    canvas.setActiveObject(activeSelection);
-                }
+                ungroupSelectedObjects(canvas);
                 break;
             case 'bringToFront':
                 if (activeObject) canvas.bringObjectToFront(activeObject);
