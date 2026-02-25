@@ -3,8 +3,7 @@ import { useCanvasContext } from '../../context/CanvasContext';
 import * as fabric from 'fabric';
 
 const CanvasCopyPasteHandler = () => {
-    const { canvas } = useCanvasContext();
-    const clipboardRef = useRef(null);
+    const { canvas, clipboard, setClipboard } = useCanvasContext();
 
     useEffect(() => {
         if (!canvas) return;
@@ -20,16 +19,16 @@ const CanvasCopyPasteHandler = () => {
                 const activeObject = canvas.getActiveObject();
                 if (activeObject) {
                     const cloned = await activeObject.clone();
-                    clipboardRef.current = cloned;
+                    setClipboard(cloned);
                     console.log('Object copied to clipboard');
                 }
             }
 
             // Ctrl+V or Cmd+V
             if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-                if (!clipboardRef.current) return;
+                if (!clipboard) return;
 
-                const clonedObj = await clipboardRef.current.clone();
+                const clonedObj = await clipboard.clone();
 
                 canvas.discardActiveObject();
                 clonedObj.set({
@@ -50,8 +49,14 @@ const CanvasCopyPasteHandler = () => {
                     canvas.add(clonedObj);
                 }
 
-                clipboardRef.current.top += 20;
-                clipboardRef.current.left += 20;
+                // Update clipboard position for next paste
+                const updatedClipboard = await clipboard.clone();
+                updatedClipboard.set({
+                    left: updatedClipboard.left + 20,
+                    top: updatedClipboard.top + 20
+                });
+                setClipboard(updatedClipboard);
+
                 canvas.setActiveObject(clonedObj);
                 canvas.requestRenderAll();
                 console.log('Object pasted from clipboard');

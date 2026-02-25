@@ -9,6 +9,7 @@ export const CanvasProvider = ({ children }) => {
   const [canvases, setCanvases] = useState([{}]); // Array of canvas JSON objects
   const [previews, setPreviews] = useState(['']); // Array of data URLs for thumbnails
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
+  const [clipboard, setClipboard] = useState(null);
   const [swatches, setSwatches] = useState([
     '#000000', '#FFFFFF', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'
   ]);
@@ -55,6 +56,8 @@ export const CanvasProvider = ({ children }) => {
         updatePreview,
         swatches,
         addSwatch,
+        clipboard,
+        setClipboard
       }}
     >
       {children}

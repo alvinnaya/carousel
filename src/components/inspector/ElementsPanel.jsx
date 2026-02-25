@@ -45,10 +45,24 @@ const ElementsPanel = () => {
     const { canvas } = useCanvasContext();
     const [draggedItem, setDraggedItem] = useState(null);
     const [dropTargetId, setDropTargetId] = useState(null);
+    const [dropPosition, setDropPosition] = useState(null); // 'top' or 'bottom'
+    const [expandedIds, setExpandedIds] = useState(new Set());
 
     const elements = canvas
         ? [...canvas.getObjects()].reverse().map((obj) => buildElementNode(obj, null))
         : [];
+
+    const toggleExpand = (id) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
 
     const handleDrop = (targetItem) => {
         if (!canvas || !draggedItem || draggedItem.ref === targetItem.ref) return;
@@ -56,71 +70,153 @@ const ElementsPanel = () => {
         const sourceParent = draggedItem.parentRef || canvas;
         const targetParent = targetItem.parentRef || canvas;
 
-        // Keep behavior predictable: reordering is only allowed inside same parent container.
+        // Reordering only allowed inside same parent container.
         if (sourceParent !== targetParent) return;
 
         const siblings = sourceParent.getObjects();
+        const currentIndex = siblings.indexOf(draggedItem.ref);
         const targetIndex = siblings.indexOf(targetItem.ref);
+
         if (targetIndex < 0) return;
 
-        sourceParent.moveObjectTo(draggedItem.ref, targetIndex);
+        let finalTargetIndex = targetIndex;
+        if (currentIndex < targetIndex) {
+            finalTargetIndex = dropPosition === 'top' ? targetIndex : targetIndex - 1;
+        } else {
+            finalTargetIndex = dropPosition === 'top' ? targetIndex + 1 : targetIndex;
+        }
+
+        sourceParent.moveObjectTo(draggedItem.ref, finalTargetIndex);
         canvas.fire('object:modified', { target: draggedItem.ref });
         canvas.requestRenderAll();
+
+        setDraggedItem(null);
+        setDropTargetId(null);
+        setDropPosition(null);
     };
 
-    const renderElementItem = (el, depth = 0) => (
-        <React.Fragment key={el.id}>
-            <div
-                draggable
-                className={`flex items-center p-2 rounded-lg border hover:border-zinc-300 hover:bg-white cursor-pointer transition-all group shadow-sm ${dropTargetId === el.id ? 'bg-zinc-100 border-zinc-400' : 'bg-zinc-50 border-zinc-100'
-                    }`}
-                style={{ marginLeft: `${depth * 16}px` }}
-                onClick={() => {
-                    const selectableTarget = el.parentRef ? el.parentRef : el.ref;
-                    canvas.setActiveObject(selectableTarget);
-                    canvas.requestRenderAll();
-                }}
-                onDragStart={(event) => {
-                    event.dataTransfer.setData('text/plain', el.id);
-                    event.dataTransfer.effectAllowed = 'move';
-                    setDraggedItem(el);
-                }}
-                onDragOver={(event) => {
-                    event.preventDefault();
-                    event.dataTransfer.dropEffect = 'move';
-                    setDropTargetId(el.id);
-                }}
-                onDragLeave={() => {
-                    setDropTargetId((current) => (current === el.id ? null : current));
-                }}
-                onDrop={(event) => {
-                    event.preventDefault();
-                    setDropTargetId(null);
-                    handleDrop(el);
-                }}
-                onDragEnd={() => {
-                    setDropTargetId(null);
-                    setDraggedItem(null);
-                }}
-            >
-                <div className="w-10 h-10 rounded-md bg-white border border-zinc-100 flex items-center justify-center mr-3 overflow-hidden shadow-inner">
-                    {el.preview ? (
-                        <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
-                    ) : (
-                        <div className="text-[10px] text-zinc-400 font-bold uppercase">{el.type.charAt(0)}</div>
-                    )}
-                </div>
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{el.type}</span>
-                    <span className="text-xs font-semibold text-zinc-800">
-                        {el.type === 'group' ? `Group (${el.children.length})` : 'Element'}
-                    </span>
-                </div>
-            </div>
+    const renderElementItem = (el, depth = 0) => {
+        const isDragged = draggedItem?.id === el.id;
+        const isDropTarget = dropTargetId === el.id;
+        const hasChildren = el.children && el.children.length > 0;
+        const isExpanded = expandedIds.has(el.id);
 
-            {el.children.map((child) => renderElementItem(child, depth + 1))}
-        </React.Fragment>
-    );
+        return (
+            <React.Fragment key={el.id}>
+                <div
+                    draggable
+                    className={`relative flex items-center p-2 rounded-lg border cursor-pointer transition-all duration-200 group shadow-sm 
+                        ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed border-indigo-300' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-300 hover:bg-white'}
+                    `}
+                    style={{ marginLeft: `${depth * 16}px` }}
+                    onClick={() => {
+                        // In Fabric 7 with interactive groups, we can select the member directly
+                        canvas.setActiveObject(el.ref);
+                        canvas.requestRenderAll();
+                    }}
+                    onDragStart={(event) => {
+                        event.dataTransfer.setData('text/plain', el.id);
+                        event.dataTransfer.effectAllowed = 'move';
+                        setDraggedItem(el);
+
+                        // Set drag image
+                        const ghost = event.currentTarget.cloneNode(true);
+                        ghost.style.opacity = '0.5';
+                        ghost.style.position = 'absolute';
+                        ghost.style.top = '-1000px';
+                        document.body.appendChild(ghost);
+
+                        // Calculate offset based on click position relative to the element
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        const xOffset = event.clientX - rect.left;
+                        const yOffset = event.clientY - rect.top;
+
+                        event.dataTransfer.setDragImage(ghost, xOffset, yOffset);
+                        setTimeout(() => document.body.removeChild(ghost), 0);
+                    }}
+                    onDragOver={(event) => {
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = 'move';
+
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        const y = event.clientY - rect.top;
+                        const position = y < rect.height / 2 ? 'top' : 'bottom';
+
+                        if (dropTargetId !== el.id || dropPosition !== position) {
+                            setDropTargetId(el.id);
+                            setDropPosition(position);
+                        }
+                    }}
+                    onDragLeave={(event) => {
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        if (
+                            event.clientX < rect.left ||
+                            event.clientX >= rect.right ||
+                            event.clientY < rect.top ||
+                            event.clientY >= rect.bottom
+                        ) {
+                            setDropTargetId(null);
+                            setDropPosition(null);
+                        }
+                    }}
+                    onDrop={(event) => {
+                        event.preventDefault();
+                        handleDrop(el);
+                    }}
+                    onDragEnd={() => {
+                        setDropTargetId(null);
+                        setDropPosition(null);
+                        setDraggedItem(null);
+                    }}
+                >
+                    {/* Drop Indicator Line */}
+                    {isDropTarget && draggedItem?.id !== el.id && (
+                        <div
+                            className={`absolute left-0 right-0 h-0.5 bg-indigo-500 z-50 rounded-full transition-all duration-200 shadow-[0_0_8px_rgba(99,102,241,0.5)]
+                                ${dropPosition === 'top' ? '-top-1' : '-bottom-1'}
+                            `}
+                        />
+                    )}
+
+                    {/* Toggle Button for Groups */}
+                    <div
+                        className="w-4 flex items-center justify-center mr-1"
+                        onClick={(e) => {
+                            if (hasChildren) {
+                                e.stopPropagation();
+                                toggleExpand(el.id);
+                            }
+                        }}
+                    >
+                        {hasChildren && (
+                            <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="w-10 h-10 rounded-md bg-white border border-zinc-100 flex items-center justify-center mr-3 overflow-hidden shadow-inner flex-shrink-0">
+                        {el.preview ? (
+                            <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
+                        ) : (
+                            <div className="text-[10px] text-zinc-400 font-bold uppercase">{el.type.charAt(0)}</div>
+                        )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{el.type}</span>
+                        <span className="text-xs font-semibold text-zinc-800 truncate">
+                            {el.type === 'group' ? `Group (${el.children.length})` :
+                                el.ref.text ? (el.ref.text.length > 15 ? el.ref.text.substring(0, 15) + '...' : el.ref.text) : 'Element'}
+                        </span>
+                    </div>
+                </div>
+
+                {isExpanded && el.children.map((child) => renderElementItem(child, depth + 1))}
+            </React.Fragment>
+        );
+    };
 
     return (
         <div className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
