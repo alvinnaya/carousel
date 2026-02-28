@@ -7,11 +7,11 @@ const ArrangementTools = ({ activeObject }) => {
 
     if (!activeObject) return null;
 
-    const btnClass = "flex-1 py-2.5 rounded-lg bg-zinc-50 border border-zinc-100 text-[10px] font-bold text-zinc-600 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm";
+    const btnClass = "mus-tool-btn mus-tool-btn-surface flex-1";
 
     return (
-        <section className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm space-y-4">
-            <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Arrangement</h3>
+        <section className="mus-tool-section">
+            <h3 className="mus-tool-label">Arrangement</h3>
             <div className="flex space-x-2 pt-1">
                 <button
                     onClick={() => bringToFront(activeObject, canvas)}

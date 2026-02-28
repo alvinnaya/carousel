@@ -20,16 +20,16 @@ const CanvasTools = () => {
 
     return (
         <div className="space-y-6">
-            <section className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm space-y-4">
-                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Canvas Settings</h3>
-                <div className="space-y-4 p-3 rounded-lg bg-zinc-50 border border-zinc-100/50">
+            <section className="mus-tool-section">
+                <h3 className="mus-tool-label">Canvas Settings</h3>
+                <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-zinc-700">Background Color</span>
-                            <span className="text-[9px] text-zinc-400 font-medium">Click to change</span>
+                            <span className="mus-tool-label !text-primary">Background</span>
+                            <span className="text-[9px] mus-text-muted font-bold">Select shade</span>
                         </div>
                         <div
-                            className="w-6 h-6 rounded-full border border-zinc-200 shadow-sm"
+                            className="mus-color-swatch w-6 h-6"
                             style={{ backgroundColor }}
                         />
                     </div>

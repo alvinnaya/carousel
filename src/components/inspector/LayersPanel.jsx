@@ -144,20 +144,20 @@ const LayersPanel = () => {
                             {/* Drop Indicator Line */}
                             {isDropTarget && draggedIndex !== index && (
                                 <div
-                                    className={`absolute left-0 right-0 h-1 bg-indigo-500 z-50 rounded-full transition-all duration-200 shadow-[0_0_10px_rgba(99,102,241,0.5)]
+                                    className={`absolute left-0 right-0 h-1 bg-[#E8C04A] z-50 rounded-full transition-all duration-200 shadow-[0_0_10px_rgba(232,192,74,0.5)]
                                         ${dropPosition === 'top' ? '-top-3' : '-bottom-3'}
                                     `}
                                 />
                             )}
 
-                            <div className="absolute top-2 left-2 z-10 text-[10px] font-bold text-zinc-900 bg-white/80 px-1 rounded shadow-sm">
+                            <div className="absolute top-2 left-2 z-10 text-[10px] font-black mus-text-primary bg-white/90 border border-[#1A1A1A] px-1.5 rounded-md shadow-sm">
                                 {index + 1}
                             </div>
 
                             <div
                                 className={`
-                                    w-full rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all duration-200 cursor-pointer bg-white
-                                    ${activeCanvasIndex === index ? 'border-indigo-500 ring-4 ring-indigo-50 shadow-lg' : 'border-zinc-100 hover:border-zinc-300'}
+                                    w-full rounded-2xl border-2 flex items-center justify-center overflow-hidden transition-all duration-200 cursor-pointer bg-white
+                                    ${activeCanvasIndex === index ? 'border-[#1A1A1A] ring-4 ring-[#E8C04A]/30 shadow-lg' : 'border-[#D4CBBA] hover:border-[#1A1A1A]'}
                                     ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed' : 'opacity-100 grayscale-0 scale-100'}
                                 `}
                                 style={{ aspectRatio: itemAspectRatio }}
@@ -176,7 +176,7 @@ const LayersPanel = () => {
             {/* Add Page Button */}
             <button
                 onClick={addCanvas}
-                className="w-full py-3 bg-zinc-50 border border-zinc-100 rounded-xl flex items-center justify-center text-zinc-600 hover:bg-zinc-100 transition-all hover:shadow-sm"
+                className="w-full py-4 mus-button-ghost hover:mus-button-ghost-active flex items-center justify-center"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />

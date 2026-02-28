@@ -11,7 +11,7 @@ const InspectorContainer = () => {
 
     return (
         <aside
-            className="fixed right-4 top-4 bottom-4 w-64 flex flex-col bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden z-50"
+            className="fixed right-4 top-4 bottom-4 w-64 flex flex-col mus-panel overflow-hidden z-50"
             onWheel={(e) => e.stopPropagation()}
         >
             {/* Header with tab switcher */}

@@ -18,7 +18,7 @@ export default function Canvas() {
         console.log("canvas useEffect")
     }, [])
     return (
-        <div className=" w-full h-full flex justify-center bg-black no-browser-zoom  p-0 m-0 overflow-hidden relative">
+        <div className=" w-full h-full flex justify-center bg-surface no-browser-zoom  p-0 m-0 overflow-hidden relative">
 
             <CanvasControllerStyling />
             <CanvasConfig />

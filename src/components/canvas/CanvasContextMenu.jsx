@@ -176,18 +176,11 @@ const CanvasContextMenu = () => {
 
     return (
         <div
+            className="mus-card !bg-[#FDFAF5] !p-1.5 min-w-[200px] z-[999999]"
             style={{
                 position: 'fixed',
                 top: position.y,
                 left: position.x,
-                zIndex: 999999,
-                background: '#1c1c1e',
-                border: '1px solid #3a3a3c',
-                borderRadius: '12px',
-                padding: '6px 0',
-                minWidth: '200px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(20px)',
                 userSelect: 'none'
             }}
         >
@@ -221,7 +214,7 @@ const CanvasContextMenu = () => {
                     {clipboard ? (
                         <MenuButton label="Paste" icon="⌘V" onClick={() => handleAction('paste')} />
                     ) : (
-                        <div style={{ padding: '10px 16px', color: '#8e8e93', fontSize: '13px', fontStyle: 'italic' }}>
+                        <div className="px-4 py-2.5 mus-text-muted text-[11px] font-black uppercase tracking-widest italic">
                             Empty Canvas
                         </div>
                     )}
@@ -232,13 +225,13 @@ const CanvasContextMenu = () => {
 };
 
 const MenuSection = ({ children }) => (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="flex flex-col gap-0.5">
         {children}
     </div>
 );
 
 const Divider = () => (
-    <div style={{ height: '1px', background: '#3a3a3c', margin: '4px 0' }} />
+    <div className="h-px mus-border-light border-b my-1.5 mx-1" />
 );
 
 const MenuButton = ({ label, onClick, icon, variant = 'default' }) => (
@@ -247,21 +240,14 @@ const MenuButton = ({ label, onClick, icon, variant = 'default' }) => (
             e.stopPropagation();
             onClick();
         }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-        style={{
-            padding: '8px 16px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            color: variant === 'danger' ? '#ff453a' : '#ffffff',
-            transition: 'background 0.15s ease',
-        }}
+        className={`
+            px-4 py-2 cursor-pointer text-[12px] font-bold flex items-center justify-between transition-all duration-200 rounded-lg
+            ${variant === 'danger' ? 'text-[#C0392B]' : 'mus-text-primary'}
+            hover:bg-[#E8C04A] hover:text-[#1A1A1A]
+        `}
     >
         <span>{label}</span>
-        {icon && <span style={{ fontSize: '10px', opacity: 0.4, marginLeft: '12px', fontWeight: '500' }}>{icon}</span>}
+        {icon && <span className="text-[9px] opacity-40 ml-3 font-black">{icon}</span>}
     </div>
 );
 

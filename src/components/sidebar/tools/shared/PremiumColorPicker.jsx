@@ -125,18 +125,18 @@ const PremiumColorPicker = ({ color = "#1DFF2D", onChange, onClose }) => {
     };
 
     return (
-        <div className="w-full bg-white space-y-4 select-none">
+        <div className="w-full space-y-4 select-none">
             {/* ── Saturation/Value Box ──────────────────────────────── */}
             <div
                 ref={svRef}
                 onMouseDown={handleSVMouseDown}
-                className="relative w-full h-32 rounded-lg cursor-crosshair overflow-hidden border border-zinc-100 shadow-inner"
+                className="relative w-full h-32 cursor-crosshair overflow-hidden mus-color-box"
                 style={{ backgroundColor: `hsl(${hsv.h}, 100%, 50%)` }}
             >
                 <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
                 <div
-                    className="absolute w-4 h-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 transition-[top,left] duration-75 pointer-events-none"
+                    className="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 transition-[top,left] duration-75 pointer-events-none mus-color-handle"
                     style={{
                         left: `${hsv.s}%`,
                         top: `${100 - hsv.v}%`,
@@ -149,7 +149,7 @@ const PremiumColorPicker = ({ color = "#1DFF2D", onChange, onClose }) => {
             <div className="flex items-center gap-3">
                 <button
                     onClick={handleEyedropper}
-                    className="p-2 bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-all border border-zinc-100 shadow-sm"
+                    className="p-2 mus-button-ghost !rounded-lg"
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 22l5-5" /><path d="M9.5 14.5L16 8l4.5 4.5L14 19l-4.5-4.5z" /><path d="M15 2l5 5" />
@@ -161,11 +161,11 @@ const PremiumColorPicker = ({ color = "#1DFF2D", onChange, onClose }) => {
                     <div
                         ref={hueRef}
                         onMouseDown={handleHueMouseDown}
-                        className="relative h-2 rounded-full cursor-pointer shadow-inner"
+                        className="relative h-2 cursor-pointer mus-color-slider-track"
                         style={{ background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)' }}
                     >
                         <div
-                            className="absolute top-1/2 w-4 h-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                            className="absolute top-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2 pointer-events-none mus-color-handle"
                             style={{ left: `${(hsv.h / 360) * 100}%`, backgroundColor: `hsl(${hsv.h}, 100%, 50%)` }}
                         />
                     </div>
@@ -175,7 +175,7 @@ const PremiumColorPicker = ({ color = "#1DFF2D", onChange, onClose }) => {
                         ref={alphaRef}
                         onMouseDown={handleAlphaMouseDown}
                         className="relative h-2 rounded-full cursor-pointer shadow-inner overflow-hidden"
-                        style={{ background: 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACVJREFUGF5jYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYICAFAA9AAEAnfB4AAAAAElFTkSuQmCC")' }}
+                        style={{ background: 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACVJREFUGF5jYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYICAFAA9AAEAnfB4AAAAAElFTkSuQmCC")' }}
                     >
                         <div
                             className="absolute inset-0"
@@ -192,39 +192,39 @@ const PremiumColorPicker = ({ color = "#1DFF2D", onChange, onClose }) => {
             {/* ── Inputs ─────────────────────────────────────────────── */}
             <div className="grid grid-cols-4 gap-2">
                 <div className="col-span-1.5 space-y-1">
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">Hex</label>
+                    <label className="mus-color-label">Hex</label>
                     <input
                         type="text"
                         value={hex}
                         onChange={handleHexChange}
-                        className="w-full bg-zinc-50 text-[10px] font-bold text-zinc-700 px-2 py-1.5 rounded-lg border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 mus-color-input"
                     />
                 </div>
                 <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">R</label>
+                    <label className="mus-color-label block text-center">R</label>
                     <input
                         type="text"
                         value={rgb.r}
                         onChange={(e) => handleRGBInputChange('r', e.target.value)}
-                        className="w-full bg-zinc-50 text-[10px] font-bold text-center text-zinc-700 py-1.5 rounded-lg border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all shadow-sm"
+                        className="w-full text-center py-1.5 mus-color-input"
                     />
                 </div>
                 <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">G</label>
+                    <label className="mus-color-label block text-center">G</label>
                     <input
                         type="text"
                         value={rgb.g}
                         onChange={(e) => handleRGBInputChange('g', e.target.value)}
-                        className="w-full bg-zinc-50 text-[10px] font-bold text-center text-zinc-700 py-1.5 rounded-lg border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all shadow-sm"
+                        className="w-full text-center py-1.5 mus-color-input"
                     />
                 </div>
                 <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">B</label>
+                    <label className="mus-color-label block text-center">B</label>
                     <input
                         type="text"
                         value={rgb.b}
                         onChange={(e) => handleRGBInputChange('b', e.target.value)}
-                        className="w-full bg-zinc-50 text-[10px] font-bold text-center text-zinc-700 py-1.5 rounded-lg border border-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all shadow-sm"
+                        className="w-full text-center py-1.5 mus-color-input"
                     />
                 </div>
             </div>

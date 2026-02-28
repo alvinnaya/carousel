@@ -105,8 +105,8 @@ const ElementsPanel = () => {
             <React.Fragment key={el.id}>
                 <div
                     draggable
-                    className={`relative flex items-center p-2 rounded-lg border cursor-pointer transition-all duration-200 group shadow-sm 
-                        ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed border-indigo-300' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-300 hover:bg-white'}
+                    className={`relative flex items-center p-2 rounded-xl border cursor-pointer transition-all duration-200 group
+                        ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed border-[#E8C04A]' : 'mus-surface hover:border-[#1A1A1A] hover:bg-white'}
                     `}
                     style={{ marginLeft: `${depth * 16}px` }}
                     onClick={() => {
@@ -172,7 +172,7 @@ const ElementsPanel = () => {
                     {/* Drop Indicator Line */}
                     {isDropTarget && draggedItem?.id !== el.id && (
                         <div
-                            className={`absolute left-0 right-0 h-0.5 bg-indigo-500 z-50 rounded-full transition-all duration-200 shadow-[0_0_8px_rgba(99,102,241,0.5)]
+                            className={`absolute left-0 right-0 h-0.5 bg-[#E8C04A] z-50 rounded-full transition-all duration-200 shadow-[0_0_8px_rgba(232,192,74,0.5)]
                                 ${dropPosition === 'top' ? '-top-1' : '-bottom-1'}
                             `}
                         />
@@ -197,15 +197,15 @@ const ElementsPanel = () => {
                         )}
                     </div>
 
-                    <div className="w-10 h-10 rounded-md bg-white border border-zinc-100 flex items-center justify-center mr-3 overflow-hidden shadow-inner flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-white border mus-border-light flex items-center justify-center mr-3 overflow-hidden shadow-inner flex-shrink-0">
                         {el.preview ? (
                             <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
                         ) : (
-                            <div className="text-[10px] text-zinc-400 font-bold uppercase">{el.type.charAt(0)}</div>
+                            <div className="text-[10px] mus-text-muted font-black uppercase">{el.type.charAt(0)}</div>
                         )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{el.type}</span>
+                        <span className="text-[10px] font-black mus-text-muted uppercase tracking-widest">{el.type}</span>
                         <span className="text-xs font-semibold text-zinc-800 truncate">
                             {el.type === 'group' ? `Group (${el.children.length})` :
                                 el.ref.text ? (el.ref.text.length > 15 ? el.ref.text.substring(0, 15) + '...' : el.ref.text) : 'Element'}

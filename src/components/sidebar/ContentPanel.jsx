@@ -24,12 +24,12 @@ const ContentPanel = ({ activeTab, onClose }) => {
     }[activeTab] || (() => <p className="text-xs text-zinc-500">Section for {activeTab} content will go here.</p>);
 
     return (
-        <aside className="w-80 h-full bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 animate-in slide-in-from-left-4 fade-in">
-            <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-zinc-900">{activeTab}</h2>
+        <aside className="w-80 h-full mus-panel overflow-hidden flex flex-col transition-all duration-300 animate-in slide-in-from-left-4 fade-in">
+            <div className="p-4 border-b mus-border-light flex items-center justify-between">
+                <h2 className="text-sm font-bold mus-text-primary">{activeTab}</h2>
                 <button
                     onClick={onClose}
-                    className="p-1 rounded-md hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
+                    className="p-1 mus-button-ghost"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />

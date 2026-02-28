@@ -60,7 +60,7 @@ const TextStylingTools = ({ activeObject }) => {
         { label: 'Bold', value: '800' }
     ];
 
-    const selectClass = "w-full px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer shadow-sm";
+    const selectClass = "mus-tool-select";
 
     const applyFontFamily = (family) => {
         if (!activeObject) return;
@@ -113,11 +113,11 @@ const TextStylingTools = ({ activeObject }) => {
     if (!activeObject) return null;
 
     return (
-        <section className="bg-white p-5 rounded-xl border border-zinc-100 shadow-sm space-y-6">
+        <section className="mus-tool-section">
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-zinc-800">Text</h3>
+                <h3 className="mus-tool-label">Text</h3>
                 {selection.hasSelection && (
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
+                    <span className="mus-tool-badge-accent mus-tool-badge">
                         Selection Only
                     </span>
                 )}
@@ -125,12 +125,12 @@ const TextStylingTools = ({ activeObject }) => {
 
             {/* ── FONT FAMILY ────────────────────────────────────────── */}
             <div className="space-y-2 relative">
-                <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+                <div className="mus-tool-select-wrapper">
+                    {/* <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                         </svg>
-                    </div>
+                    </div> */}
                     <select
                         value={fontFamily}
                         onChange={(e) => applyFontFamily(e.target.value)}
@@ -150,7 +150,7 @@ const TextStylingTools = ({ activeObject }) => {
 
             {/* ── WEIGHT & SIZE ──────────────────────────────────────── */}
             <div className="grid grid-cols-[1.2fr_1fr] gap-3">
-                <div className="relative">
+                <div className="mus-tool-select-wrapper">
                     <select
                         value={fontWeight === 'bold' ? 'bold' : (fontWeight === 'normal' ? 'normal' : fontWeight)}
                         onChange={(e) => applyFontWeight(e.target.value)}
@@ -167,10 +167,10 @@ const TextStylingTools = ({ activeObject }) => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-0.5 bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-sm">
+                <div className="mus-tool-input-group">
                     <button
                         onClick={() => applyFontSize(Math.max(1, fontSize - 1))}
-                        className="px-2 py-2 hover:bg-zinc-50 text-zinc-500 transition-colors"
+                        className="mus-tool-input-btn"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12" />
@@ -179,11 +179,11 @@ const TextStylingTools = ({ activeObject }) => {
                     <DelayedInput
                         value={fontSize}
                         onChange={(val) => applyFontSize(parseInt(val) || 12)}
-                        className="w-full text-center text-xs font-bold text-zinc-800 bg-transparent border-none focus:ring-0 p-0"
+                        className="mus-tool-input-pure"
                     />
                     <button
                         onClick={() => applyFontSize(fontSize + 1)}
-                        className="px-2 py-2 hover:bg-zinc-50 text-zinc-500 transition-colors"
+                        className="mus-tool-input-btn"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -193,9 +193,9 @@ const TextStylingTools = ({ activeObject }) => {
             </div>
 
             {/* ── COLOR ─────────────────────────────────────────────── */}
-            <div className="space-y-4 pt-2 border-t border-zinc-100">
+            <div className="mus-tool-divider space-y-4">
                 <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Solid Fill</span>
+                    <span className="mus-tool-label">Solid Fill</span>
                     <div
                         className="w-5 h-5 rounded-full border border-zinc-200 shadow-sm"
                         style={{ backgroundColor: fill }}

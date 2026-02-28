@@ -24,19 +24,19 @@ const ShapeTools = ({ activeObject }) => {
         <div className="space-y-6">
             <TransformTools activeObject={activeObject} />
 
-            <section>
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Shape Style</h3>
+            <section className="mus-tool-section">
+                <h3 className="mus-tool-label">Shape Style</h3>
                 <div className="space-y-4 pt-2">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-medium text-zinc-500">Fill Color</span>
+                        <span className="mus-tool-label !text-primary">Fill Color</span>
                         <div
-                            className="w-6 h-6 rounded-full border border-zinc-200 shadow-sm"
+                            className="mus-color-swatch w-6 h-6"
                             style={{ backgroundColor: fillColor }}
                         />
                     </div>
                     <ColorPaletteSelector color={fillColor} onChange={handleFillColor} />
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-medium text-zinc-500">Corner Radius</span>
+                        <span className="mus-tool-label !text-primary">Corner Radius</span>
                         <input
                             type="range"
                             min="0"
@@ -46,7 +46,7 @@ const ShapeTools = ({ activeObject }) => {
                                 updateObjectProperty(activeObject, 'rx', parseInt(e.target.value), canvas);
                                 updateObjectProperty(activeObject, 'ry', parseInt(e.target.value), canvas);
                             }}
-                            className="w-2/3 h-1 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-zinc-900"
+                            className="w-2/3 mus-tool-range"
                         />
                     </div>
                 </div>

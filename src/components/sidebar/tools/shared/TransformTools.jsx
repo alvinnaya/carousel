@@ -24,15 +24,14 @@ const TransformTools = ({ activeObject }) => {
     const angle = Math.round(activeObject.angle || 0);
 
     // ─── Shared styles ──────────────────────────────────────────────────────
-    const sectionLabel = "text-[10px] font-bold text-zinc-400 uppercase tracking-widest";
-    const inputClass = "w-full pl-7 pr-2 py-2.5 bg-zinc-50 border border-zinc-100 rounded-lg text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all";
-    const alignBtnClass = "flex items-center gap-2 p-2 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all duration-150 text-xs font-medium";
+    const sectionLabel = "mus-tool-label";
+    const inputClass = "mus-tool-input";
+    const alignBtnClass = "mus-tool-align-btn";
 
     return (
-        <section className="bg-white p-5 rounded-xl border border-zinc-100 shadow-sm space-y-6">
-            {/* ── Header ───────────────────────────────────────────────── */}
+        <section className="mus-tool-section">
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-zinc-800">Transform</h3>
+                <h3 className="mus-tool-label">Transform</h3>
             </div>
 
             {/* ── ALIGNMENT ────────────────────────────────────────────── */}
@@ -89,7 +88,7 @@ const TransformTools = ({ activeObject }) => {
                     </button>
                 </div>
 
-                <div className="border-t border-zinc-100 my-2 pt-2">
+                <div className="mus-tool-divider my-2 pt-2">
                     <div className="grid grid-cols-2 gap-x-4">
                         <button onClick={() => flipHorizontal(activeObject, canvas)} className={alignBtnClass}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,41 +1,451 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Serif+Display:ital@0;1&display=swap');
+
+:root {
+    --bg-main: #F2EDE4;
+    --bg-surface: #FDFAF5;
+    --border-dark: #1A1A1A;
+    --border-light: #D4CBBA;
+    --text-primary: #1A1A1A;
+    --text-muted: #7A7062;
+    --accent: #E8C04A;
+    --danger: #C0392B;
+
+    --shadow-sm: 2px 2px 0px 0px rgba(26, 26, 26, 1);
+    --shadow-md: 4px 4px 0px 0px rgba(26, 26, 26, 1);
+    --shadow-subtle: 4px 4px 0px 0px rgba(26, 26, 26, 0.1);
+
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Musmentor Utility Classes */
+.mus-panel {
+    background-color: var(--bg-main);
+    border: 2px solid var(--border-dark);
+    border-radius: 1rem;
+    /* 16px */
+    box-shadow: var(--shadow-subtle);
+}
+
+.mus-surface {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    /* 12px */
+}
+
+.mus-card {
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-dark);
+    border-radius: 1rem;
+    /* box-shadow: var(--shadow-sm); */
+    transition: all 0.2s ease;
+}
+
+.mus-card:hover {
+    /* box-shadow: var(--shadow-md); */
+    transform: translate(-1px, -1px);
+}
+
+.mus-button-amber {
+    @apply transition-all duration-200;
+    background-color: var(--accent);
+    border: 2px solid var(--border-dark);
+    border-radius: 0.75rem;
+    /* box-shadow: var(--shadow-sm); */
+    color: var(--text-primary);
+}
+
+.mus-button-amber:hover {
+    /* box-shadow: var(--shadow-md); */
+    transform: translate(-1px, -1px);
+}
+
+.mus-button-amber:active {
+    /* box-shadow: none; */
+    transform: translate(1px, 1px);
+}
+
+.mus-button-ghost {
+    @apply transition-all duration-200 outline-none;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    color: var(--text-muted);
+}
+
+.mus-button-ghost:hover {
+    background-color: rgba(232, 192, 74, 0.2);
+    border-color: rgba(26, 26, 26, 0.1);
+    color: var(--text-primary);
+}
+
+.mus-button-ghost-active {
+    background-color: var(--accent);
+    border-color: var(--border-dark);
+    /* box-shadow: var(--shadow-sm); */
+    color: var(--text-primary);
+}
+
+.mus-input-range {
+    @apply appearance-none cursor-pointer rounded-full h-1.5;
+    background-color: var(--border-light);
+}
+
+.mus-input-range::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 rounded-full border-2;
+    background-color: var(--accent);
+    border-color: var(--border-dark);
+}
+
+.mus-text-muted {
+    color: var(--text-muted);
+}
+
+.mus-text-primary {
+    color: var(--text-primary);
+}
+
+.mus-border-light {
+    border-color: var(--border-light);
+}
+
+/* Color Picker Specific */
+.mus-color-box {
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mus-color-handle {
+    border: 2px solid white;
+    border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mus-color-slider-track {
+    border-radius: 9999px;
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.mus-color-input {
+    @apply transition-all duration-200 outline-none;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.mus-color-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(232, 192, 74, 0.1);
+}
+
+.mus-color-label {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.mus-color-swatch {
+    border: 2px solid var(--border-dark);
+    border-radius: 9999px;
+    box-shadow: 2px 2px 0px 0px var(--border-dark);
+    transition: all 0.2s ease;
+}
+
+.mus-color-swatch:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px 0px var(--border-dark);
+}
+
+.mus-color-swatch-active {
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--accent);
+    transform: scale(1.1);
+}
+
+.mus-color-swatch-add {
+    border: 2px dashed var(--border-light);
+    border-radius: 9999px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+
+.mus-color-swatch-add:hover {
+    border-color: var(--border-dark);
+    color: var(--text-primary);
+    background-color: var(--accent);
+}
 
 body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    /* Prevent scrollbars from the browser */
+    background-color: var(--bg-main);
+    color: var(--text-primary);
 }
 
 #root {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    /* Prevent scrollbars from the root */
 }
 
 .no-browser-zoom {
     touch-action: none;
 }
 
-/* Custom Scrollbar Styling - High Visibility */
+/* Custom Scrollbar Styling - Musmentor Style */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
+    background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #888888;
-    /* Darker gray for high contrast */
+    background: var(--border-light);
     border-radius: 10px;
-    border: 2px solid #f1f1f1;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #555555;
-    /* Even darker on hover */
+    background: var(--text-muted);
+}
+
+/* Tool Design System */
+.mus-tool-section {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-subtle);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.mus-tool-label {
+    text-transform: uppercase;
+    font-size: 0.625rem;
+    /* 10px */
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+}
+
+.mus-tool-badge {
+    text-transform: uppercase;
+    font-size: 0.5625rem;
+    /* 9px */
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+}
+
+.mus-tool-badge-accent {
+    background-color: rgba(232, 192, 74, 0.2);
+    color: var(--text-primary);
+}
+
+.mus-tool-divider {
+    border-top: 1px solid var(--border-light);
+    padding-top: 0.5rem;
+}
+
+.mus-tool-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.mus-tool-select {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    /* 12px */
+    font-weight: 600;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+}
+
+.mus-tool-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(232, 192, 74, 0.1);
+}
+
+.mus-tool-input-group {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.mus-tool-input-btn {
+    padding: 0.5rem;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mus-tool-input-btn:hover {
+    background-color: rgba(232, 192, 74, 0.1);
+    color: var(--text-primary);
+}
+
+.mus-tool-input-pure {
+    width: 100%;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    background-color: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+}
+
+.mus-tool-btn-danger {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background-color: rgba(192, 57, 43, 0.05);
+    color: var(--danger);
+    font-size: 0.625rem;
+    font-weight: 800;
+    border: 1px solid rgba(192, 57, 43, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.mus-tool-btn-danger:hover {
+    background-color: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+.mus-tool-btn {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid transparent;
+}
+
+.mus-tool-btn-surface {
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+}
+
+.mus-tool-btn-surface:hover {
+    border-color: var(--accent);
+    background-color: white;
+}
+
+.mus-tool-range {
+    width: 100%;
+    height: 0.25rem;
+    background-color: var(--border-light);
+    border-radius: 9999px;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+}
+
+.mus-tool-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: var(--accent);
+    border: 2px solid var(--border-dark);
+}
+
+.mus-tool-align-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.mus-tool-align-btn:hover {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+}
+
+.mus-tool-input {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    padding-left: 1.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.mus-tool-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(232, 192, 74, 0.1);
+}
+
+.mus-tool-input-prefix {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.625rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    user-select: none;
+    pointer-events: none;
+}
+
+.mus-tool-input-suffix {
+    position: absolute;
+    right: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.625rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    user-select: none;
+    pointer-events: none;
 }

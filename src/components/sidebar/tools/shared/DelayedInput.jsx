@@ -26,7 +26,7 @@ const DelayedInput = ({ value, onChange, className, type = "number", prefix, suf
 
     return (
         <div className="relative w-full">
-            {prefix && <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400 select-none">{prefix}</span>}
+            {prefix && <span className="mus-tool-input-prefix">{prefix}</span>}
             <input
                 {...props}
                 type={type}
@@ -36,7 +36,7 @@ const DelayedInput = ({ value, onChange, className, type = "number", prefix, suf
                 onKeyDown={handleKeyDown}
                 className={className}
             />
-            {suffix && <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400 select-none">{suffix}</span>}
+            {suffix && <span className="mus-tool-input-suffix">{suffix}</span>}
         </div>
     );
 };
