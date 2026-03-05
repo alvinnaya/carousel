@@ -117,12 +117,14 @@ const TransformTools = ({ activeObject }) => {
                     <DelayedInput
                         prefix="X"
                         value={posX}
+                        isNumeric={true}
                         onChange={(val) => updateObjectProperty(activeObject, 'left', parseInt(val) || 0, canvas)}
                         className={inputClass}
                     />
                     <DelayedInput
                         prefix="Y"
                         value={posY}
+                        isNumeric={true}
                         onChange={(val) => updateObjectProperty(activeObject, 'top', parseInt(val) || 0, canvas)}
                         className={inputClass}
                     />
@@ -161,12 +163,14 @@ const TransformTools = ({ activeObject }) => {
                     <DelayedInput
                         prefix="W"
                         value={renderedW}
+                        isNumeric={true}
                         onChange={(val) => changeWidth(activeObject, parseInt(val) || 1, canvas, lockRatio)}
                         className={inputClass}
                     />
                     <DelayedInput
                         prefix="H"
                         value={renderedH}
+                        isNumeric={true}
                         onChange={(val) => changeHeight(activeObject, parseInt(val) || 1, canvas, lockRatio)}
                         className={inputClass}
                     />
@@ -181,6 +185,7 @@ const TransformTools = ({ activeObject }) => {
                         prefix="△"
                         suffix="°"
                         value={angle}
+                        isNumeric={true}
                         min="0"
                         max="360"
                         onChange={(val) => changeRotation(activeObject, parseInt(val) || 0, canvas)}

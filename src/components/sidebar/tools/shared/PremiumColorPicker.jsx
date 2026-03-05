@@ -171,7 +171,7 @@ const PremiumColorPicker = ({ color = "#1DFF2D", onChange, onClose }) => {
                     </div>
 
                     {/* Alpha Slider */}
-                    {/* <div
+                    <div
                         ref={alphaRef}
                         onMouseDown={handleAlphaMouseDown}
                         className="relative h-2 rounded-full cursor-pointer shadow-inner overflow-hidden"
@@ -185,7 +185,7 @@ const PremiumColorPicker = ({ color = "#1DFF2D", onChange, onClose }) => {
                             className="absolute top-1/2 w-4 h-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                             style={{ left: `${hsv.a * 100}%`, backgroundColor: hex }}
                         />
-                    </div> */}
+                    </div>
                 </div>
             </div>
 

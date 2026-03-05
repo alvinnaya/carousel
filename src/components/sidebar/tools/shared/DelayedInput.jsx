@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const DelayedInput = ({ value, onChange, className, type = "number", prefix, suffix, ...props }) => {
+const DelayedInput = ({ value, onChange, className, type = "text", isNumeric = false, prefix, suffix, ...props }) => {
     const [localValue, setLocalValue] = useState(value);
 
     // Sync with external value changes (e.g. from canvas events)
@@ -9,8 +9,36 @@ const DelayedInput = ({ value, onChange, className, type = "number", prefix, suf
     }, [value]);
 
     const handleCommit = () => {
-        if (localValue !== value) {
-            onChange(localValue);
+        let finalValue = localValue;
+
+        if (isNumeric && localValue !== '') {
+            let num = parseFloat(localValue);
+            if (!isNaN(num)) {
+                if (props.min !== undefined) num = Math.max(parseFloat(props.min), num);
+                if (props.max !== undefined) num = Math.min(parseFloat(props.max), num);
+                finalValue = num.toString();
+            }
+        } else if (isNumeric && localValue === '') {
+            finalValue = (props.min !== undefined ? props.min : '0').toString();
+        }
+
+        setLocalValue(finalValue);
+        if (finalValue !== value.toString()) {
+            onChange(finalValue);
+        }
+    };
+
+    const handleChange = (e) => {
+        let val = e.target.value;
+        if (isNumeric) {
+            // Allow digits, one decimal point, and one leading minus sign
+            // This regex allows intermediate states like "-" or "1."
+            const regex = /^-?\d*\.?\d*$/;
+            if (val === '' || regex.test(val)) {
+                setLocalValue(val);
+            }
+        } else {
+            setLocalValue(val);
         }
     };
 
@@ -31,7 +59,7 @@ const DelayedInput = ({ value, onChange, className, type = "number", prefix, suf
                 {...props}
                 type={type}
                 value={localValue}
-                onChange={(e) => setLocalValue(e.target.value)}
+                onChange={handleChange}
                 onBlur={handleCommit}
                 onKeyDown={handleKeyDown}
                 className={className}

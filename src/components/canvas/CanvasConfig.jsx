@@ -24,6 +24,8 @@ export default function CanvasConfig() {
 
     fabric.FabricObject.prototype.originX = 'center';
     fabric.FabricObject.prototype.originY = 'center';
+    fabric.Textbox.prototype.splitByGrapheme = true;
+
 
 
     useEffect(() => {

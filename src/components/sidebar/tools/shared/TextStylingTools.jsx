@@ -7,8 +7,10 @@ import {
     changeFontFamily,
     changeFontWeight,
     changeSelectedTextProperty,
-    getTextSelection
+    getTextSelection,
+    alignLeft, alignCenterH, alignRight
 } from '../../../Helper/FabricHelper';
+import { FONT_LIST, loadGoogleFont } from '../../../../utils/fontList';
 
 const TextStylingTools = ({ activeObject }) => {
     const { canvas, canvases } = useCanvasContext();
@@ -18,7 +20,22 @@ const TextStylingTools = ({ activeObject }) => {
     const [fontSize, setFontSize] = useState(24);
     const [fontFamily, setFontFamily] = useState('Arial');
     const [fontWeight, setFontWeight] = useState('normal');
+    const [fontStyle, setFontStyle] = useState('normal');
+    const [textAlign, setTextAlign] = useState('left');
     const [fill, setFill] = useState('#000000');
+
+    // Normalize fontFamily: extract only the first font from a CSS stack (e.g. "Inter, ui-sans-serif" -> "Inter")
+    const normalizeFontFamily = (family) => {
+        if (!family) return 'Arial';
+        return family.split(',')[0].trim().replace(/['"|]/g, '');
+    };
+
+    // Normalize fontWeight: Fabric may return "bold" (=700) or "normal" (=400)
+    const normalizeFontWeight = (weight) => {
+        if (weight === 'bold') return '700';
+        if (weight === 'normal') return '400';
+        return String(weight);
+    };
 
     // If text is selected, try to read the style of the first selected char for display
     const getDisplayProp = (prop, fallback) => {
@@ -35,44 +52,69 @@ const TextStylingTools = ({ activeObject }) => {
 
 
     useEffect(() => {
-        if (!activeObject) return;
-        console.log("changing")
-        const fontSize = getDisplayProp('fontSize', 24);
-        const fontFamily = getDisplayProp('fontFamily', 'Arial');
-        const fontWeight = getDisplayProp('fontWeight', 'normal');
-        const fill = getDisplayProp('fill', '#000000');
-        setFontSize(fontSize);
-        setFontFamily(fontFamily);
-        setFontWeight(fontWeight);
-        setFill(fill);
-    }, [canvas, activeObject, canvases])
+        if (!activeObject || !canvas) return;
+
+        const updateState = () => {
+            setFontSize(getDisplayProp('fontSize', 24));
+            setFontFamily(normalizeFontFamily(getDisplayProp('fontFamily', 'Arial')));
+            setFontWeight(normalizeFontWeight(getDisplayProp('fontWeight', '400')));
+            setFontStyle(getDisplayProp('fontStyle', 'normal'));
+            setTextAlign(getDisplayProp('textAlign', 'left'));
+            setFill(getDisplayProp('fill', '#000000'));
+        };
+
+        updateState();
+
+        const handleModified = (e) => {
+            if (e.target === activeObject) updateState();
+        };
+
+        canvas.on('object:modified', handleModified);
+        canvas.on('selection:updated', updateState);
+        canvas.on('selection:created', updateState);
+
+        return () => {
+            canvas.off('object:modified', handleModified);
+            canvas.off('selection:updated', updateState);
+            canvas.off('selection:created', updateState);
+        };
+    }, [canvas, activeObject]);
 
 
-
-    const fonts = [
-        'Montserrat', 'Inter', 'Roboto', 'Open Sans', 'Playfair Display', 'Lora', 'Arial', 'Times New Roman'
-    ];
+    const fonts = FONT_LIST;
 
     const weights = [
-        { label: 'Regular', value: '300' },
+        { label: 'Thin', value: '100' },
+        { label: 'Extra Light', value: '200' },
+        { label: 'Light', value: '300' },
+        { label: 'Regular', value: '400' },
         { label: 'Medium', value: '500' },
-        { label: 'SemiBold', value: '600' },
-        { label: 'Bold', value: '800' }
+        { label: 'Semi Bold', value: '600' },
+        { label: 'Bold', value: '700' },
+        { label: 'Extra Bold', value: '800' },
+        { label: 'Black', value: '900' },
     ];
 
     const selectClass = "mus-tool-select";
 
-    const applyFontFamily = (family) => {
+    const applyFontFamily = async (family) => {
         if (!activeObject) return;
+
+
+
+        // Wait for the font to load via the CSS Font Loading API
+        await loadGoogleFont(family);
+
+        // Optimistically update the UI dropdown
+        await setFontFamily(family);
+        // Ensure canvas and activeObject are still valid after the async delay
+        if (!canvas || !canvas.getObjects().includes(activeObject)) return;
+
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {
             changeSelectedTextProperty(activeObject, 'fontFamily', family, canvas);
-            const newFontFamily = getDisplayProp('fontFamily', 'Arial');
-            setFontFamily(newFontFamily);
         } else {
             changeFontFamily(activeObject, family, canvas);
-            const newFontFamily = getDisplayProp('fontFamily', 'Arial');
-            setFontFamily(newFontFamily);
         }
     };
 
@@ -102,6 +144,18 @@ const TextStylingTools = ({ activeObject }) => {
             const newFontSize = getDisplayProp('fontSize', 24);
             setFontSize(newFontSize);
         }
+    };
+
+    const applyFontStyle = (style) => {
+        if (!activeObject) return;
+        changeSelectedTextProperty(activeObject, 'fontStyle', style, canvas);
+        setFontStyle(getDisplayProp('fontStyle', 'normal'));
+    };
+
+    const applyTextAlign = (align) => {
+        if (!activeObject) return;
+        changeSelectedTextProperty(activeObject, 'textAlign', align, canvas);
+        setTextAlign(getDisplayProp('textAlign', 'left'));
     };
 
     const applyFill = (color) => {
@@ -136,6 +190,9 @@ const TextStylingTools = ({ activeObject }) => {
                         onChange={(e) => applyFontFamily(e.target.value)}
                         className={`${selectClass} pl-9`}
                     >
+                        {!fonts.includes(fontFamily) && (
+                            <option value={fontFamily}>{fontFamily}</option>
+                        )}
                         {fonts.map(font => (
                             <option key={font} value={font}>{font}</option>
                         ))}
@@ -152,7 +209,7 @@ const TextStylingTools = ({ activeObject }) => {
             <div className="grid grid-cols-[1.2fr_1fr] gap-3">
                 <div className="mus-tool-select-wrapper">
                     <select
-                        value={fontWeight === 'bold' ? 'bold' : (fontWeight === 'normal' ? 'normal' : fontWeight)}
+                        value={fontWeight.toString()}
                         onChange={(e) => applyFontWeight(e.target.value)}
                         className={selectClass}
                     >
@@ -178,6 +235,7 @@ const TextStylingTools = ({ activeObject }) => {
                     </button>
                     <DelayedInput
                         value={fontSize}
+                        isNumeric={true}
                         onChange={(val) => applyFontSize(parseInt(val) || 12)}
                         className="mus-tool-input-pure"
                     />
@@ -192,8 +250,56 @@ const TextStylingTools = ({ activeObject }) => {
                 </div>
             </div>
 
+            {/* ── STYLE & ALIGNMENT ───────────────────────────────────── */}
+            <div className="space-y-2">
+                <label className="mus-tool-label">Style & Align</label>
+                <div className="mus-tool-input-group">
+                    {/* Italic Toggle */}
+                    <button
+                        onClick={() => applyFontStyle(fontStyle === 'italic' ? 'normal' : 'italic')}
+                        className={`mus-tool-input-btn flex-1 h-9 ${fontStyle === 'italic' ? 'mus-button-ghost-active' : ''}`}
+                        title="Italic"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" />
+                        </svg>
+                    </button>
+
+                    <div className="w-[1px] h-6 bg-zinc-200/50 self-center" />
+
+                    {/* Horizontal Alignment */}
+                    <button
+                        onClick={() => applyTextAlign('left')}
+                        className={`mus-tool-input-btn flex-1 h-9 ${textAlign === 'left' ? 'mus-button-ghost-active' : ''}`}
+                        title="Align Left"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="17" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="17" y1="18" x2="3" y2="18" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => applyTextAlign('center')}
+                        className={`mus-tool-input-btn flex-1 h-9 ${textAlign === 'center' ? 'mus-button-ghost-active' : ''}`}
+                        title="Align Center"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="10" x2="6" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="18" y1="18" x2="6" y2="18" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => applyTextAlign('right')}
+                        className={`mus-tool-input-btn flex-1 h-9 ${textAlign === 'right' ? 'mus-button-ghost-active' : ''}`}
+                        title="Align Right"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="21" y1="10" x2="7" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="21" y1="18" x2="7" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
             {/* ── COLOR ─────────────────────────────────────────────── */}
-            <div className="mus-tool-divider space-y-4">
+            {/* <div className="mus-tool-divider space-y-4">
                 <div className="flex items-center justify-between">
                     <span className="mus-tool-label">Solid Fill</span>
                     <div
@@ -205,7 +311,7 @@ const TextStylingTools = ({ activeObject }) => {
                     color={fill}
                     onChange={applyFill}
                 />
-            </div>
+            </div> */}
         </section>
     );
 };

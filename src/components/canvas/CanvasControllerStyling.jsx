@@ -54,12 +54,19 @@ export default function CanvasControllerStyling() {
             const ImageClass = fabric.FabricImage || fabric.Image;
 
 
-            if (obj.type == 'textbox' || obj.type === 'itext') {
+            if (obj.type === 'textbox' || obj.type === 'itext') {
                 obj.controls = createTextControlSet();
                 obj.setControlsVisibility({
                     mt: false, mb: false, ml: true, mr: true,
                     tl: true, tr: true, bl: true, br: true, mtr: true
                 });
+
+                // Styling for text editing mode (Fabric 7++)
+                obj.selectionColor = 'rgba(235, 126, 75, 0.3)'; // Semi-transparent version of the theme color
+                obj.cursorColor = 'hsl(19, 87%, 65%)';
+                obj.cursorWidth = 2 / scale;
+                obj.editingBorderColor = 'hsl(19, 87%, 65%)';
+                obj.padding = 4 / scale; // Add some breathing room when editing
             } else if (obj.type === 'activeselection') {
                 obj.setControlsVisibility({
                     mt: false, mb: false, ml: false, mr: false,
@@ -126,7 +133,11 @@ export function CanvasDefaultControllerStyling(fabricInstance) {
         cornerStyle: 'circle',
         transparentCorners: false,
         padding: 0,
-        borderScaleFactor: 3
+        borderScaleFactor: 3,
+        // Text editing defaults
+        selectionColor: 'rgba(235, 126, 75, 0.3)',
+        cursorColor: 'hsl(19, 87%, 65%)',
+        editingBorderColor: 'hsl(19, 87%, 65%)',
     });
 }
 

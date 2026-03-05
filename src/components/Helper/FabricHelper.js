@@ -215,7 +215,21 @@ export const changeFontSize = (obj, size, canvas) => {
 
 export const changeFontFamily = (obj, family, canvas) => {
     if (!obj || !canvas) return;
-    updateObjectProperty(obj, 'fontFamily', family, canvas);
+
+    // Preserve the fixed width for Textbox — do NOT call initDimensions() as it
+    // resets the Textbox width back to auto, causing text overflow.
+    const savedWidth = obj.width;
+
+    obj.set('fontFamily', family);
+
+    // The font is already loaded via CSS Font Loading API in TextStylingTools.jsx
+    // so we can apply styles immediately without setTimeout delayed measurement
+    obj.dirty = true;
+    if (savedWidth) obj.set('width', savedWidth);
+
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
 };
 
 export const changeFontWeight = (obj, weight, canvas) => {
