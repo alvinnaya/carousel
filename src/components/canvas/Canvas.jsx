@@ -7,6 +7,8 @@ import CanvasCopyPasteHandler from "./CanvasCopyPasteHandler"
 import CanvasTextScaleNormalizer from "./CanvasTextScaleNormalizer"
 import CanvasPreviewSyncronizer from "./CanvasPreviewSyncronizer"
 import CanvasContextMenu from "./CanvasContextMenu"
+import CanvasSmartGuide from "./CanvasSmartGuide"
+import CanvasSmartGuideScale from "./CanvasSmartGuideScale"
 import { useEffect } from "react";
 
 
@@ -33,6 +35,9 @@ export default function Canvas() {
             />
             <CanvasViewController />
             <CanvasContextMenu />
+            <CanvasSmartGuide />
+            <CanvasSmartGuideScale />
+
 
 
         </div>

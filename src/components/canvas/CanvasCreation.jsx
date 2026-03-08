@@ -112,8 +112,8 @@ const CanvasCreation = ({ width, height }) => {
         loadContent();
 
         // Generate preview
-     
-  
+
+
         // Cleanup on unmount or when activeCanvasIndex changes
         return () => {
             console.log("disposed canvas for index:", activeCanvasIndex);
@@ -121,7 +121,7 @@ const CanvasCreation = ({ width, height }) => {
             setCanvas(null);
         };
 
-        
+
     }, [setCanvas, activeCanvasIndex, width, height]);
 
     return (

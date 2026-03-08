@@ -66,7 +66,7 @@ export default function CanvasControllerStyling() {
                 obj.cursorColor = 'hsl(19, 87%, 65%)';
                 obj.cursorWidth = 2 / scale;
                 obj.editingBorderColor = 'hsl(19, 87%, 65%)';
-                obj.padding = 4 / scale; // Add some breathing room when editing
+                obj.padding = 0 // Add some breathing room when editing
             } else if (obj.type === 'activeselection') {
                 obj.setControlsVisibility({
                     mt: false, mb: false, ml: false, mr: false,

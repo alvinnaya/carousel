@@ -7,7 +7,7 @@ const PREVIEW_QUALITY = 0.5;
 const DEFAULT_CANVAS_SIZE = 1080;
 
 const CanvasPreviewSyncronizer = () => {
-    const { canvases, activeCanvasIndex, updatePreview,canvas } = useCanvasContext();
+    const { canvases, activeCanvasIndex, updatePreview, canvas } = useCanvasContext();
     const hasInitializedAllPreviewsRef = useRef(false);
 
     const syncPreviewForIndex = async (index, savedState) => {
@@ -34,7 +34,7 @@ const CanvasPreviewSyncronizer = () => {
     };
 
 
-   
+
     //     if (hasInitializedAllPreviewsRef.current) return;
     //     if (!Array.isArray(canvases) || canvases.length === 0) return;
 
