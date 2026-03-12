@@ -1,6 +1,7 @@
 /**
  * Helper functions for manipulating Fabric.js objects on the canvas.
  */
+import * as fabric from 'fabric';
 
 /**
  * Updates a single property of a Fabric object and re-renders the canvas.
@@ -48,7 +49,105 @@ export const changeColor = (obj, color, canvas) => {
  * @param {fabric.Canvas} canvas - The Fabric canvas instance.
  */
 export const changeStroke = (obj, color, canvas) => {
-    updateObjectProperty(obj, 'stroke', color, canvas);
+    if (!obj || !canvas) return;
+
+    const isImage = obj.type === 'image' || obj.type === 'FabricImage' || (obj.constructor && obj.constructor.name === 'FabricImage');
+
+    if (isImage) {
+        if (!obj.clipPath || obj.clipPath.type !== 'rect') {
+            obj.set('clipPath', new fabric.Rect({
+                width: obj.width,
+                height: obj.height,
+                originX: 'center',
+                originY: 'center',
+                rx: obj.rx || 0,
+                ry: obj.ry || 0
+            }));
+        }
+        obj.clipPath.set({
+            stroke: color,
+
+            strokeLineJoin: 'miter',
+            strokeUniform: true
+        });
+        obj.set({ stroke: null });
+    } else {
+        obj.set({
+            stroke: color,
+            strokeAlign: 'outside',
+            strokeLineJoin: 'round',
+            strokeUniform: true,
+            paintFirst: 'stroke'
+        });
+    }
+
+    obj.dirty = true;
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
+};
+
+/**
+ * Changes the stroke width of a Fabric object.
+ * @param {fabric.Object} obj - The Fabric object.
+ * @param {number} width - The stroke width.
+ * @param {fabric.Canvas} canvas - The Fabric canvas instance.
+ */
+export const changeStrokeWidth = (obj, width, canvas) => {
+    if (!obj || !canvas) return;
+
+    const isImage = obj.type === 'image' || obj.type === 'FabricImage' || (obj.constructor && obj.constructor.name === 'FabricImage');
+
+    if (isImage) {
+        if (!obj.clipPath || obj.clipPath.type !== 'rect') {
+            obj.set('clipPath', new fabric.Rect({
+                width: obj.width,
+                height: obj.height,
+                originX: 'center',
+                originY: 'center',
+                rx: obj.rx || 0,
+                ry: obj.ry || 0
+            }));
+        }
+        obj.clipPath.set({
+            strokeWidth: width,
+
+        });
+        obj.set({ strokeWidth: 0 });
+    } else {
+        obj.set({
+            strokeWidth: width,
+
+        });
+    }
+
+    obj.dirty = true;
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
+};
+
+/**
+ * Changes the stroke alignment of a Fabric object.
+ * @param {fabric.Object} obj - The Fabric object.
+ * @param {string} alignment - The stroke alignment ('center', 'inside', 'outside').
+ * @param {fabric.Canvas} canvas - The Fabric canvas instance.
+ */
+export const changeStrokeAlign = (obj, alignment, canvas) => {
+    if (!obj || !canvas) return;
+
+    const isImage = obj.type === 'image' || obj.type === 'FabricImage' || (obj.constructor && obj.constructor.name === 'FabricImage');
+
+    if (isImage && obj.clipPath) {
+        obj.clipPath.set('strokeAlign', alignment);
+    } else {
+        obj.set('strokeAlign', alignment);
+    }
+
+    obj.dirty = true;
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
 };
 
 /**
@@ -160,6 +259,42 @@ export const alignCenterV = (obj, canvas) => {
     const bound = obj.getBoundingRect();
     const newTop = obj.top + (canvas.height / 2 - (bound.top + bound.height / 2));
     updateObjectProperty(obj, 'top', newTop, canvas);
+};
+
+// ─── Corner Radius helper ──────────────────────────────────────────────────
+/**
+ * Changes the corner radius of a Fabric object.
+ * For Images, it uses clipPath with a Rect.
+ * @param {fabric.Object} obj - The Fabric object.
+ * @param {number} radius - The corner radius.
+ * @param {fabric.Canvas} canvas - The Fabric canvas instance.
+ */
+export const changeCornerRadius = (obj, radius, canvas) => {
+    if (!obj || !canvas) return;
+
+    if (obj.type === 'image' || obj.type === 'FabricImage' || (obj.constructor && obj.constructor.name === 'FabricImage')) {
+        // For Images, use clipPath with a Rect
+        if (!obj.clipPath || obj.clipPath.type !== 'rect') {
+            obj.set('clipPath', new fabric.Rect({
+                width: obj.width,
+                height: obj.height,
+                originX: 'center',
+                originY: 'center',
+                rx: radius,
+                ry: radius
+            }));
+        } else {
+            obj.clipPath.set({ rx: radius, ry: radius });
+        }
+    } else {
+        // For Rect and other shapes that support rx/ry
+        obj.set({ rx: radius, ry: radius });
+    }
+
+    obj.dirty = true;
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
 };
 
 export const alignBottom = (obj, canvas) => {

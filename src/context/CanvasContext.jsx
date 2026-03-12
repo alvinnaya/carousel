@@ -21,6 +21,14 @@ export const CanvasProvider = ({ children }) => {
     setSwatches((prev) => [...prev, color]);
   };
 
+  const updateSwatch = (index, color) => {
+    setSwatches((prev) => {
+      const newSwatches = [...prev];
+      newSwatches[index] = color;
+      return newSwatches;
+    });
+  };
+
   const updateCanvasState = (index, json) => {
     setCanvases((prev) => {
       const newCanvases = [...prev];
@@ -56,6 +64,7 @@ export const CanvasProvider = ({ children }) => {
         updatePreview,
         swatches,
         addSwatch,
+        updateSwatch,
         clipboard,
         setClipboard
       }}

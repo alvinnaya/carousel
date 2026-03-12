@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { changeColor, updateObjectProperty } from '../../Helper/FabricHelper';
+import { changeColor } from '../../Helper/FabricHelper';
 import { useCanvasContext } from '../../../context/CanvasContext';
 import TransformTools from './shared/TransformTools';
 import OpacityTool from './shared/OpacityTool';
 import CommonActionTools from './shared/CommonActionTools';
 import ColorPaletteSelector from './shared/ColorPaletteSelector';
+import StrokeTools from './shared/StrokeTools';
+import CornerRadiusTool from './shared/CornerRadiusTool';
 
 const ShapeTools = ({ activeObject }) => {
     const { canvas } = useCanvasContext();
@@ -35,22 +37,14 @@ const ShapeTools = ({ activeObject }) => {
                         />
                     </div>
                     <ColorPaletteSelector color={fillColor} onChange={handleFillColor} />
-                    <div className="flex items-center justify-between">
-                        <span className="mus-tool-label !text-primary">Corner Radius</span>
-                        <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            defaultValue={activeObject.rx}
-                            onChange={(e) => {
-                                updateObjectProperty(activeObject, 'rx', parseInt(e.target.value), canvas);
-                                updateObjectProperty(activeObject, 'ry', parseInt(e.target.value), canvas);
-                            }}
-                            className="w-2/3 mus-tool-range"
-                        />
-                    </div>
+
+
                 </div>
             </section>
+
+            <CornerRadiusTool activeObject={activeObject} />
+
+            <StrokeTools activeObject={activeObject} />
 
             <OpacityTool activeObject={activeObject} />
 

@@ -70,27 +70,73 @@ export const FONT_LIST = [
     'Kalam',
 ];
 
+// ─── Font Loading Caches ─────────────────────────────────────────────────────
+const previewLoaded = new Set();   // Fonts with weight 400 loaded (preview only)
+const fullyLoaded = new Set();     // Fonts with ALL weights + italic loaded
+
 /**
- * Injects a Google Font stylesheet into the document head if not already loaded.
- * Loads all weights 100–900 to support the font weight selector.
- * Resolves when the font has finished loading via the CSS Font Loading API.
+ * Lightweight font loader for dropdown previews.
+ * Only loads weight 400 (regular) to minimize network usage.
+ * Used when the font picker opens and items become visible.
  *
  * @param {string} fontName - The exact font name as it appears in FONT_LIST
  * @returns {Promise<void>}
  */
-const loadedFonts = new Set();
+export const loadFontPreview = async (fontName) => {
+    if (previewLoaded.has(fontName) || fullyLoaded.has(fontName)) return;
 
+    const id = `gfont-preview-${fontName.replace(/\s+/g, '-').toLowerCase()}`;
+    if (document.getElementById(id)) {
+        previewLoaded.add(fontName);
+        return;
+    }
+
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+        fontName
+    )}:wght@400&display=swap`;
+
+    document.head.appendChild(link);
+
+    try {
+        await new Promise((resolve, reject) => {
+            link.onload = resolve;
+            link.onerror = reject;
+        });
+        await document.fonts.load(`400 1em "${fontName}"`);
+        await document.fonts.ready;
+        previewLoaded.add(fontName);
+    } catch (err) {
+        console.warn(`Preview load failed for ${fontName}`, err);
+    }
+};
+
+/**
+ * Full font loader for canvas use.
+ * Loads ALL weights (100–900) + italic to support the weight selector and italic toggle.
+ * Replaces the preview stylesheet if one exists to avoid duplicate requests.
+ *
+ * @param {string} fontName - The exact font name as it appears in FONT_LIST
+ * @returns {Promise<void>}
+ */
 export const loadGoogleFont = async (fontName) => {
-    if (loadedFonts.has(fontName)) return;
+    if (fullyLoaded.has(fontName)) return;
 
-    const id = `gfont-${fontName.replace(/\s+/g, '-').toLowerCase()}`;
-    let link = document.getElementById(id);
+    const slug = fontName.replace(/\s+/g, '-').toLowerCase();
+
+    // Remove the lightweight preview link if it exists (will be replaced by full one)
+    const previewLink = document.getElementById(`gfont-preview-${slug}`);
+    if (previewLink) previewLink.remove();
+
+    const fullId = `gfont-full-${slug}`;
+    let link = document.getElementById(fullId);
 
     if (!link) {
         link = document.createElement('link');
-        link.id = id;
+        link.id = fullId;
         link.rel = 'stylesheet';
-
         link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
             fontName
         )}:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap`;
@@ -104,27 +150,21 @@ export const loadGoogleFont = async (fontName) => {
     }
 
     try {
-        const weights = [
-            '100', '200', '300', '400', '500',
-            '600', '700', '800', '900'
-        ];
-
+        const weights = ['100', '200', '300', '400', '500', '600', '700', '800', '900'];
         const styles = ['normal', 'italic'];
 
-        // Force load semua kombinasi
+        // Force load semua kombinasi weight × style
         await Promise.all(
             weights.flatMap(weight =>
                 styles.map(style =>
-                    document.fonts.load(
-                        `${style} ${weight} 1em "${fontName}"`
-                    )
+                    document.fonts.load(`${style} ${weight} 1em "${fontName}"`)
                 )
             )
         );
 
         await document.fonts.ready;
-
-        loadedFonts.add(fontName);
+        fullyLoaded.add(fontName);
+        previewLoaded.add(fontName); // Mark preview as loaded too
     } catch (err) {
         console.error(`Failed loading font ${fontName}`, err);
     }

@@ -74,6 +74,7 @@ const CanvasCreation = ({ width, height }) => {
                     fontFamily: 'Inter, ui-sans-serif, system-ui',
                     fontWeight: 'bold',
                     textAlign: 'center',
+                    // globalCompositeOperation: "destination-out"
                 });
                 fabricCanvas.add(text);
 

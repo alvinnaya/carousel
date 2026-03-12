@@ -1,8 +1,9 @@
 import React from 'react';
 import TransformTools from './shared/TransformTools';
 import OpacityTool from './shared/OpacityTool';
-import ArrangementTools from './shared/ArrangementTools';
 import CommonActionTools from './shared/CommonActionTools';
+import StrokeTools from './shared/StrokeTools';
+import CornerRadiusTool from './shared/CornerRadiusTool';
 
 const ImageTools = ({ activeObject }) => {
     return (
@@ -11,7 +12,9 @@ const ImageTools = ({ activeObject }) => {
 
             <OpacityTool activeObject={activeObject} />
 
-            <ArrangementTools activeObject={activeObject} />
+            <CornerRadiusTool activeObject={activeObject} />
+
+
 
             <CommonActionTools activeObject={activeObject} objectTypeLabel="Image" />
         </div>

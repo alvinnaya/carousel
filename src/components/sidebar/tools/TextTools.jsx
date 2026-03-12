@@ -3,15 +3,16 @@ import TextStylingTools from './shared/TextStylingTools';
 import OpacityTool from './shared/OpacityTool';
 import CommonActionTools from './shared/CommonActionTools';
 import ColorPaletteSelector from './shared/ColorPaletteSelector';
+import HighlightColorTool from './shared/HighlightColorTool';
 import { changeSelectedTextProperty, getTextSelection } from '../../Helper/FabricHelper';
 import { useCanvasContext } from '../../../context/CanvasContext';
 import { useState, useEffect } from 'react';
+import StrokeTools from './shared/StrokeTools';
 
 const TextTools = ({ activeObject }) => {
 
     const { canvas, canvases } = useCanvasContext();
 
-    const selection = activeObject ? getTextSelection(activeObject) : { hasSelection: false };
     const getDisplayProp = (prop, fallback) => {
         if (!activeObject) return fallback;
         const selection = getTextSelection(activeObject);
@@ -53,11 +54,12 @@ const TextTools = ({ activeObject }) => {
 
             <CommonActionTools activeObject={activeObject} objectTypeLabel="Text" />
 
-            <div className="mus-tool-divider space-y-4">
+            <section className="mus-tool-section">
+
                 <div className="flex items-center justify-between">
-                    <span className="mus-tool-label">Solid Fill</span>
+                    <span className="mus-tool-label !text-primary">Fill Color</span>
                     <div
-                        className="w-5 h-5 rounded-full border border-zinc-200 shadow-sm"
+                        className="mus-color-swatch w-6 h-6"
                         style={{ backgroundColor: fill }}
                     />
                 </div>
@@ -65,7 +67,12 @@ const TextTools = ({ activeObject }) => {
                     color={fill}
                     onChange={applyFill}
                 />
-            </div>
+
+            </section>
+
+            <HighlightColorTool activeObject={activeObject} />
+
+            <StrokeTools activeObject={activeObject} />
         </div>
     );
 };

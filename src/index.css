@@ -181,6 +181,27 @@
     background-color: var(--accent);
 }
 
+.mus-color-swatch-none {
+    border: 2px solid var(--border-dark);
+    border-radius: 9999px;
+    box-shadow: 2px 2px 0px 0px var(--border-dark);
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.mus-color-swatch-none:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px 0px var(--border-dark);
+}
+
+.mus-color-swatch-none.mus-color-swatch-active {
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--accent);
+    transform: scale(1.1);
+}
+
 body {
     margin: 0;
     padding: 0;

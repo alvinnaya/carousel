@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import DelayedInput from './DelayedInput';
 import ColorPaletteSelector from './ColorPaletteSelector';
+import SmartDropdown from '../../../shared/SmartDropdown';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 import {
     changeFontSize,
@@ -10,7 +11,73 @@ import {
     getTextSelection,
     alignLeft, alignCenterH, alignRight
 } from '../../../Helper/FabricHelper';
-import { FONT_LIST, loadGoogleFont } from '../../../../utils/fontList';
+import { FONT_LIST, loadGoogleFont, loadFontPreview } from '../../../../utils/fontList';
+
+/**
+ * A single font item that lazy-loads its Google Font preview
+ * when it scrolls into view using IntersectionObserver.
+ */
+const FontItem = ({ font, isActive, onSelect }) => {
+    const ref = useRef(null);
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !loaded) {
+                    loadFontPreview(font).then(() => setLoaded(true));
+                    observer.unobserve(el);
+                }
+            },
+            { rootMargin: '100px' } // Start loading slightly before visible
+        );
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [font, loaded]);
+
+    return (
+        <button
+            ref={ref}
+            onClick={() => onSelect(font)}
+            className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150 flex items-center justify-between group ${isActive
+                    ? 'bg-[#E8C04A] text-[#1A1A1A] font-bold border-2 border-[#1A1A1A] shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]'
+                    : 'hover:bg-[#E8C04A]/20 text-[#1A1A1A] border-2 border-transparent'
+                }`}
+        >
+            <div className="flex flex-col gap-0.5">
+                <span
+                    className="text-xs font-bold"
+                    style={{ fontFamily: loaded ? font : 'inherit' }}
+                >
+                    {font}
+                </span>
+                <span className="text-[9px] text-[#7A7062] font-black uppercase tracking-tighter">
+                    {loaded ? 'Google Fonts' : 'Loading…'}
+                </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <span
+                    className="text-sm opacity-50 group-hover:opacity-100 transition-opacity font-medium"
+                    style={{ fontFamily: loaded ? font : 'inherit' }}
+                >
+                    Abgl
+                </span>
+                {isActive && (
+                    <div className="w-4 h-4 rounded-full bg-[#1A1A1A] flex items-center justify-center">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                )}
+            </div>
+        </button>
+    );
+};
 
 const TextStylingTools = ({ activeObject }) => {
     const { canvas, canvases } = useCanvasContext();
@@ -23,6 +90,7 @@ const TextStylingTools = ({ activeObject }) => {
     const [fontStyle, setFontStyle] = useState('normal');
     const [textAlign, setTextAlign] = useState('left');
     const [fill, setFill] = useState('#000000');
+    const [isFontPickerOpen, setIsFontPickerOpen] = useState(false);
 
     // Normalize fontFamily: extract only the first font from a CSS stack (e.g. "Inter, ui-sans-serif" -> "Inter")
     const normalizeFontFamily = (family) => {
@@ -100,13 +168,15 @@ const TextStylingTools = ({ activeObject }) => {
     const applyFontFamily = async (family) => {
         if (!activeObject) return;
 
-
+        // Close the font picker
+        setIsFontPickerOpen(false);
 
         // Wait for the font to load via the CSS Font Loading API
         await loadGoogleFont(family);
 
         // Optimistically update the UI dropdown
-        await setFontFamily(family);
+        setFontFamily(family);
+
         // Ensure canvas and activeObject are still valid after the async delay
         if (!canvas || !canvas.getObjects().includes(activeObject)) return;
 
@@ -123,12 +193,12 @@ const TextStylingTools = ({ activeObject }) => {
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {
             changeSelectedTextProperty(activeObject, 'fontWeight', weight, canvas);
-            const newFontWeight = getDisplayProp('fontWeight', 'normal');
-            setFontWeight(newFontWeight);
+            const newFontWeight = getDisplayProp('fontWeight', '400');
+            setFontWeight(normalizeFontWeight(newFontWeight));
         } else {
             changeFontWeight(activeObject, weight, canvas);
-            const newFontWeight = getDisplayProp('fontWeight', 'normal');
-            setFontWeight(newFontWeight);
+            const newFontWeight = getDisplayProp('fontWeight', '400');
+            setFontWeight(normalizeFontWeight(newFontWeight));
         }
     };
 
@@ -179,30 +249,40 @@ const TextStylingTools = ({ activeObject }) => {
 
             {/* ── FONT FAMILY ────────────────────────────────────────── */}
             <div className="space-y-2 relative">
-                <div className="mus-tool-select-wrapper">
-                    {/* <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                        </svg>
-                    </div> */}
-                    <select
-                        value={fontFamily}
-                        onChange={(e) => applyFontFamily(e.target.value)}
-                        className={`${selectClass} pl-9`}
-                    >
-                        {!fonts.includes(fontFamily) && (
-                            <option value={fontFamily}>{fontFamily}</option>
-                        )}
+                <SmartDropdown
+                    isOpen={isFontPickerOpen}
+                    onClose={() => setIsFontPickerOpen(false)}
+                    triggerClassName="w-full"
+                    trigger={
+                        <button
+                            onClick={() => setIsFontPickerOpen(!isFontPickerOpen)}
+                            className={`${selectClass} w-full text-left flex items-center gap-3 px-3 h-11 bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] hover:shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] transition-all duration-200`}
+                        >
+                            <div className="w-6 h-6 rounded-md bg-[#F2EDE4] border border-[#1A1A1A] flex items-center justify-center text-[#1A1A1A] shrink-0">
+                                <span className="text-[10px] font-black uppercase">Ag</span>
+                            </div>
+                            <span className="truncate flex-1 text-xs font-bold uppercase tracking-tight" style={{ fontFamily }}>
+                                {fontFamily}
+                            </span>
+                            <div className="text-[#1A1A1A]">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M6 9l6 6 6-6" />
+                                </svg>
+                            </div>
+                        </button>
+                    }
+                >
+                    <div className="max-h-80 overflow-y-auto custom-scrollbar p-1 space-y-1">
                         {fonts.map(font => (
-                            <option key={font} value={font}>{font}</option>
+                            <FontItem
+                                key={font}
+                                font={font}
+                                isActive={fontFamily === font}
+                                onSelect={applyFontFamily}
+                            />
                         ))}
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M6 9l6 6 6-6" />
-                        </svg>
                     </div>
-                </div>
+                </SmartDropdown>
             </div>
 
             {/* ── WEIGHT & SIZE ──────────────────────────────────────── */}
