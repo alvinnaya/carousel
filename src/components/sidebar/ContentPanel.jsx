@@ -15,7 +15,7 @@ const ContentPanel = ({ activeTab, onClose }) => {
 
     // Component mapping for each tool panel
     const PanelContent = {
-        'Edit': EditTool,
+        'Tools': EditTool,
         'Text': AddText,
         'Shape': AddShape,
         'Image': AddImage,

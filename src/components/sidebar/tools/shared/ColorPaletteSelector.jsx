@@ -5,7 +5,7 @@ import { useCanvasContext } from '../../../../context/CanvasContext';
 
 const MAX_SWATCHES = 13;
 
-const ColorPaletteSelector = ({ onChange }) => {
+const ColorPaletteSelector = ({ color, onChange }) => {
     const { swatches, addSwatch, updateSwatch } = useCanvasContext();
     const [editingIndex, setEditingIndex] = useState(null);
     const [activeIndex, setActiveIndex] = useState(null);

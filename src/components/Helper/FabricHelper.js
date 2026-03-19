@@ -224,7 +224,9 @@ export const sendToBack = (obj, canvas) => {
 export const deleteObject = (obj, canvas) => {
     if (!obj || !canvas) return;
     canvas.remove(obj);
+    canvas.fire('object:modified');
     canvas.requestRenderAll();
+
 };
 
 // ─── Alignment helpers ──────────────────────────────────────────────────────
@@ -402,9 +404,173 @@ export const changeSelectedTextProperty = (obj, property, value, canvas) => {
         // Apply style only to the selected range
         obj.setSelectionStyles({ [property]: value }, start, end);
         obj.dirty = true;
+        canvas.fire('object:modified', { target: obj });
         canvas.requestRenderAll();
     } else {
         // Fall back to whole-object change
         updateObjectProperty(obj, property, value, canvas);
     }
+};
+
+// ─── Image Filter helper ─────────────────────────────────────────────────────
+/**
+ * Applies a named filter to a Fabric image object.
+ * Stores the filter name as obj.customFilter for UI state.
+ * @param {fabric.Image} obj - The Fabric image object.
+ * @param {string} filterName - Filter name (e.g. 'Grayscale', 'Sepia', 'None').
+ * @param {fabric.Canvas} canvas - The Fabric canvas instance.
+ */
+export const changeImageFilter = (obj, filterName, canvas) => {
+    if (!obj || !canvas) return;
+
+    let filters = [];
+
+    switch (filterName) {
+        case 'Grayscale':
+            filters = [new fabric.filters.Grayscale()];
+            break;
+        case 'Sepia':
+            filters = [new fabric.filters.Sepia()];
+            break;
+        case 'Invert':
+            filters = [new fabric.filters.Invert()];
+            break;
+        case 'Blur':
+            filters = [new fabric.filters.Blur({ blur: 0.1 })];
+            break;
+        case 'Brightness':
+            filters = [new fabric.filters.Brightness({ brightness: 0.3 })];
+            break;
+        case 'Contrast':
+            filters = [new fabric.filters.Contrast({ contrast: 0.4 })];
+            break;
+        case 'Saturate':
+            filters = [new fabric.filters.Saturation({ saturation: 1 })];
+            break;
+        case 'Vintage':
+            filters = [
+                new fabric.filters.Sepia(),
+                new fabric.filters.Contrast({ contrast: 0.15 }),
+                new fabric.filters.Saturation({ saturation: -0.2 }),
+            ];
+            break;
+        case 'None':
+        default:
+            filters = [];
+            break;
+    }
+
+    obj.filters = filters;
+    obj.customFilter = filterName === 'None' ? null : filterName;
+    obj.customFilterValues = null; // clear custom values when preset is selected
+    obj.applyFilters();
+    obj.dirty = true;
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
+};
+
+/**
+ * Applies individual custom filter adjustments to a Fabric image object.
+ *
+ * All values use Fabric's native units:
+ *   brightness / contrast / saturation / vibrance  → -1..1
+ *   hue                                            → degrees -180..180
+ *   blur                                           → 0..0.5
+ *   noise                                          → 0..1000
+ *   pixelate                                       → 1..20 (blocksize)
+ *   gammaR / gammaG / gammaB                       → 0.1..2.2 (default 1.0)
+ *
+ * @param {fabric.Image} obj
+ * @param {object} values
+ * @param {fabric.Canvas} canvas
+ */
+export const changeImageCustomFilter = (obj, values, canvas) => {
+    if (!obj || !canvas) return;
+
+    const {
+        brightness = 0,
+        contrast = 0,
+        exposure = 0,
+        saturation = 0,
+        vibrance = 0,
+        hue = 0,
+        blur = 0,
+        noise = 0,
+        pixelate = 1,
+        gammaR = 1,
+        gammaG = 1,
+        gammaB = 1,
+    } = values;
+
+    const filters = [];
+
+    if (brightness !== 0)
+        filters.push(new fabric.filters.Brightness({ brightness }));
+
+    if (exposure !== 0)
+        filters.push(new fabric.filters.Brightness({ brightness: exposure }));
+
+    if (contrast !== 0)
+        filters.push(new fabric.filters.Contrast({ contrast }));
+
+    if (saturation !== 0)
+        filters.push(new fabric.filters.Saturation({ saturation }));
+
+    if (vibrance !== 0)
+        filters.push(new fabric.filters.Vibrance({ vibrance }));
+
+    if (hue !== 0)
+        filters.push(new fabric.filters.HueRotation({ rotation: (hue / 360) * Math.PI * 2 }));
+
+    if (blur > 0)
+        filters.push(new fabric.filters.Blur({ blur }));
+
+    if (noise > 0)
+        filters.push(new fabric.filters.Noise({ noise }));
+
+    if (pixelate > 1)
+        filters.push(new fabric.filters.Pixelate({ blocksize: Math.round(pixelate) }));
+
+    // Gamma: only add if any channel differs from 1.0
+    if (gammaR !== 1 || gammaG !== 1 || gammaB !== 1)
+        filters.push(new fabric.filters.Gamma({ gamma: [gammaR, gammaG, gammaB] }));
+
+    obj.filters = filters;
+    obj.customFilter = 'Custom';
+    obj.customFilterValues = { brightness, contrast, exposure, saturation, vibrance, hue, blur, noise, pixelate, gammaR, gammaG, gammaB };
+    obj.applyFilters();
+    obj.dirty = true;
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
+};
+
+/**
+ * Changes the shadow of a Fabric object.
+ * @param {fabric.Object} obj - The Fabric object.
+ * @param {Object} options - Shadow options (color, blur, offsetX, offsetY).
+ * @param {fabric.Canvas} canvas - The Fabric canvas instance.
+ */
+export const changeShadow = (obj, options, canvas) => {
+    if (!obj || !canvas) return;
+
+    if (!options) {
+        obj.set('shadow', null);
+    } else {
+        const shadow = new fabric.Shadow({
+            color: options.color || 'rgba(0,0,0,0.3)',
+            blur: options.blur ?? 10,
+            offsetX: options.offsetX ?? 5,
+            offsetY: options.offsetY ?? 5,
+            affectStroke: false,
+            nonScaling: true
+        });
+        obj.set('shadow', shadow);
+    }
+
+    obj.dirty = true;
+    obj.setCoords();
+    canvas.fire('object:modified', { target: obj });
+    canvas.requestRenderAll();
 };

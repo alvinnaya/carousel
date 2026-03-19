@@ -8,6 +8,7 @@ import { changeSelectedTextProperty, getTextSelection } from '../../Helper/Fabri
 import { useCanvasContext } from '../../../context/CanvasContext';
 import { useState, useEffect } from 'react';
 import StrokeTools from './shared/StrokeTools';
+import ShadowTool from './shared/ShadowTool';
 
 const TextTools = ({ activeObject }) => {
 
@@ -71,6 +72,8 @@ const TextTools = ({ activeObject }) => {
             </section>
 
             <HighlightColorTool activeObject={activeObject} />
+
+            <ShadowTool activeObject={activeObject} />
 
             <StrokeTools activeObject={activeObject} />
         </div>

@@ -85,6 +85,7 @@ const TextStylingTools = ({ activeObject }) => {
     const selection = activeObject ? getTextSelection(activeObject) : { hasSelection: false };
 
     const [fontSize, setFontSize] = useState(24);
+    const [lineHeight, setLineHeight] = useState(1.16);
     const [fontFamily, setFontFamily] = useState('Arial');
     const [fontWeight, setFontWeight] = useState('normal');
     const [fontStyle, setFontStyle] = useState('normal');
@@ -124,6 +125,7 @@ const TextStylingTools = ({ activeObject }) => {
 
         const updateState = () => {
             setFontSize(getDisplayProp('fontSize', 24));
+            setLineHeight(getDisplayProp('lineHeight', 1.16));
             setFontFamily(normalizeFontFamily(getDisplayProp('fontFamily', 'Arial')));
             setFontWeight(normalizeFontWeight(getDisplayProp('fontWeight', '400')));
             setFontStyle(getDisplayProp('fontStyle', 'normal'));
@@ -214,6 +216,15 @@ const TextStylingTools = ({ activeObject }) => {
             const newFontSize = getDisplayProp('fontSize', 24);
             setFontSize(newFontSize);
         }
+    };
+
+    const applyLineHeight = (val) => {
+        if (!activeObject) return;
+        const selection = getTextSelection(activeObject);
+        // Line height is typically an object-level property in Fabric, 
+        // but changeSelectedTextProperty fallback will handle it.
+        changeSelectedTextProperty(activeObject, 'lineHeight', val, canvas);
+        setLineHeight(getDisplayProp('lineHeight', 1.16));
     };
 
     const applyFontStyle = (style) => {
@@ -327,6 +338,32 @@ const TextStylingTools = ({ activeObject }) => {
                             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
                     </button>
+                </div>
+            </div>
+
+            {/* ── LINE HEIGHT ────────────────────────────────────────── */}
+            <div className="space-y-2">
+                <label className="mus-tool-label">Line Height</label>
+                <div className="flex items-center gap-3">
+                    <div className="mus-tool-badge w-12 h-7 flex items-center justify-center gap-0.5 flex-shrink-0">
+                        <DelayedInput
+                            value={lineHeight}
+                            isNumeric={true}
+                            onChange={(val) => applyLineHeight(parseFloat(val) || 1.16)}
+                            className="mus-tool-input-pure !text-[10px] !text-center w-full"
+                        />
+                    </div>
+                    <div className="flex-1 flex items-center">
+                        <input
+                            type="range"
+                            min="0.1"
+                            max="5.0"
+                            step="0.1"
+                            value={lineHeight}
+                            onChange={(e) => applyLineHeight(parseFloat(e.target.value))}
+                            className="mus-tool-range w-full"
+                        />
+                    </div>
                 </div>
             </div>
 

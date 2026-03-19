@@ -133,29 +133,26 @@ const StrokeTools = ({ activeObject }) => {
 
                 <div className="space-y-2">
                     <span className="mus-tool-label !text-primary">Width</span>
-                    <div className="mus-tool-input-group">
-                        <button
-                            onClick={() => applyStrokeWidth(Math.max(0, strokeWidth - 1))}
-                            className="mus-tool-input-btn"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="5" y1="12" x2="19" y2="12" />
-                            </svg>
-                        </button>
-                        <DelayedInput
+                    <div className="flex items-center gap-3">
+                        <div className="mus-tool-badge w-12 h-7 flex items-center justify-center gap-0.5 flex-shrink-0 px-2">
+                            <DelayedInput
+                                value={strokeWidth}
+                                isNumeric={true}
+                                min="0"
+                                max="100"
+                                onChange={(val) => applyStrokeWidth(parseFloat(val) || 0)}
+                                className="mus-tool-input-pure !text-[10px] !text-right w-full"
+                            />
+                            <span className="text-[9px] font-extrabold text-[#7A7062] select-none">px</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="100"
                             value={strokeWidth}
-                            isNumeric={true}
-                            onChange={(val) => applyStrokeWidth(val)}
-                            className="mus-tool-input-pure"
+                            onChange={(e) => applyStrokeWidth(parseFloat(e.target.value))}
+                            className="mus-tool-range flex-1"
                         />
-                        <button
-                            onClick={() => applyStrokeWidth(strokeWidth + 1)}
-                            className="mus-tool-input-btn"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                            </svg>
-                        </button>
                     </div>
                 </div>
             </div>

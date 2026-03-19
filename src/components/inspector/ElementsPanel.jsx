@@ -118,21 +118,6 @@ const ElementsPanel = () => {
                         event.dataTransfer.setData('text/plain', el.id);
                         event.dataTransfer.effectAllowed = 'move';
                         setDraggedItem(el);
-
-                        // Set drag image
-                        const ghost = event.currentTarget.cloneNode(true);
-                        ghost.style.opacity = '0.5';
-                        ghost.style.position = 'absolute';
-                        ghost.style.top = '-1000px';
-                        document.body.appendChild(ghost);
-
-                        // Calculate offset based on click position relative to the element
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        const xOffset = event.clientX - rect.left;
-                        const yOffset = event.clientY - rect.top;
-
-                        event.dataTransfer.setDragImage(ghost, xOffset, yOffset);
-                        setTimeout(() => document.body.removeChild(ghost), 0);
                     }}
                     onDragOver={(event) => {
                         event.preventDefault();

@@ -7,6 +7,7 @@ import CommonActionTools from './shared/CommonActionTools';
 import ColorPaletteSelector from './shared/ColorPaletteSelector';
 import StrokeTools from './shared/StrokeTools';
 import CornerRadiusTool from './shared/CornerRadiusTool';
+import ShadowTool from './shared/ShadowTool';
 
 const ShapeTools = ({ activeObject }) => {
     const { canvas } = useCanvasContext();
@@ -43,6 +44,8 @@ const ShapeTools = ({ activeObject }) => {
             </section>
 
             <CornerRadiusTool activeObject={activeObject} />
+
+            <ShadowTool activeObject={activeObject} />
 
             <StrokeTools activeObject={activeObject} />
 

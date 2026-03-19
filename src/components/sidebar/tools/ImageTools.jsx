@@ -4,6 +4,8 @@ import OpacityTool from './shared/OpacityTool';
 import CommonActionTools from './shared/CommonActionTools';
 import StrokeTools from './shared/StrokeTools';
 import CornerRadiusTool from './shared/CornerRadiusTool';
+import ImageFilterTool from './shared/ImageFilterTool';
+import ShadowTool from './shared/ShadowTool';
 
 const ImageTools = ({ activeObject }) => {
     return (
@@ -14,7 +16,9 @@ const ImageTools = ({ activeObject }) => {
 
             <CornerRadiusTool activeObject={activeObject} />
 
+            <ShadowTool activeObject={activeObject} />
 
+            <ImageFilterTool activeObject={activeObject} />
 
             <CommonActionTools activeObject={activeObject} objectTypeLabel="Image" />
         </div>

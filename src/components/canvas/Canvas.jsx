@@ -9,6 +9,10 @@ import CanvasPreviewSyncronizer from "./CanvasPreviewSyncronizer"
 import CanvasContextMenu from "./CanvasContextMenu"
 import CanvasSmartGuide from "./CanvasSmartGuide"
 import CanvasSmartGuideScale from "./CanvasSmartGuideScale"
+import CanvasUndoRedoHandler from "./CanvasUndoRedoHandler"
+import CanvasImageCrop from "./CanvasImageCrop"
+import CanvasKeyHandler from "./CanvasKeyHandler"
+import CanvasActiveObjectHandler from "./CanvasActiveObjectHandler"
 import { useEffect } from "react";
 
 
@@ -27,16 +31,17 @@ export default function Canvas() {
             <CanvasStateHandler />
             <CanvasPreviewSyncronizer />
             <CanvasCopyPasteHandler />
+            <CanvasUndoRedoHandler />
             <CanvasTextScaleNormalizer />
 
-            <CanvasCreation
-                width={1080}
-                height={1080}
-            />
+            <CanvasCreation />
             <CanvasViewController />
             <CanvasContextMenu />
             <CanvasSmartGuide />
-            <CanvasSmartGuideScale />
+            {/* <CanvasSmartGuideScale /> */}
+            <CanvasKeyHandler />
+            <CanvasImageCrop />
+            <CanvasActiveObjectHandler />
 
 
 

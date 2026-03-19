@@ -6,12 +6,12 @@ import React from 'react';
  */
 const LayerThumbnail = React.memo(({ previewUrl }) => {
     return (
-        <div className="w-full h-full flex items-center justify-center bg-white overflow-hidden shadow-inner">
+        <div className="w-full h-full flex items-center justify-center overflow-hidden" style={{backgroundColor: 'var(--bg-surface)'}}>
             {previewUrl ? (
                 <img
                     src={previewUrl}
                     alt="Layer Preview"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    className="w-full h-full object-contain p-1 drop-shadow-sm"
                 />
             ) : (
                 <div className="flex items-center justify-center w-full h-full bg-zinc-50">

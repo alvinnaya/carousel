@@ -9,7 +9,7 @@ import ShapeTools from './tools/ShapeTools';
  * EditTool - Dynamically renders the appropriate toolset based on the active object on the canvas.
  */
 const EditTool = () => {
-    const { canvas } = useCanvasContext();
+    const { canvas, setActiveTool } = useCanvasContext();
     const [selectedObject, setSelectedObject] = useState(null);
     const [, setUpdateTick] = useState(0);
 
@@ -23,7 +23,8 @@ const EditTool = () => {
 
         // Handler to update the local state when selection changes
         const handleSelection = () => {
-            setSelectedObject(canvas.getActiveObject());
+            const activeObject = canvas.getActiveObject();
+            setSelectedObject(activeObject);
             forceUpdate();
         };
 

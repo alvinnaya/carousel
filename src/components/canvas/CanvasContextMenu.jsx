@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 import * as fabric from 'fabric';
+import ContextMenu from '../shared/ContextMenu';
 import {
     groupSelectedObjects,
-    ungroupSelectedObjects,
-    deleteSelectedObjects
+    ungroupSelectedObjects
 } from '../Helper/FabricGroupHelper';
 
 const CanvasContextMenu = () => {
@@ -19,13 +19,8 @@ const CanvasContextMenu = () => {
         e.preventDefault();
         e.stopPropagation();
 
-        const target = opt.target;
-
-        // Use client coordinates for the floating menu position
         setPosition({ x: e.clientX, y: e.clientY });
         setIsVisible(true);
-
-        console.log("Context menu triggered on canvas. Target:", target ? target.type : "none");
     }, [canvas]);
 
     const handleClick = useCallback(() => {
@@ -60,8 +55,6 @@ const CanvasContextMenu = () => {
             window.removeEventListener('contextmenu', handleGlobalContextMenu);
         };
     }, [canvas, handleContextMenu, handleClick]);
-
-    if (!isVisible) return null;
 
     const activeObject = canvas?.getActiveObject();
     const isSelection = activeObject instanceof fabric.ActiveSelection;
@@ -124,27 +117,19 @@ const CanvasContextMenu = () => {
                 break;
             case 'delete':
                 if (activeObject) {
-                    // removeAll() restores coordinates AND adds objects to canvas 
-                    // if selection has a canvas. We need to catch that.
                     const toDelete = isSelection ? activeObject.removeAll() : [activeObject];
-
-                    // 1. Collect all groups for cleanup
                     const allGroups = canvas.getObjects().filter(obj => obj.type === 'group');
 
-                    // 2. Remove objects from groups and canvas
                     toDelete.forEach(obj => {
-                        // Remove from any group it might be in
                         allGroups.forEach(g => {
                             if (g.contains && g.contains(obj)) {
                                 g.remove(obj);
                                 canvas.fire('object:modified', { target: g });
                             }
                         });
-                        // IMPORTANT: remove from canvas as well
                         canvas.remove(obj);
                     });
 
-                    // Remove the selection container if it's still there
                     if (isSelection) canvas.remove(activeObject);
                     canvas.discardActiveObject();
                 }
@@ -175,14 +160,11 @@ const CanvasContextMenu = () => {
     };
 
     return (
-        <div
-            className="mus-card !bg-[#FDFAF5] !p-1.5 min-w-[200px] z-[999999]"
-            style={{
-                position: 'fixed',
-                top: position.y,
-                left: position.x,
-                userSelect: 'none'
-            }}
+        <ContextMenu
+            x={position.x}
+            y={position.y}
+            isOpen={isVisible}
+            onClose={() => setIsVisible(false)}
         >
             {activeObject ? (
                 <>
@@ -220,7 +202,7 @@ const CanvasContextMenu = () => {
                     )}
                 </MenuSection>
             )}
-        </div>
+        </ContextMenu>
     );
 };
 

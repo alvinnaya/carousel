@@ -2,14 +2,36 @@ import { useEffect, useRef } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 
 const CanvasStateHandler = () => {
-    const { canvas, updateCanvasState, updatePreview, activeCanvasIndex } = useCanvasContext();
+    const { canvas, updateCanvasState, updatePreview, activeCanvasIndex, recordHistory, histories, isInternalAction } = useCanvasContext();
     const debounceTimerRef = useRef(null);
     const lastJsonRef = useRef(null);
 
     useEffect(() => {
         if (!canvas) return;
 
-        const syncState = () => {
+        // Initialize history if empty
+        const currentHistory = histories[activeCanvasIndex];
+        if (!currentHistory || currentHistory.past.length === 0) {
+            const initialJson = canvas.toJSON();
+            recordHistory(activeCanvasIndex, {
+                ...initialJson,
+                width: canvas.width,
+                height: canvas.height
+            });
+            lastJsonRef.current = JSON.stringify(initialJson);
+        }
+
+        const syncState = (e) => {
+            // Skip sync if this change was triggered internally (e.g. undo/redo)
+            if (isInternalAction.current) {
+                console.log('Skipping sync for internal action');
+                
+                // Still update lastJsonRef to current to avoid double sync
+                const currentJson = canvas.toJSON();
+                lastJsonRef.current = JSON.stringify(currentJson);
+                return;
+            }
+
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
             }
@@ -31,17 +53,10 @@ const CanvasStateHandler = () => {
                     height: canvas.height
                 };
 
-                console.log('Syncing canvas state for index:', activeCanvasIndex);
+                console.log('Recording canvas history for index:', activeCanvasIndex);
+                recordHistory(activeCanvasIndex, stateUpdate);
                 updateCanvasState(activeCanvasIndex, stateUpdate);
-
-                // // Generate preview
-                // const previewDataUrl = canvas.toDataURL({
-                //     format: 'png',
-                //     multiplier: 0.2, // Small preview for performance
-                //     quality: 0.5
-                // });
-                // updatePreview(activeCanvasIndex, previewDataUrl);
-            }, 250); // 250ms debounce
+            }, 500);
         };
 
         // Structural and content change events
@@ -65,7 +80,7 @@ const CanvasStateHandler = () => {
                 clearTimeout(debounceTimerRef.current);
             }
         };
-    }, [canvas, activeCanvasIndex, updateCanvasState]);
+    }, [canvas, activeCanvasIndex, updateCanvasState, recordHistory, isInternalAction]);
 
     return null;
 };

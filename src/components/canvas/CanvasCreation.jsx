@@ -3,7 +3,7 @@ import * as fabric from 'fabric';
 import { useCanvasContext } from '../../context/CanvasContext';
 import { CanvasDefaultControllerStyling } from './CanvasControllerStyling';
 
-const CanvasCreation = ({ width, height }) => {
+const CanvasCreation = () => {
     const canvasRef = useRef(null);
     const {
         setCanvas,
@@ -17,14 +17,18 @@ const CanvasCreation = ({ width, height }) => {
 
     console.log("canvas creation", activeCanvasIndex)
 
+    const activeCanvasData = canvases[activeCanvasIndex] || {};
+    const canvasWidth = activeCanvasData.width || 1080;
+    const canvasHeight = activeCanvasData.height || 1080;
+
     useEffect(() => {
         if (!canvasRef.current) return;
 
         CanvasDefaultControllerStyling(fabric);
 
         const fabricCanvas = new fabric.Canvas(canvasRef.current, {
-            width: width,
-            height: height,
+            width: canvasWidth,
+            height: canvasHeight,
             backgroundColor: '#ffffff',
         });
 
@@ -40,70 +44,70 @@ const CanvasCreation = ({ width, height }) => {
         const loadContent = async () => {
             const savedState = canvases[activeCanvasIndex];
 
-            // Check if savedState is not empty (e.g., has objects)
+            // Check if savedState is not empty and has objects
             if (savedState && savedState.objects && savedState.objects.length > 0) {
                 console.log('Loading state from context for index:', activeCanvasIndex);
                 await fabricCanvas.loadFromJSON(savedState);
                 fabricCanvas.renderAll();
             } else {
-                console.log('Initializing new canvas for index:', activeCanvasIndex);
-                // Default objects for new canvas
-                const rect = new fabric.Rect({
-                    top: 100,
-                    left: 100,
-                    width: 150,
-                    height: 150,
-                    fill: '#4f46e5',
-                    rx: 20,
-                    ry: 20,
-                    shadow: new fabric.Shadow({
-                        color: 'rgba(0,0,0,0.3)',
-                        blur: 15,
-                        offsetX: 5,
-                        offsetY: 5
-                    })
-                });
-                fabricCanvas.add(rect);
+                // console.log('Initializing new canvas for index:', activeCanvasIndex);
+                // // Default objects for new canvas
+                // const rect = new fabric.Rect({
+                //     top: 100,
+                //     left: 100,
+                //     width: 150,
+                //     height: 150,
+                //     fill: '#4f46e5',
+                //     rx: 20,
+                //     ry: 20,
+                //     shadow: new fabric.Shadow({
+                //         color: 'rgba(0,0,0,0.3)',
+                //         blur: 15,
+                //         offsetX: 5,
+                //         offsetY: 5
+                //     })
+                // });
+                // fabricCanvas.add(rect);
 
-                const text = new fabric.Textbox('Creative Design', {
-                    top: 150,
-                    left: 300,
-                    width: 250,
-                    fontSize: 32,
-                    fill: '#1f2937',
-                    fontFamily: 'Inter, ui-sans-serif, system-ui',
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    // globalCompositeOperation: "destination-out"
-                });
-                fabricCanvas.add(text);
+                // const text = new fabric.Textbox('Creative Design', {
+                //     top: 150,
+                //     left: 300,
+                //     width: 250,
+                //     fontSize: 32,
+                //     fill: '#1f2937',
+                //     fontFamily: 'Inter, ui-sans-serif, system-ui',
+                //     fontWeight: 'bold',
+                //     textAlign: 'center',
+                //     // globalCompositeOperation: "destination-out"
+                // });
+                // fabricCanvas.add(text);
 
-                fabric.FabricImage.fromURL('https://picsum.photos/seed/picsum/400/300', {
-                    crossOrigin: 'anonymous'
-                }).then((img) => {
-                    img.set({
-                        top: 400,
-                        left: 150,
-                        scaleX: 0.6,
-                        scaleY: 0.6,
-                        strokeWidth: 0,
-                        strokeUniform: true
-                    });
+                // fabric.FabricImage.fromURL('https://picsum.photos/seed/picsum/400/300', {
+                //     crossOrigin: 'anonymous'
+                // }).then((img) => {
+                //     img.set({
+                //         top: 400,
+                //         left: 150,
+                //         scaleX: 0.6,
+                //         scaleY: 0.6,
+                //         strokeWidth: 0,
+                //         strokeUniform: true
+                //     });
 
-                    const clipRect = new fabric.Rect({
-                        width: img.width,
-                        height: img.height,
-                        rx: 40,
-                        ry: 40,
-                        originX: 'center',
-                        originY: 'center',
-                    });
-                    img.clipPath = clipRect;
+                //     const clipRect = new fabric.Rect({
+                //         width: img.width,
+                //         height: img.height,
+                //         rx: 40,
+                //         ry: 40,
+                //         originX: 'center',
+                //         originY: 'center',
+                //     });
+                //     img.clipPath = clipRect;
 
-                    fabricCanvas.add(img);
-                    fabricCanvas.renderAll();
-                    syncCanvasState();
-                });
+                //     fabricCanvas.add(img);
+                //     fabricCanvas.renderAll();
+                //     syncCanvasState();
+                // });
             }
 
             syncCanvasState();
@@ -123,7 +127,7 @@ const CanvasCreation = ({ width, height }) => {
         };
 
 
-    }, [setCanvas, activeCanvasIndex, width, height]);
+    }, [setCanvas, activeCanvasIndex, canvasWidth, canvasHeight]);
 
     return (
         <>

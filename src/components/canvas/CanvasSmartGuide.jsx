@@ -8,25 +8,40 @@ const CanvasSmartGuide = ({ snapThreshold = 15 }) => {
     useEffect(() => {
         if (!canvas) return;
 
-        let snapLines = [];
+        let guides = [];
 
         function drawLine(points) {
-            const line = new fabric.Line(points, {
-                stroke: '#8e4ae2',
-                strokeWidth: 1,
-                selectable: false,
-                evented: false,
-                isSmartGuide: true
-            });
-
-            snapLines.push(line);
-            canvas.add(line);
+            guides.push(points);
         }
 
         function clearLines() {
-            snapLines.forEach(l => canvas.remove(l));
-            snapLines = [];
+            guides = [];
         }
+
+        const handleAfterRender = (opt) => {
+            if (guides.length === 0) return;
+            
+            const ctx = opt.ctx;
+            ctx.save();
+            
+            // Reset transformation to draw in viewport coordinates (screen pixels)
+            // We use retinaScaling factor to ensure it looks sharp on high-DPI screens
+            const v = canvas.viewportTransform;
+            const retina = canvas.getRetinaScaling();
+            ctx.setTransform(retina, 0, 0, retina, 0, 0);
+
+            ctx.strokeStyle = '#8e4ae2';
+            ctx.lineWidth = 1;
+            
+            guides.forEach(points => {
+                ctx.beginPath();
+                ctx.moveTo(points[0], points[1]);
+                ctx.lineTo(points[2], points[3]);
+                ctx.stroke();
+            });
+            
+            ctx.restore();
+        };
 
         function getTargets(obj) {
             const targetsX = [];
@@ -152,22 +167,24 @@ const CanvasSmartGuide = ({ snapThreshold = 15 }) => {
             });
 
             obj.setCoords();
-            canvas.renderAll();
+            canvas.requestRenderAll();
         };
 
         const handleMouseUp = () => {
             clearLines();
-            canvas.renderAll();
+            canvas.requestRenderAll();
         };
 
         canvas.on("object:moving", handleMoving);
         canvas.on("mouse:up", handleMouseUp);
+        canvas.on("after:render", handleAfterRender);
 
         return () => {
             canvas.off("object:moving", handleMoving);
             canvas.off("mouse:up", handleMouseUp);
+            canvas.off("after:render", handleAfterRender);
             clearLines();
-            canvas.renderAll();
+            canvas.requestRenderAll();
         };
     }, [canvas, snapThreshold]);
 

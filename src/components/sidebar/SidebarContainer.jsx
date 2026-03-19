@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useCanvasContext } from '../../context/CanvasContext';
 import NavPanel from './NavPanel';
 import ContentPanel from './ContentPanel';
 
@@ -7,10 +7,10 @@ import ContentPanel from './ContentPanel';
  * and the dynamic content area (ContentPanel).
  */
 const SidebarContainer = () => {
-    const [activeTab, setActiveTab] = useState(null);
+    const { activeTool, setActiveTool } = useCanvasContext();
 
     const toggleTab = (tabName) => {
-        setActiveTab((prev) => (prev === tabName ? null : tabName));
+        setActiveTool((prev) => (prev === tabName ? null : tabName));
     };
 
     return (
@@ -20,12 +20,11 @@ const SidebarContainer = () => {
         >
             {/* 1. Vertical Navigation Bar (Slim Sidebar) */}
             <div className="pointer-events-auto h-full">
-                <NavPanel activeTab={activeTab} onTabClick={toggleTab} />
+                <NavPanel activeTab={activeTool} onTabClick={toggleTab} />
             </div>
-
             {/* 2. Dynamic Content Panel (Expands to the right) */}
             <div className="pointer-events-auto h-full ml-2">
-                <ContentPanel activeTab={activeTab} onClose={() => setActiveTab(null)} />
+                <ContentPanel activeTab={activeTool} onClose={() => setActiveTool(null)} />
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
-import LayerThumbnail from './LayerThumbnail';
+import LayerItem from './LayerItem';
+import AddCanvasSection from './AddCanvasSection';
 
 /**
  * LayersPanel - Manages canvas pages with thumbnails and addition logic.
@@ -10,9 +11,78 @@ const LayersPanel = () => {
     const [draggedIndex, setDraggedIndex] = useState(null);
     const [dropTargetIndex, setDropTargetIndex] = useState(null);
     const [dropPosition, setDropPosition] = useState(null); // 'top' or 'bottom'
+    const [dropdownOpenIndex, setDropdownOpenIndex] = useState(null);
+    const scrollContainerRef = useRef(null);
+
+    const duplicateCanvas = (index) => {
+        const newCanvas = JSON.parse(JSON.stringify(canvases[index]));
+        const newPreview = previews[index];
+
+        const newCanvases = [...canvases];
+        newCanvases.splice(index + 1, 0, newCanvas);
+        setCanvases(newCanvases);
+
+        const newPreviews = [...previews];
+        newPreviews.splice(index + 1, 0, newPreview);
+        setPreviews(newPreviews);
+
+        setActiveCanvasIndex(index + 1);
+        setDropdownOpenIndex(null);
+    };
+
+    const deleteCanvas = (index) => {
+        if (canvases.length <= 1) return;
+
+        const newCanvases = [...canvases];
+        newCanvases.splice(index, 1);
+        setCanvases(newCanvases);
+
+        const newPreviews = [...previews];
+        newPreviews.splice(index, 1);
+        setPreviews(newPreviews);
+
+        // Update active index
+        if (activeCanvasIndex === index) {
+            // If deleting active, go to previous if last, else stay at index (which is now next)
+            setActiveCanvasIndex(Math.max(0, index - 1));
+        } else if (activeCanvasIndex > index) {
+            // If deleting before active, adjust active index down
+            setActiveCanvasIndex(activeCanvasIndex - 1);
+        }
+        setDropdownOpenIndex(null);
+    };
+
+    const insertCanvas = (index) => {
+        const newCanvases = [...canvases];
+        // For 'Add New', if we have an active canvas, clone its width/height dimensions if available
+        const templateCanvas = canvases[activeCanvasIndex] || {};
+        const width = templateCanvas.width || 1080;
+        const height = templateCanvas.height || 1080;
+
+        newCanvases.splice(index + 1, 0, { width, height });
+        setCanvases(newCanvases);
+
+        const newPreviews = [...previews];
+        newPreviews.splice(index + 1, 0, '');
+        setPreviews(newPreviews);
+
+        setActiveCanvasIndex(index + 1);
+        setDropdownOpenIndex(null);
+    };
 
     const addCanvas = () => {
-        setCanvases([...canvases, {}]);
+        // By default adding a canvas uses dimensions of the active canvas or defaults to 1080x1080
+        const templateCanvas = canvases[activeCanvasIndex] || {};
+        const width = templateCanvas.width || 1080;
+        const height = templateCanvas.height || 1080;
+
+        setCanvases([...canvases, { width, height }]);
+        setPreviews([...previews, '']);
+        setActiveCanvasIndex(canvases.length);
+    };
+
+    const handleCreateCustomCanvas = (width, height) => {
+        setCanvases([...canvases, { width, height }]);
         setPreviews([...previews, '']);
         setActiveCanvasIndex(canvases.length);
     };
@@ -67,124 +137,75 @@ const LayersPanel = () => {
     // Calculate aspect ratio from the active canvas or fallback to 1/1
     const aspectRatio = canvas ? canvas.width / canvas.height : 1;
 
+    const handleContainerDragOver = (e) => {
+        e.preventDefault();
+        if (!scrollContainerRef.current || draggedIndex === null) return;
+
+        const container = scrollContainerRef.current;
+        const rect = container.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+
+        // Auto-scroll zones (e.g., top 10% and bottom 10% of the container)
+        const scrollZoneHeight = rect.height * 0.1;
+        const scrollSpeed = 10; // Pixels per frame
+
+        if (y < scrollZoneHeight) {
+            // Scroll Up
+            container.scrollTop -= scrollSpeed;
+        } else if (y > rect.height - scrollZoneHeight) {
+            // Scroll Down
+            container.scrollTop += scrollSpeed;
+        }
+    };
+
     return (
-        <div className="flex-1 flex flex-col p-4 space-y-4 h-full overflow-y-scroll overflow-x-hidden custom-scrollbar">
+        <div
+            className="flex-1 flex flex-col h-full relative overflow-hidden"
+            style={{backgroundColor: 'var(--bg-main)'}}
+            onDragOver={handleContainerDragOver}
+        >
             {/* Pages List */}
-            <div className="flex-1 space-y-3  pb-4 ">
-                {canvases.map((canvasJSON, index) => {
-                    // Try to get aspect ratio from this specific canvas state
-                    const itemAspectRatio = (canvasJSON.width && canvasJSON.height)
-                        ? canvasJSON.width / canvasJSON.height
-                        : aspectRatio;
-
-                    const isDragged = draggedIndex === index;
-                    const isDropTarget = dropTargetIndex === index;
-
-                    return (
-                        <div
-                            key={index}
-                            draggable
-                            className={`relative group transition-all duration-300 ${isDragged ? 'z-0' : 'z-10'}`}
-                            onClick={() => setActiveCanvasIndex(index)}
-                            onDragStart={(event) => {
-                                event.dataTransfer.setData('text/plain', `${index}`);
-                                event.dataTransfer.effectAllowed = 'move';
-                                setDraggedIndex(index);
-
-                                // Create a drag ghost image
-                                const ghost = event.currentTarget.cloneNode(true);
-                                ghost.style.opacity = '0.5';
-                                ghost.style.position = 'absolute';
-                                ghost.style.top = '-1000px';
-                                document.body.appendChild(ghost);
-
-                                // Calculate offset based on click position relative to the element
-                                const rect = event.currentTarget.getBoundingClientRect();
-                                const xOffset = event.clientX - rect.left;
-                                const yOffset = event.clientY - rect.top;
-
-                                event.dataTransfer.setDragImage(ghost, xOffset, yOffset);
-                                setTimeout(() => document.body.removeChild(ghost), 0);
-                            }}
-                            onDragOver={(event) => {
-                                event.preventDefault();
-                                event.dataTransfer.dropEffect = 'move';
-
-                                const rect = event.currentTarget.getBoundingClientRect();
-                                const y = event.clientY - rect.top;
-                                const position = y < rect.height / 2 ? 'top' : 'bottom';
-
-                                if (dropTargetIndex !== index || dropPosition !== position) {
-                                    setDropTargetIndex(index);
-                                    setDropPosition(position);
-                                }
-                            }}
-                            onDragLeave={(event) => {
-                                const rect = event.currentTarget.getBoundingClientRect();
-                                if (
-                                    event.clientX < rect.left ||
-                                    event.clientX >= rect.right ||
-                                    event.clientY < rect.top ||
-                                    event.clientY >= rect.bottom
-                                ) {
-                                    setDropTargetIndex(null);
-                                    setDropPosition(null);
-                                }
-                            }}
-                            onDrop={(event) => {
-                                event.preventDefault();
-                                handleDrop(index);
-                            }}
-                            onDragEnd={() => {
-                                setDraggedIndex(null);
-                                setDropTargetIndex(null);
-                                setDropPosition(null);
-                            }}
-                        >
-                            {/* Drop Indicator Line */}
-                            {isDropTarget && draggedIndex !== index && (
-                                <div
-                                    className={`absolute left-0 right-0 h-1 bg-[#E8C04A] z-50 rounded-full transition-all duration-200 shadow-[0_0_10px_rgba(232,192,74,0.5)]
-                                        ${dropPosition === 'top' ? '-top-3' : '-bottom-3'}
-                                    `}
-                                />
-                            )}
-
-                            <div className="absolute top-2 left-2 z-10 text-[10px] font-black mus-text-primary bg-white/90 border border-[#1A1A1A] px-1.5 rounded-md shadow-sm">
-                                {index + 1}
-                            </div>
-
-                            <div
-                                className={`
-                                    w-full rounded-2xl border-2 flex items-center justify-center overflow-hidden transition-all duration-200 cursor-pointer bg-white
-                                    ${activeCanvasIndex === index ? 'border-[#1A1A1A] ring-4 ring-[#E8C04A]/30 shadow-lg' : 'border-[#D4CBBA] hover:border-[#1A1A1A]'}
-                                    ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed' : 'opacity-100 grayscale-0 scale-100'}
-                                `}
-                                style={{ aspectRatio: itemAspectRatio }}
-                            >
-                                <LayerThumbnail previewUrl={previews[index]} />
-                            </div>
-
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 -mr-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-                            </div>
-                        </div>
-                    );
-                })}
+            <div 
+                ref={scrollContainerRef}
+                className="flex-1 space-y-3 p-4 pb-4 overflow-y-scroll overflow-x-hidden custom-scrollbar"
+            >
+                {canvases.map((canvasJSON, index) => (
+                    <LayerItem
+                        key={index}
+                        index={index}
+                        canvasJSON={canvasJSON}
+                        previewUrl={previews[index]}
+                        aspectRatio={aspectRatio}
+                        isActive={activeCanvasIndex === index}
+                        isDragged={draggedIndex === index}
+                        isDropTarget={dropTargetIndex === index}
+                        dropPosition={dropPosition}
+                        draggedIndex={draggedIndex}
+                        isDropdownOpen={dropdownOpenIndex === index}
+                        onSetActive={() => setActiveCanvasIndex(index)}
+                        setDraggedIndex={setDraggedIndex}
+                        setDropTargetIndex={setDropTargetIndex}
+                        setDropPosition={setDropPosition}
+                        handleDrop={() => handleDrop(index)}
+                        toggleDropdown={() => setDropdownOpenIndex(dropdownOpenIndex === index ? null : index)}
+                        closeDropdown={() => setDropdownOpenIndex(null)}
+                        onDuplicate={() => duplicateCanvas(index)}
+                        onInsert={() => insertCanvas(index)}
+                        onDelete={() => deleteCanvas(index)}
+                        canDelete={canvases.length > 1}
+                    />
+                ))}
             </div>
 
-            {/* Add Page Button */}
-            <button
-                onClick={addCanvas}
-                className="w-full py-4 mus-button-ghost hover:mus-button-ghost-active flex items-center justify-center"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="12" y1="18" x2="12" y2="12" />
-                    <line x1="9" y1="15" x2="15" y2="15" />
-                </svg>
-            </button>
+            {/* Add Page Button Section */}
+            <div className="p-3 pt-3 border-t border-[#D4CBBA] z-10 w-full mt-auto" style={{backgroundColor: 'var(--bg-main)'}}>
+                <AddCanvasSection
+                    onAddDefault={addCanvas}
+                    onDuplicateActive={() => duplicateCanvas(activeCanvasIndex)}
+                    onAddNewNextToActive={() => insertCanvas(canvases.length - 1)}
+                    onCreateCustom={(width, height) => handleCreateCustomCanvas(width, height)}
+                />
+            </div>
         </div>
     );
 };

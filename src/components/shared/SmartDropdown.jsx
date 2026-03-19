@@ -114,6 +114,7 @@ const SmartDropdown = ({ trigger, children, isOpen, onClose, triggerClassName = 
                     style={positionStyle}
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
+                    onWheel={(e) => e.stopPropagation()}
                     className={`fixed z-[9999] animate-in fade-in zoom-in-95 duration-200 ${className}`}
                 >
                     {/* The custom hard-UI styling matching Musmentor design system */}

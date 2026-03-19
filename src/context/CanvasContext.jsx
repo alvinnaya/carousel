@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const CanvasContext = createContext(undefined);
 
@@ -9,10 +9,33 @@ export const CanvasProvider = ({ children }) => {
   const [canvases, setCanvases] = useState([{}]); // Array of canvas JSON objects
   const [previews, setPreviews] = useState(['']); // Array of data URLs for thumbnails
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
+  const [activeTool, setActiveTool] = useState('Tools');
   const [clipboard, setClipboard] = useState(null);
   const [swatches, setSwatches] = useState([
-    '#000000', '#FFFFFF', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'
+    '#000000', '#FFFFFF', '#FF3B30', '#FF9500'
   ]);
+  const [histories, setHistories] = useState([{ past: [], future: [] }]); // Per-canvas history stacks
+  const isInternalAction = useRef(false);
+
+  // Keep histories in sync with canvases
+  useEffect(() => {
+    setHistories((prev) => {
+      // If same length, assume it might be a reorder or internal change handled elsewhere
+      // but actually we want to handle reorders too if possible.
+      // However, a simple length sync is a good start.
+      if (prev.length === canvases.length) return prev;
+
+      if (canvases.length > prev.length) {
+        // Canvases added
+        const diff = canvases.length - prev.length;
+        const newEntries = Array(diff).fill(null).map(() => ({ past: [], future: [] }));
+        return [...prev, ...newEntries];
+      } else {
+        // Canvases removed
+        return prev.slice(0, canvases.length);
+      }
+    });
+  }, [canvases.length]); // Only sync when length changes for now to avoid complexity with reorders
 
   const MAX_SWATCHES = 13;
 
@@ -45,6 +68,84 @@ export const CanvasProvider = ({ children }) => {
     });
   };
 
+  const recordHistory = (index, state) => {
+    setHistories((prev) => {
+      const newHistories = [...prev];
+      if (!newHistories[index]) {
+        newHistories[index] = { past: [], future: [] };
+      }
+      const currentPast = newHistories[index].past;
+      // Limit history to 50 steps
+      const newPast = [...currentPast.slice(-49), state];
+      newHistories[index] = {
+        past: newPast,
+        future: [] // Clear redo stack on new action
+      };
+      return newHistories;
+    });
+  };
+
+  const undo = (index) => {
+    const history = histories[index];
+    if (!history || history.past.length <= 1) return; // Need current + previous
+
+    const newPast = [...history.past];
+    const currentState = newPast.pop();
+    const previousState = newPast[newPast.length - 1];
+
+    setHistories((prev) => {
+      const newHistories = [...prev];
+      newHistories[index] = {
+        past: newPast,
+        future: [currentState, ...history.future]
+      };
+      return newHistories;
+    });
+
+    // Update active index state for thumbnails/layers
+    updateCanvasState(index, previousState);
+
+    // Physical canvas update
+    if (index === activeCanvasIndex && canvas) {
+      isInternalAction.current = true;
+      canvas.loadFromJSON(previousState).then(() => {
+        canvas.renderAll();
+        setTimeout(() => {
+          isInternalAction.current = false;
+        }, 100); // Small delay to catch any trailing events
+      });
+    }
+  };
+
+  const redo = (index) => {
+    const history = histories[index];
+    if (!history || history.future.length === 0) return;
+
+    const newFuture = [...history.future];
+    const nextState = newFuture.shift();
+
+    setHistories((prev) => {
+      const newHistories = [...prev];
+      newHistories[index] = {
+        past: [...history.past, nextState],
+        future: newFuture
+      };
+      return newHistories;
+    });
+
+    updateCanvasState(index, nextState);
+
+    if (index === activeCanvasIndex && canvas) {
+      isInternalAction.current = true;
+      canvas.loadFromJSON(nextState).then(() => {
+        canvas.renderAll();
+        setTimeout(() => {
+          isInternalAction.current = false;
+        }, 100);
+      });
+    }
+  };
+
   return (
     <CanvasContext.Provider
       value={{
@@ -66,7 +167,15 @@ export const CanvasProvider = ({ children }) => {
         addSwatch,
         updateSwatch,
         clipboard,
-        setClipboard
+        setClipboard,
+        histories,
+        setHistories,
+        recordHistory,
+        undo,
+        redo,
+        isInternalAction,
+        activeTool,
+        setActiveTool
       }}
     >
       {children}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useCanvasContext } from '../../context/CanvasContext';
 import Logo from './Logo';
 import EditTool from './EditTool';
 import AddText from './AddText';
@@ -12,10 +13,11 @@ import AddTemplate from './AddTemplate';
  * It wraps all tool components and handles their active states.
  */
 const Menu = () => {
-    const [activeTool, setActiveTool] = useState('Tools');
+    const { activeTool, setActiveTool } = useCanvasContext();
+
 
     const tools = [
-        { name: 'Edit', component: EditTool },
+        { name: 'Tools', component: EditTool },
         { name: 'Text', component: AddText },
         { name: 'Shape', component: AddShape },
         { name: 'Image', component: AddImage },
@@ -37,6 +39,7 @@ const Menu = () => {
                             key={tool.name}
                             active={activeTool === tool.name}
                             onClick={() => setActiveTool(tool.name)}
+                            setActiveTool={setActiveTool}
                         />
                     );
                 })}

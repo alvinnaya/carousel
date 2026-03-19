@@ -39,7 +39,7 @@ export default function CanvasControllerStyling() {
 
         const applyInstanceStyle = (obj) => {
             if (!obj) return;
-            console.log(obj.type);
+
             // Direct property assignment for styling
             obj.borderScaleFactor = 3 / scale;
             obj.cornerSize = 12 / scale;
@@ -50,10 +50,6 @@ export default function CanvasControllerStyling() {
             obj.cornerStyle = 'circle';
 
             // Custom Controls assignment
-            // IMPORTANT: We do NOT set setControlsVisibility here, because it's managed by CanvasConfig
-            const ImageClass = fabric.FabricImage || fabric.Image;
-
-
             if (obj.type === 'textbox' || obj.type === 'itext') {
                 obj.controls = createTextControlSet();
                 obj.setControlsVisibility({
@@ -62,11 +58,11 @@ export default function CanvasControllerStyling() {
                 });
 
                 // Styling for text editing mode (Fabric 7++)
-                obj.selectionColor = 'rgba(235, 126, 75, 0.3)'; // Semi-transparent version of the theme color
+                obj.selectionColor = 'rgba(235, 126, 75, 0.3)';
                 obj.cursorColor = 'hsl(19, 87%, 65%)';
                 obj.cursorWidth = 2 / scale;
                 obj.editingBorderColor = 'hsl(19, 87%, 65%)';
-                obj.padding = 0 // Add some breathing room when editing
+                obj.padding = 0
             } else if (obj.type === 'activeselection') {
                 obj.setControlsVisibility({
                     mt: false, mb: false, ml: false, mr: false,
@@ -77,12 +73,60 @@ export default function CanvasControllerStyling() {
                 obj.controls.mtr.offsetY = -40 / scale;
             }
 
+            // Recursive styling for group members
+            if (obj.getObjects) {
+                obj.getObjects().forEach(applyInstanceStyle);
+            }
+
             if (obj.setCoords) obj.setCoords();
         };
 
         const hObjectAdded = (e) => {
-            const obj = e.target;
-            applyInstanceStyle(obj);
+            applyInstanceStyle(e.target);
+        };
+
+        const hMouseOver = (e) => {
+            const target = e.target;
+            if (target && target !== canvas.getActiveObject()) {
+                target.set('isHovered', true);
+                canvas.requestRenderAll();
+            }
+        };
+
+        const hMouseOut = (e) => {
+            const target = e.target;
+            if (target) {
+                target.set('isHovered', false);
+                canvas.requestRenderAll();
+            }
+        };
+
+        const hAfterRender = (opt) => {
+            const ctx = opt.ctx;
+            canvas.getObjects().forEach(obj => {
+                if (obj.isHovered && obj !== canvas.getActiveObject()) {
+                    ctx.save();
+                    const bound = obj.getBoundingRect(true, true);
+                    ctx.strokeStyle = 'hsl(19, 87%, 65%)';
+                    ctx.lineWidth = 2 / scale;
+                    
+                    // Use dashed line for groups/selections, solid for regular objects
+                    if (obj.type === 'group' || obj.type === 'activeselection' || (obj._objects && obj._objects.length > 0)) {
+                        ctx.setLineDash([5 / scale, 5 / scale]);
+                    } else {
+                        ctx.setLineDash([]);
+                    }
+                    ctx.lineDashOffset = 0;
+                    
+                    ctx.strokeRect(
+                        bound.left,
+                        bound.top,
+                        bound.width,
+                        bound.height
+                    );
+                    ctx.restore();
+                }
+            });
         };
 
 
@@ -100,18 +144,33 @@ export default function CanvasControllerStyling() {
 
         canvas.requestRenderAll();
 
-        // Listeners for selection to apply style (includes ActiveSelection)
-        const hSelectionCreated = (e) => applyInstanceStyle(e.selected[0]?.group || e.target);
-        const hSelectionUpdated = (e) => applyInstanceStyle(e.selected[0]?.group || e.target);
+        // Listeners for selection to apply style
+        const hSelectionCreated = (e) => {
+            const targets = e.selected || [e.target];
+            targets.forEach(obj => {
+                applyInstanceStyle(obj);
+                // Also ensure the parent group is styled if we're sub-selecting
+                if (obj.group) applyInstanceStyle(obj.group);
+                // Clear hover state on selection
+                obj.set('isHovered', false);
+            });
+        };
+        const hSelectionUpdated = hSelectionCreated;
 
         canvas.on('selection:created', hSelectionCreated);
         canvas.on('selection:updated', hSelectionUpdated);
         canvas.on('object:added', hObjectAdded);
+        canvas.on('mouse:over', hMouseOver);
+        canvas.on('mouse:out', hMouseOut);
+        canvas.on('after:render', hAfterRender);
 
         return () => {
             canvas.off('selection:created', hSelectionCreated);
             canvas.off('selection:updated', hSelectionUpdated);
             canvas.off('object:added', hObjectAdded);
+            canvas.off('mouse:over', hMouseOver);
+            canvas.off('mouse:out', hMouseOut);
+            canvas.off('after:render', hAfterRender);
         };
     }, [canvas, scale]);
 
