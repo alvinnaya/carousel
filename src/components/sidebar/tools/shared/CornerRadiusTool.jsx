@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { changeCornerRadius } from '../../../Helper/FabricHelper';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 import DelayedInput from './DelayedInput';
+import CollapsibleToolSection from './CollapsibleToolSection';
 
 const CornerRadiusTool = ({ activeObject }) => {
     const { canvas } = useCanvasContext();
@@ -49,8 +50,7 @@ const CornerRadiusTool = ({ activeObject }) => {
     if (!isSupported) return null;
 
     return (
-        <section className="mus-tool-section">
-            <h3 className="mus-tool-label">Corner Radius</h3>
+        <CollapsibleToolSection title="Corner Radius">
             <div className="flex items-center gap-3">
                 <div className="mus-tool-badge w-12 h-7 flex items-center justify-center gap-0.5 flex-shrink-0 px-2">
                     <DelayedInput
@@ -74,7 +74,7 @@ const CornerRadiusTool = ({ activeObject }) => {
                     />
                 </div>
             </div>
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

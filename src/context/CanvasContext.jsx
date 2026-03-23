@@ -9,10 +9,18 @@ export const CanvasProvider = ({ children }) => {
   const [canvases, setCanvases] = useState([{}]); // Array of canvas JSON objects
   const [previews, setPreviews] = useState(['']); // Array of data URLs for thumbnails
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
-  const [activeTool, setActiveTool] = useState('Tools');
+  const [activeTool, setActiveTool] = useState(null);
+  const [activeSubView, setActiveSubView] = useState(null);
+  const [activeObjectSrc, setActiveObjectSrc] = useState(null);
   const [clipboard, setClipboard] = useState(null);
   const [swatches, setSwatches] = useState([
     '#000000', '#FFFFFF', '#FF3B30', '#FF9500'
+  ]);
+  const [gradientSwatches, setGradientSwatches] = useState([
+    { type: 'linear', angle: 45, stops: [{ offset: 0, color: '#FF9A9E' }, { offset: 1, color: '#FECFEF' }] },
+    { type: 'linear', angle: 120, stops: [{ offset: 0, color: '#a18cd1' }, { offset: 1, color: '#fbc2eb' }] },
+    { type: 'linear', angle: 90, stops: [{ offset: 0, color: '#ff9a44' }, { offset: 1, color: '#fc6076' }] },
+    { type: 'radial', angle: 0, stops: [{ offset: 0, color: '#f6d365' }, { offset: 1, color: '#fda085' }] },
   ]);
   const [histories, setHistories] = useState([{ past: [], future: [] }]); // Per-canvas history stacks
   const isInternalAction = useRef(false);
@@ -40,8 +48,14 @@ export const CanvasProvider = ({ children }) => {
   const MAX_SWATCHES = 13;
 
   const addSwatch = (color) => {
-    if (!color || swatches.includes(color) || swatches.length >= MAX_SWATCHES) return;
-    setSwatches((prev) => [...prev, color]);
+    if (!color || swatches.includes(color)) return;
+    setSwatches((prev) => {
+      const next = [...prev, color];
+      if (next.length > MAX_SWATCHES) {
+        return next.slice(1); // Remove oldest
+      }
+      return next;
+    });
   };
 
   const updateSwatch = (index, color) => {
@@ -49,6 +63,25 @@ export const CanvasProvider = ({ children }) => {
       const newSwatches = [...prev];
       newSwatches[index] = color;
       return newSwatches;
+    });
+  };
+
+  const addGradientSwatch = (gradient) => {
+    if (!gradient) return;
+    setGradientSwatches((prev) => {
+      const next = [...prev, gradient];
+      if (next.length > MAX_SWATCHES) {
+        return next.slice(1);
+      }
+      return next;
+    });
+  };
+
+  const updateGradientSwatch = (index, gradient) => {
+    setGradientSwatches((prev) => {
+      const next = [...prev];
+      next[index] = gradient;
+      return next;
     });
   };
 
@@ -166,6 +199,9 @@ export const CanvasProvider = ({ children }) => {
         swatches,
         addSwatch,
         updateSwatch,
+        gradientSwatches,
+        addGradientSwatch,
+        updateGradientSwatch,
         clipboard,
         setClipboard,
         histories,
@@ -175,7 +211,11 @@ export const CanvasProvider = ({ children }) => {
         redo,
         isInternalAction,
         activeTool,
-        setActiveTool
+        setActiveTool,
+        activeSubView,
+        setActiveSubView,
+        activeObjectSrc,
+        setActiveObjectSrc
       }}
     >
       {children}

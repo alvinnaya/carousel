@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
+import ContextMenu from '../shared/ContextMenu';
+import { useCanvasActions, MenuSection, Divider, MenuButton } from '../canvas/CanvasContextMenu';
 
 const ensureStableId = (obj) => {
     if (!obj.__elementsPanelId) {
@@ -47,6 +49,54 @@ const ElementsPanel = () => {
     const [dropTargetId, setDropTargetId] = useState(null);
     const [dropPosition, setDropPosition] = useState(null); // 'top' or 'bottom'
     const [expandedIds, setExpandedIds] = useState(new Set());
+    const [activeObject, setActiveObject] = useState(null);
+    const { 
+        isVisible, 
+        setIsVisible, 
+        position, 
+        setPosition, 
+        handleAction, 
+        isSelection, 
+        isGroup, 
+        clipboard 
+    } = useCanvasActions();
+
+    useEffect(() => {
+        if (!canvas) return;
+
+        const updateActive = () => {
+            setActiveObject(canvas.getActiveObject());
+        };
+
+        const clearActive = () => {
+            setActiveObject(null);
+        };
+
+        const handleRemoved = (e) => {
+            if (e.target === activeObject) {
+                setActiveObject(null);
+            }
+        };
+
+        canvas.on({
+            'selection:created': updateActive,
+            'selection:updated': updateActive,
+            'selection:cleared': clearActive,
+            'object:removed': handleRemoved
+        });
+
+        // Initialize active object
+        setActiveObject(canvas.getActiveObject());
+
+        return () => {
+            canvas.off({
+                'selection:created': updateActive,
+                'selection:updated': updateActive,
+                'selection:cleared': clearActive,
+                'object:removed': handleRemoved
+            });
+        };
+    }, [canvas]);
 
     const elements = canvas
         ? [...canvas.getObjects()].reverse().map((obj) => buildElementNode(obj, null))
@@ -100,13 +150,15 @@ const ElementsPanel = () => {
         const isDropTarget = dropTargetId === el.id;
         const hasChildren = el.children && el.children.length > 0;
         const isExpanded = expandedIds.has(el.id);
+        const isActive = activeObject === el.ref;
 
         return (
             <React.Fragment key={el.id}>
                 <div
                     draggable
-                    className={`relative flex items-center p-2 rounded-xl border cursor-pointer transition-all duration-200 group
+                    className={`relative flex items-center p-2 rounded-xl border cursor-pointer transition-all duration-300 group
                         ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed border-[#E8C04A]' : 'mus-surface hover:border-[#1A1A1A] hover:bg-white'}
+                        ${isActive ? 'border-[#1A1A1A] ring-4 ring-[#E8C04A]/30 shadow-lg' : ''}
                     `}
                     style={{ marginLeft: `${depth * 16}px` }}
                     onClick={() => {
@@ -143,6 +195,17 @@ const ElementsPanel = () => {
                             setDropTargetId(null);
                             setDropPosition(null);
                         }
+                    }}
+                    onContextMenu={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        
+                        // Select the object first
+                        canvas.setActiveObject(el.ref);
+                        canvas.requestRenderAll();
+                        
+                        setPosition({ x: event.clientX, y: event.clientY });
+                        setIsVisible(true);
                     }}
                     onDrop={(event) => {
                         event.preventDefault();
@@ -182,7 +245,7 @@ const ElementsPanel = () => {
                         )}
                     </div>
 
-                    <div className="w-10 h-10 rounded-lg bg-white border mus-border-light flex items-center justify-center mr-3 overflow-hidden shadow-inner flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-white border mus-border-light flex items-center justify-center mr-4 overflow-hidden shadow-inner flex-shrink-0">
                         {el.preview ? (
                             <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
                         ) : (
@@ -215,6 +278,51 @@ const ElementsPanel = () => {
                     <p className="text-[10px] font-bold">No elements found</p>
                 </div>
             )}
+
+            {/* Context Menu */}
+            <ContextMenu
+                x={position.x}
+                y={position.y}
+                isOpen={isVisible}
+                onClose={() => setIsVisible(false)}
+            >
+                {activeObject ? (
+                    <>
+                        <MenuSection>
+                            <MenuButton label="Copy" icon="⌘C" onClick={() => { handleAction('copy'); setIsVisible(false); }} />
+                            <MenuButton label="Duplicate" icon="⌘D" onClick={() => { handleAction('duplicate'); setIsVisible(false); }} />
+                            {clipboard && <MenuButton label="Paste" icon="⌘V" onClick={() => { handleAction('paste'); setIsVisible(false); }} />}
+                        </MenuSection>
+
+                        <Divider />
+
+                        <MenuSection>
+                            <MenuButton label="Bring Forward" icon="]" onClick={() => { handleAction('bringForward'); setIsVisible(false); }} />
+                            <MenuButton label="Bring to Front" icon="⇧]" onClick={() => { handleAction('bringToFront'); setIsVisible(false); }} />
+                            <MenuButton label="Send Backward" icon="[" onClick={() => { handleAction('sendBackward'); setIsVisible(false); }} />
+                            <MenuButton label="Send to Back" icon="⇧[" onClick={() => { handleAction('sendToBack'); setIsVisible(false); }} />
+                        </MenuSection>
+
+                        <Divider />
+
+                        <MenuSection>
+                            {isSelection && <MenuButton label="Group" icon="⌘G" onClick={() => { handleAction('group'); setIsVisible(false); }} />}
+                            {isGroup && <MenuButton label="Ungroup" icon="⇧⌘G" onClick={() => { handleAction('ungroup'); setIsVisible(false); }} />}
+                            <MenuButton label="Delete" icon="⌫" onClick={() => { handleAction('delete'); setIsVisible(false); }} variant="danger" />
+                        </MenuSection>
+                    </>
+                ) : (
+                    <MenuSection>
+                        {clipboard ? (
+                            <MenuButton label="Paste" icon="⌘V" onClick={() => { handleAction('paste'); setIsVisible(false); }} />
+                        ) : (
+                            <div className="px-4 py-2.5 mus-text-muted text-[11px] font-black uppercase tracking-widest italic">
+                                No Element Selected
+                            </div>
+                        )}
+                    </MenuSection>
+                )}
+            </ContextMenu>
         </div>
     );
 };

@@ -9,6 +9,7 @@ import { useCanvasContext } from '../../../context/CanvasContext';
 import { useState, useEffect } from 'react';
 import StrokeTools from './shared/StrokeTools';
 import ShadowTool from './shared/ShadowTool';
+import CollapsibleToolSection from './shared/CollapsibleToolSection';
 
 const TextTools = ({ activeObject }) => {
 
@@ -47,7 +48,7 @@ const TextTools = ({ activeObject }) => {
 
     return (
         <div className="space-y-6">
-            <TransformTools activeObject={activeObject} />
+
 
             <TextStylingTools activeObject={activeObject} />
 
@@ -55,27 +56,28 @@ const TextTools = ({ activeObject }) => {
 
             <CommonActionTools activeObject={activeObject} objectTypeLabel="Text" />
 
-            <section className="mus-tool-section">
-
-                <div className="flex items-center justify-between">
-                    <span className="mus-tool-label !text-primary">Fill Color</span>
+            <CollapsibleToolSection
+                title="Fill Color"
+                actionButton={
                     <div
                         className="mus-color-swatch w-6 h-6"
                         style={{ backgroundColor: fill }}
                     />
-                </div>
+                }
+            >
                 <ColorPaletteSelector
                     color={fill}
                     onChange={applyFill}
                 />
-
-            </section>
+            </CollapsibleToolSection>
 
             <HighlightColorTool activeObject={activeObject} />
 
             <ShadowTool activeObject={activeObject} />
 
             <StrokeTools activeObject={activeObject} />
+
+            <TransformTools activeObject={activeObject} />
         </div>
     );
 };

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import DelayedInput from './DelayedInput';
 import ColorPaletteSelector from './ColorPaletteSelector';
 import SmartDropdown from '../../../shared/SmartDropdown';
+import CollapsibleToolSection from './CollapsibleToolSection';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 import {
     changeFontSize,
@@ -247,16 +248,14 @@ const TextStylingTools = ({ activeObject }) => {
 
     if (!activeObject) return null;
 
+    const selectionBadge = selection.hasSelection ? (
+        <span className="mus-tool-badge-accent mus-tool-badge">
+            Selection Only
+        </span>
+    ) : null;
+
     return (
-        <section className="mus-tool-section">
-            <div className="flex items-center justify-between">
-                <h3 className="mus-tool-label">Text</h3>
-                {selection.hasSelection && (
-                    <span className="mus-tool-badge-accent mus-tool-badge">
-                        Selection Only
-                    </span>
-                )}
-            </div>
+        <CollapsibleToolSection title="Text" actionButton={selectionBadge}>
 
             {/* ── FONT FAMILY ────────────────────────────────────────── */}
             <div className="space-y-2 relative">
@@ -429,7 +428,7 @@ const TextStylingTools = ({ activeObject }) => {
                     onChange={applyFill}
                 />
             </div> */}
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

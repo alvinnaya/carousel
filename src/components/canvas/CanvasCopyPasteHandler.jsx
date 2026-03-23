@@ -15,7 +15,7 @@ const CanvasCopyPasteHandler = () => {
             }
 
             // Ctrl+C or Cmd+C
-            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
                 const activeObject = canvas.getActiveObject();
                 if (activeObject) {
                     const cloned = await activeObject.clone();
@@ -25,7 +25,7 @@ const CanvasCopyPasteHandler = () => {
             }
 
             // Ctrl+V or Cmd+V
-            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
                 if (!clipboard) return;
 
                 const clonedObj = await clipboard.clone();
@@ -68,7 +68,7 @@ const CanvasCopyPasteHandler = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [canvas]);
+    }, [canvas, clipboard, setClipboard]);
 
     return null;
 };

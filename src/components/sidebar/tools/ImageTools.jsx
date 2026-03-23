@@ -4,13 +4,13 @@ import OpacityTool from './shared/OpacityTool';
 import CommonActionTools from './shared/CommonActionTools';
 import StrokeTools from './shared/StrokeTools';
 import CornerRadiusTool from './shared/CornerRadiusTool';
-import ImageFilterTool from './shared/ImageFilterTool';
+import ImageFilterTool from './shared/ImageFilterTool/ImageFilterTool';
 import ShadowTool from './shared/ShadowTool';
 
 const ImageTools = ({ activeObject }) => {
     return (
         <div className="space-y-6">
-            <TransformTools activeObject={activeObject} />
+
 
             <OpacityTool activeObject={activeObject} />
 
@@ -21,6 +21,8 @@ const ImageTools = ({ activeObject }) => {
             <ImageFilterTool activeObject={activeObject} />
 
             <CommonActionTools activeObject={activeObject} objectTypeLabel="Image" />
+
+            <TransformTools activeObject={activeObject} />
         </div>
     );
 };

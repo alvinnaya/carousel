@@ -3,6 +3,7 @@ import { changeShadow } from '../../../Helper/FabricHelper';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 import DelayedInput from './DelayedInput';
 import ColorPaletteSelector from './ColorPaletteSelector';
+import CollapsibleToolSection from './CollapsibleToolSection';
 
 const ShadowTool = ({ activeObject }) => {
     const { canvas } = useCanvasContext();
@@ -68,23 +69,20 @@ const ShadowTool = ({ activeObject }) => {
 
     const hasShadow = !!activeObject.shadow;
 
+    const removeBtn = hasShadow ? (
+        <button 
+            onClick={removeShadow}
+            className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors flex items-center gap-1"
+        >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Remove
+        </button>
+    ) : null;
+
     return (
-        <section className="mus-tool-section">
-            <div className="flex items-center justify-between mb-2">
-                <h3 className="mus-tool-label">Shadow</h3>
-                {hasShadow && (
-                    <button 
-                        onClick={removeShadow}
-                        className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors flex items-center gap-1"
-                    >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                        Remove
-                    </button>
-                )}
-            </div>
-            
+        <CollapsibleToolSection title="Shadow" actionButton={removeBtn}>
             <div className="space-y-5">
                 {/* Color with Swatches */}
                 <div className="space-y-3">
@@ -183,7 +181,7 @@ const ShadowTool = ({ activeObject }) => {
                     </div>
                 </div>
             </div>
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

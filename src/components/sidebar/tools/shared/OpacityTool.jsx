@@ -2,6 +2,7 @@ import React from 'react';
 import { changeOpacity } from '../../../Helper/FabricHelper';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 import DelayedInput from './DelayedInput';
+import CollapsibleToolSection from './CollapsibleToolSection';
 
 const OpacityTool = ({ activeObject }) => {
     const { canvas } = useCanvasContext();
@@ -18,8 +19,7 @@ const OpacityTool = ({ activeObject }) => {
     };
 
     return (
-        <section className="mus-tool-section">
-            <h3 className="mus-tool-label">Opacity</h3>
+        <CollapsibleToolSection title="Opacity">
             <div className="flex items-center gap-3">
                 <div className="mus-tool-badge w-12 h-7 flex items-center justify-center gap-0.5 flex-shrink-0 px-2">
                     <DelayedInput
@@ -44,7 +44,7 @@ const OpacityTool = ({ activeObject }) => {
                     />
                 </div>
             </div>
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

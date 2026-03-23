@@ -71,6 +71,7 @@ const EditTool = () => {
     // Case: Object selected - Determine which toolset to show
     const type = selectedObject.type;
 
+
     if (type === 'image') {
         return <ImageTools activeObject={selectedObject} />;
     }

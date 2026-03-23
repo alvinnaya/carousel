@@ -8,27 +8,22 @@ import {
 } from '../Helper/FabricGroupHelper';
 
 const CanvasContextMenu = () => {
-    const { canvas, clipboard, setClipboard } = useCanvasContext();
-    const [isVisible, setIsVisible] = useState(false);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-
-    const handleContextMenu = useCallback((opt) => {
-        const { e } = opt;
-        if (!canvas) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        setPosition({ x: e.clientX, y: e.clientY });
-        setIsVisible(true);
-    }, [canvas]);
-
-    const handleClick = useCallback(() => {
-        setIsVisible(false);
-    }, []);
+    const { canvas, isVisible, setIsVisible, position, setPosition, handleAction, activeObject, isSelection, isGroup, clipboard } = useCanvasActions();
 
     useEffect(() => {
         if (!canvas) return;
+
+        const handleContextMenu = (opt) => {
+            const { e } = opt;
+            e.preventDefault();
+            e.stopPropagation();
+            setPosition({ x: e.clientX, y: e.clientY });
+            setIsVisible(true);
+        };
+
+        const handleClick = () => {
+            setIsVisible(false);
+        };
 
         canvas.fireRightClick = true;
         canvas.stopContextMenu = true;
@@ -54,7 +49,64 @@ const CanvasContextMenu = () => {
             window.removeEventListener('click', handleClick);
             window.removeEventListener('contextmenu', handleGlobalContextMenu);
         };
-    }, [canvas, handleContextMenu, handleClick]);
+    }, [canvas, setPosition, setIsVisible]);
+
+    const handleActionWithClose = async (action) => {
+        await handleAction(action);
+        setIsVisible(false);
+    };
+
+    return (
+        <ContextMenu
+            x={position.x}
+            y={position.y}
+            isOpen={isVisible}
+            onClose={() => setIsVisible(false)}
+        >
+            {activeObject ? (
+                <>
+                    <MenuSection>
+                        <MenuButton label="Copy" icon="⌘C" onClick={() => handleActionWithClose('copy')} />
+                        <MenuButton label="Duplicate" icon="⌘D" onClick={() => handleActionWithClose('duplicate')} />
+                        {clipboard && <MenuButton label="Paste" icon="⌘V" onClick={() => handleActionWithClose('paste')} />}
+                    </MenuSection>
+
+                    <Divider />
+
+                    <MenuSection>
+                        <MenuButton label="Bring Forward" icon="]" onClick={() => handleActionWithClose('bringForward')} />
+                        <MenuButton label="Bring to Front" icon="⇧]" onClick={() => handleActionWithClose('bringToFront')} />
+                        <MenuButton label="Send Backward" icon="[" onClick={() => handleActionWithClose('sendBackward')} />
+                        <MenuButton label="Send to Back" icon="⇧[" onClick={() => handleActionWithClose('sendToBack')} />
+                    </MenuSection>
+
+                    <Divider />
+
+                    <MenuSection>
+                        {isSelection && <MenuButton label="Group" icon="⌘G" onClick={() => handleActionWithClose('group')} />}
+                        {isGroup && <MenuButton label="Ungroup" icon="⇧⌘G" onClick={() => handleActionWithClose('ungroup')} />}
+                        <MenuButton label="Delete" icon="⌫" onClick={() => handleActionWithClose('delete')} variant="danger" />
+                    </MenuSection>
+                </>
+            ) : (
+                <MenuSection>
+                    {clipboard ? (
+                        <MenuButton label="Paste" icon="⌘V" onClick={() => handleActionWithClose('paste')} />
+                    ) : (
+                        <div className="px-4 py-2.5 mus-text-muted text-[11px] font-black uppercase tracking-widest italic">
+                            Empty Canvas
+                        </div>
+                    )}
+                </MenuSection>
+            )}
+        </ContextMenu>
+    );
+};
+
+export const useCanvasActions = () => {
+    const { canvas, clipboard, setClipboard } = useCanvasContext();
+    const [isVisible, setIsVisible] = useState(false);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
 
     const activeObject = canvas?.getActiveObject();
     const isSelection = activeObject instanceof fabric.ActiveSelection;
@@ -86,11 +138,9 @@ const CanvasContextMenu = () => {
                     } else {
                         canvas.add(clonedObj);
                     }
-                    // Update clipboard position
                     const nextClipboard = await clipboard.clone();
                     nextClipboard.set({ left: nextClipboard.left + 20, top: nextClipboard.top + 20 });
                     setClipboard(nextClipboard);
-
                     canvas.setActiveObject(clonedObj);
                 }
                 break;
@@ -156,67 +206,34 @@ const CanvasContextMenu = () => {
                 break;
         }
         canvas.requestRenderAll();
-        setIsVisible(false);
+        return Promise.resolve();
     };
 
-    return (
-        <ContextMenu
-            x={position.x}
-            y={position.y}
-            isOpen={isVisible}
-            onClose={() => setIsVisible(false)}
-        >
-            {activeObject ? (
-                <>
-                    <MenuSection>
-                        <MenuButton label="Copy" icon="⌘C" onClick={() => handleAction('copy')} />
-                        <MenuButton label="Duplicate" icon="⌘D" onClick={() => handleAction('duplicate')} />
-                        {clipboard && <MenuButton label="Paste" icon="⌘V" onClick={() => handleAction('paste')} />}
-                    </MenuSection>
-
-                    <Divider />
-
-                    <MenuSection>
-                        <MenuButton label="Bring Forward" icon="]" onClick={() => handleAction('bringForward')} />
-                        <MenuButton label="Bring to Front" icon="⇧]" onClick={() => handleAction('bringToFront')} />
-                        <MenuButton label="Send Backward" icon="[" onClick={() => handleAction('sendBackward')} />
-                        <MenuButton label="Send to Back" icon="⇧[" onClick={() => handleAction('sendToBack')} />
-                    </MenuSection>
-
-                    <Divider />
-
-                    <MenuSection>
-                        {isSelection && <MenuButton label="Group" icon="⌘G" onClick={() => handleAction('group')} />}
-                        {isGroup && <MenuButton label="Ungroup" icon="⇧⌘G" onClick={() => handleAction('ungroup')} />}
-                        <MenuButton label="Delete" icon="⌫" onClick={() => handleAction('delete')} variant="danger" />
-                    </MenuSection>
-                </>
-            ) : (
-                <MenuSection>
-                    {clipboard ? (
-                        <MenuButton label="Paste" icon="⌘V" onClick={() => handleAction('paste')} />
-                    ) : (
-                        <div className="px-4 py-2.5 mus-text-muted text-[11px] font-black uppercase tracking-widest italic">
-                            Empty Canvas
-                        </div>
-                    )}
-                </MenuSection>
-            )}
-        </ContextMenu>
-    );
+    return {
+        canvas,
+        isVisible,
+        setIsVisible,
+        position,
+        setPosition,
+        handleAction,
+        activeObject,
+        isSelection,
+        isGroup,
+        clipboard
+    };
 };
 
-const MenuSection = ({ children }) => (
+export const MenuSection = ({ children }) => (
     <div className="flex flex-col gap-0.5">
         {children}
     </div>
 );
 
-const Divider = () => (
+export const Divider = () => (
     <div className="h-px mus-border-light border-b my-1.5 mx-1" />
 );
 
-const MenuButton = ({ label, onClick, icon, variant = 'default' }) => (
+export const MenuButton = ({ label, onClick, icon, variant = 'default' }) => (
     <div
         onClick={(e) => {
             e.stopPropagation();

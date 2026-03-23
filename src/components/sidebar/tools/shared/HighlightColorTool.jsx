@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ColorPaletteSelector from './ColorPaletteSelector';
+import CollapsibleToolSection from './CollapsibleToolSection';
 import { changeSelectedTextProperty, getTextSelection } from '../../../Helper/FabricHelper';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 
@@ -32,27 +33,26 @@ const HighlightColorTool = ({ activeObject }) => {
         setHighlight(color);
     };
 
-    return (
-        <section className="mus-tool-section">
-            <div className="flex items-center justify-between">
-                <span className="mus-tool-label !text-primary">Highlight</span>
-                <div
-                    className="mus-color-swatch w-6 h-6 border-2 border-dashed border-zinc-300 relative overflow-hidden"
-                    style={{ backgroundColor: highlight === 'transparent' ? 'transparent' : highlight }}
-                >
-                    {highlight === 'transparent' && (
-                        <div className="absolute inset-0 bg-white">
-                            <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500 rotate-45 origin-top-left scale-x-[1.5]" />
-                        </div>
-                    )}
+    const colorSwatch = (
+        <div
+            className="mus-color-swatch w-6 h-6 border-2 border-dashed border-zinc-300 relative overflow-hidden"
+            style={{ backgroundColor: highlight === 'transparent' ? 'transparent' : highlight }}
+        >
+            {highlight === 'transparent' && (
+                <div className="absolute inset-0 bg-white">
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500 rotate-45 origin-top-left scale-x-[1.5]" />
                 </div>
-            </div>
+            )}
+        </div>
+    );
 
-            <div className="flex gap-2.5">
+    return (
+        <CollapsibleToolSection title="Highlight" actionButton={colorSwatch}>
+            <div className="flex flex-col gap-3">
                 {/* "None" switch */}
                 <button
                     onClick={() => applyHighlight('transparent')}
-                    className={`w-6 h-6 mus-color-swatch-none shrink-0 ${highlight === 'transparent' ? 'mus-color-swatch-active' : ''}`}
+                    className={`w-4 h-4 mus-color-swatch-none shrink-0 ${highlight === 'transparent' ? 'mus-color-swatch-active' : ''}`}
                     title="No Highlight"
                 >
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -60,14 +60,12 @@ const HighlightColorTool = ({ activeObject }) => {
                     </div>
                 </button>
 
-                <div className="flex-1">
-                    <ColorPaletteSelector
-                        color={highlight}
-                        onChange={applyHighlight}
-                    />
-                </div>
+                <ColorPaletteSelector
+                    color={highlight}
+                    onChange={applyHighlight}
+                />
             </div>
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

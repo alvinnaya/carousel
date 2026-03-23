@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DelayedInput from './DelayedInput';
+import CollapsibleToolSection from './CollapsibleToolSection';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 import {
     updateObjectProperty,
@@ -29,10 +30,7 @@ const TransformTools = ({ activeObject }) => {
     const alignBtnClass = "mus-tool-align-btn";
 
     return (
-        <section className="mus-tool-section">
-            <div className="flex items-center justify-between">
-                <h3 className="mus-tool-label">Transform</h3>
-            </div>
+        <CollapsibleToolSection title="Transform">
 
             {/* ── ALIGNMENT ────────────────────────────────────────────── */}
             <div className="space-y-3">
@@ -203,7 +201,7 @@ const TransformTools = ({ activeObject }) => {
                     </button>
                 </div>
             </div>
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

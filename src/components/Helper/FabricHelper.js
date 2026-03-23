@@ -43,6 +43,49 @@ export const changeColor = (obj, color, canvas) => {
 };
 
 /**
+ * Applies a gradient to a property of a Fabric object.
+ * @param {fabric.Object} obj - The Fabric object.
+ * @param {string} property - The property to apply gradient to (e.g., 'fill' or 'stroke').
+ * @param {Object} gradientState - The custom gradient state object.
+ * @param {fabric.Canvas} canvas - The Fabric canvas instance.
+ */
+export const applyGradient = (obj, property, gradientState, canvas) => {
+    if (!obj || !canvas) return;
+
+    if (!gradientState || !gradientState.stops) {
+        updateObjectProperty(obj, property, '#000000', canvas);
+        return;
+    }
+
+    // Native CSS angles: 0deg is bottom up, 90deg is left to right
+    // Fabric angles in percentage mode act within a 0-1 unit box.
+    const angleRad = (gradientState.angle - 90) * (Math.PI / 180);
+    const x1 = Math.round(50 + Math.sin(angleRad + Math.PI) * 50) / 100;
+    const y1 = Math.round(50 + Math.cos(angleRad + Math.PI) * 50) / 100;
+    const x2 = Math.round(50 + Math.sin(angleRad) * 50) / 100;
+    const y2 = Math.round(50 + Math.cos(angleRad) * 50) / 100;
+
+    let coords;
+    if (gradientState.type === 'radial') {
+        coords = { x1: 0.5, y1: 0.5, r1: 0, x2: 0.5, y2: 0.5, r2: 0.5 };
+    } else {
+        coords = { x1, y1, x2, y2 };
+    }
+
+    const fabricGradient = new fabric.Gradient({
+        type: gradientState.type || 'linear',
+        gradientUnits: 'percentage',
+        coords: coords,
+        colorStops: gradientState.stops,
+    });
+
+    // Store custom raw state to the object for re-editing
+    obj.set('gradientState', gradientState);
+
+    updateObjectProperty(obj, property, fabricGradient, canvas);
+};
+
+/**
  * Changes the stroke color of a Fabric object.
  * @param {fabric.Object} obj - The Fabric object.
  * @param {string} color - The color string.
@@ -505,23 +548,27 @@ export const changeImageCustomFilter = (obj, values, canvas) => {
 
     const filters = [];
 
-    if (brightness !== 0)
-        filters.push(new fabric.filters.Brightness({ brightness }));
+    if (values.colorMatrix) {
+        filters.push(new fabric.filters.ColorMatrix({ matrix: values.colorMatrix }));
+    } else {
+        if (brightness !== 0)
+            filters.push(new fabric.filters.Brightness({ brightness }));
 
-    if (exposure !== 0)
-        filters.push(new fabric.filters.Brightness({ brightness: exposure }));
+        if (exposure !== 0)
+            filters.push(new fabric.filters.Brightness({ brightness: exposure }));
 
-    if (contrast !== 0)
-        filters.push(new fabric.filters.Contrast({ contrast }));
+        if (contrast !== 0)
+            filters.push(new fabric.filters.Contrast({ contrast }));
 
-    if (saturation !== 0)
-        filters.push(new fabric.filters.Saturation({ saturation }));
+        if (saturation !== 0)
+            filters.push(new fabric.filters.Saturation({ saturation }));
 
-    if (vibrance !== 0)
-        filters.push(new fabric.filters.Vibrance({ vibrance }));
+        if (vibrance !== 0)
+            filters.push(new fabric.filters.Vibrance({ vibrance }));
 
-    if (hue !== 0)
-        filters.push(new fabric.filters.HueRotation({ rotation: (hue / 360) * Math.PI * 2 }));
+        if (hue !== 0)
+            filters.push(new fabric.filters.HueRotation({ rotation: (hue / 360) * Math.PI * 2 }));
+    }
 
     if (blur > 0)
         filters.push(new fabric.filters.Blur({ blur }));

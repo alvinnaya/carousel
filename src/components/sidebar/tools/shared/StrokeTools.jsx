@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DelayedInput from './DelayedInput';
 import ColorPaletteSelector from './ColorPaletteSelector';
+import CollapsibleToolSection from './CollapsibleToolSection';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 import {
     changeStroke,
@@ -107,17 +108,14 @@ const StrokeTools = ({ activeObject }) => {
 
     const selection = getTextSelection(activeObject);
 
-    return (
-        <section className="mus-tool-section">
-            <div className="flex items-center justify-between">
-                <h3 className="mus-tool-label">Stroke</h3>
-                {selection.hasSelection && (
-                    <span className="mus-tool-badge-accent mus-tool-badge">
-                        Selection Only
-                    </span>
-                )}
-            </div>
+    const selectionBadge = selection.hasSelection ? (
+        <span className="mus-tool-badge-accent mus-tool-badge">
+            Selection Only
+        </span>
+    ) : null;
 
+    return (
+        <CollapsibleToolSection title="Stroke" actionButton={selectionBadge}>
             <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
                     <span className="mus-tool-label !text-primary">Color</span>
@@ -156,7 +154,7 @@ const StrokeTools = ({ activeObject }) => {
                     </div>
                 </div>
             </div>
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { bringToFront, sendToBack } from '../../../Helper/FabricHelper';
+import CollapsibleToolSection from './CollapsibleToolSection';
 import { useCanvasContext } from '../../../../context/CanvasContext';
 
 const ArrangementTools = ({ activeObject }) => {
@@ -10,8 +11,7 @@ const ArrangementTools = ({ activeObject }) => {
     const btnClass = "mus-tool-btn mus-tool-btn-surface flex-1";
 
     return (
-        <section className="mus-tool-section">
-            <h3 className="mus-tool-label">Arrangement</h3>
+        <CollapsibleToolSection title="Arrangement">
             <div className="flex space-x-2 pt-1">
                 <button
                     onClick={() => bringToFront(activeObject, canvas)}
@@ -34,7 +34,7 @@ const ArrangementTools = ({ activeObject }) => {
                     <span>To Back</span>
                 </button>
             </div>
-        </section>
+        </CollapsibleToolSection>
     );
 };
 

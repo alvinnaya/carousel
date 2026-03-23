@@ -1,5 +1,7 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect, createContext, useContext } from 'react';
 import { createPortal } from 'react-dom';
+
+const DropdownContext = createContext(null);
 
 /**
  * A smart dropdown component that automatically adjusts its position
@@ -17,6 +19,10 @@ const SmartDropdown = ({ trigger, children, isOpen, onClose, triggerClassName = 
     const [positionStyle, setPositionStyle] = useState({});
     const triggerRef = useRef(null);
     const dropdownRef = useRef(null);
+    const parentContext = useContext(DropdownContext);
+    
+    // Unique ID for this instance to track it in nested events
+    const [dropdownId] = useState(() => Math.random().toString(36).substr(2, 9));
 
     // Update trigger coordinates when opened or window resized
     const updateCoords = () => {
@@ -84,11 +90,22 @@ const SmartDropdown = ({ trigger, children, isOpen, onClose, triggerClassName = 
         }
     }, [isOpen, coords.top, coords.left]);
 
+    // Used to signal to parents that a click happened inside one of their descendants
+    const markActive = (nativeEvent) => {
+        if (!nativeEvent.__smartDropdowns) nativeEvent.__smartDropdowns = new Set();
+        nativeEvent.__smartDropdowns.add(dropdownId);
+        if (parentContext) parentContext.markActive(nativeEvent);
+    };
+
     // Handle click outside to close
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // If the event is marked as "inside" this dropdown (or its child), don't close
+            const isInside = event.__smartDropdowns?.has(dropdownId);
+            
             if (
                 isOpen &&
+                !isInside &&
                 dropdownRef.current && !dropdownRef.current.contains(event.target) &&
                 triggerRef.current && !triggerRef.current.contains(event.target)
             ) {
@@ -100,10 +117,16 @@ const SmartDropdown = ({ trigger, children, isOpen, onClose, triggerClassName = 
             document.addEventListener('mousedown', handleClickOutside);
         }
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, dropdownId]);
+
+    const handleContentMouseDown = (e) => {
+        markActive(e.nativeEvent);
+        // We do NOT stop propagation here to allow parents to receive native events 
+        // and children to receive outside-click notifications when parent is clicked.
+    };
 
     return (
-        <>
+        <DropdownContext.Provider value={{ markActive }}>
             <div ref={triggerRef} className={`inline-block ${triggerClassName}`}>
                 {trigger}
             </div>
@@ -112,19 +135,18 @@ const SmartDropdown = ({ trigger, children, isOpen, onClose, triggerClassName = 
                 <div
                     ref={dropdownRef}
                     style={positionStyle}
-                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseDown={handleContentMouseDown}
                     onClick={(e) => e.stopPropagation()}
                     onWheel={(e) => e.stopPropagation()}
                     className={`fixed z-[9999] animate-in fade-in zoom-in-95 duration-200 ${className}`}
                 >
-                    {/* The custom hard-UI styling matching Musmentor design system */}
                     <div className="bg-[#FDFAF5] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] rounded-xl p-1.5 overflow-hidden">
                         {children}
                     </div>
                 </div>,
                 document.body
             )}
-        </>
+        </DropdownContext.Provider>
     );
 };
 
