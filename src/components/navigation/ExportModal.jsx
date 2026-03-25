@@ -122,8 +122,8 @@ const ExportModal = ({ isOpen, onClose }) => {
                 <div className="flex items-center justify-between">
                     <span className="mus-tool-label">Select Canvases</span>
                     <div className="flex gap-3">
-                        <button onClick={selectAll} className="text-[10px] font-black uppercase text-[#E8C04A] hover:underline">Select All</button>
-                        <button onClick={selectNone} className="text-[10px] font-black uppercase mus-text-muted hover:underline">Deselect All</button>
+                        <button onClick={selectAll} className="text-[10px] font-bold uppercase text-[var(--accent)] hover:underline">Select All</button>
+                        <button onClick={selectNone} className="text-[10px] font-bold uppercase mus-text-muted hover:underline">Deselect All</button>
                     </div>
                 </div>
 
@@ -133,22 +133,22 @@ const ExportModal = ({ isOpen, onClose }) => {
                             key={index}
                             onClick={() => toggleSelection(index)}
                             className={`
-                                relative cursor-pointer mus-surface border-2 transition-all duration-200 overflow-hidden aspect-square
+                                relative cursor-pointer mus-surface border transition-all duration-200 overflow-hidden aspect-square
                                 ${selectedIndices.includes(index) 
-                                    ? 'border-[#1A1A1A] ring-2 ring-[#E8C04A]' 
-                                    : 'border-[#D4CBBA] hover:border-[#1A1A1A]'}
+                                    ? 'border-[var(--accent)] ring-2 ring-[var(--accent-light)]' 
+                                    : 'border-[var(--border-light)] hover:border-[var(--accent)]'}
                             `}
                         >
                             {previews[index] ? (
                                 <img src={previews[index]} alt={`Canvas ${index + 1}`} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full bg-[#f0f0eb] flex items-center justify-center text-[10px] font-bold text-zinc-400">
+                                <div className="w-full h-full bg-[var(--bg-main)] flex items-center justify-center text-[10px] font-bold text-[var(--text-muted)]">
                                     Canvas {index + 1}
                                 </div>
                             )}
                             
-                            <div className={`absolute top-2 right-2 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors
-                                ${selectedIndices.includes(index) ? 'bg-[#E8C04A] border-[#1A1A1A]' : 'bg-white/80 border-[#D4CBBA]'}
+                            <div className={`absolute top-2 right-2 w-5 h-5 rounded-md border flex items-center justify-center transition-colors
+                                ${selectedIndices.includes(index) ? 'bg-[var(--accent)] border-[var(--accent)]' : 'bg-white/80 border-[var(--border-light)]'}
                             `}>
                                 {selectedIndices.includes(index) && (
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">

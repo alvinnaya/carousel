@@ -31,10 +31,10 @@ const AddCanvasSection = ({
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex w-full border border-[#D4CBBA] rounded-xl overflow-hidden" style={{backgroundColor: 'var(--bg-main)'}}>
+            <div className="mus-action-bar">
                 <button
                     onClick={onAddDefault}
-                    className="flex-1 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold transition-all text-[#7A7062] hover:bg-[rgba(232,192,74,0.2)] hover:text-[#1A1A1A]"
+                    className="mus-action-btn"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -45,7 +45,7 @@ const AddCanvasSection = ({
                     Add Canvas
                 </button>
 
-                <div className="w-px bg-[#D4CBBA]"></div>
+                <div className="mus-action-divider"></div>
 
                 <SmartDropdown
                     isOpen={addDropdownOpen}
@@ -57,7 +57,7 @@ const AddCanvasSection = ({
                                 e.stopPropagation();
                                 setAddDropdownOpen(!addDropdownOpen);
                             }}
-                            className={`px-3 py-2.5 flex items-center justify-center transition-all text-[#7A7062] hover:bg-[rgba(232,192,74,0.2)] hover:text-[#1A1A1A] ${addDropdownOpen ? 'bg-[rgba(232,192,74,0.2)] text-[#1A1A1A]' : ''}`}
+                            className={`mus-action-btn-icon ${addDropdownOpen ? 'mus-action-btn-icon-active' : ''}`}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="1.5"></circle>
@@ -90,7 +90,7 @@ const AddCanvasSection = ({
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Add New Canvas
                         </button>
-                        <hr className="border-[#D4CBBA] my-1 mx-2" />
+                        <hr className="mus-border-t-soft my-1 mx-2" />
                         <button
                             className="mus-button-ghost text-left px-3 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer w-full"
                             onClick={(e) => {
@@ -111,7 +111,7 @@ const AddCanvasSection = ({
                 title="Create Custom Canvas"
             >
                 <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-1.5 focus-within:text-[#E8C04A] transition-colors">
+                    <div className="flex flex-col gap-1.5 focus-within:text-[var(--accent)] transition-colors">
                         <label className="text-sm font-bold transition-colors">Width (px)</label>
                         <input
                             type="text"
@@ -123,7 +123,7 @@ const AddCanvasSection = ({
                             maxLength={5}
                         />
                     </div>
-                    <div className="flex flex-col gap-1.5 focus-within:text-[#E8C04A] transition-colors">
+                    <div className="flex flex-col gap-1.5 focus-within:text-[var(--accent)] transition-colors">
                         <label className="text-sm font-bold transition-colors">Height (px)</label>
                         <input
                             type="text"
@@ -137,7 +137,7 @@ const AddCanvasSection = ({
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-[#D4CBBA]">
+                <div className="flex justify-end gap-3 mt-8 pt-4 mus-border-t-soft">
                     <button
                         className="mus-button-ghost px-4 py-2 text-sm font-semibold rounded-lg cursor-pointer"
                         onClick={() => setIsCustomCanvasModalOpen(false)}

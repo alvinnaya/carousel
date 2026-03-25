@@ -48,6 +48,7 @@ const ShapeTools = ({ activeObject }) => {
 
             <CollapsibleToolSection
                 title="Shape Style"
+                defaultOpen={true}
                 actionButton={
                     <div
                         className="mus-color-swatch w-6 h-6 border"
@@ -94,9 +95,9 @@ const ShapeTools = ({ activeObject }) => {
 
             <OpacityTool activeObject={activeObject} />
 
-            <CommonActionTools activeObject={activeObject} objectTypeLabel="Shape" />
-
             <TransformTools activeObject={activeObject} />
+
+            <CommonActionTools activeObject={activeObject} objectTypeLabel="Shape" />
 
         </div>
     );

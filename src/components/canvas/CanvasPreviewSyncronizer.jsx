@@ -35,26 +35,24 @@ const CanvasPreviewSyncronizer = () => {
 
 
 
-    //     if (hasInitializedAllPreviewsRef.current) return;
-    //     if (!Array.isArray(canvases) || canvases.length === 0) return;
+    useEffect(() => {
+        if (!Array.isArray(canvases) || canvases.length === 0) return;
 
-    //     hasInitializedAllPreviewsRef.current = true;
+        const syncAllPreviews = async () => {
+            for (let i = 0; i < canvases.length; i += 1) {
+                const savedState = canvases[i];
+                if (!savedState) continue;
 
-    //     const syncAllPreviews = async () => {
-    //         for (let i = 0; i < canvases.length; i += 1) {
-    //             const savedState = canvases[i];
-    //             if (!savedState) continue;
+                try {
+                    await syncPreviewForIndex(i, savedState);
+                } catch (error) {
+                    console.error('Failed to sync initial canvas preview:', error);
+                }
+            }
+        };
 
-    //             try {
-    //                 await syncPreviewForIndex(i, savedState);
-    //             } catch (error) {
-    //                 console.error('Failed to sync initial canvas preview:', error);
-    //             }
-    //         }
-    //     };
-
-    //     syncAllPreviews();
-    // }, [canvas]);
+        syncAllPreviews();
+    }, [canvases.length]); // Sync all when count changes
 
     useEffect(() => {
         const savedState = canvases?.[activeCanvasIndex];
@@ -73,6 +71,7 @@ const CanvasPreviewSyncronizer = () => {
 
         syncPreview();
 
+        return () => { isCancelled = true; };
     }, [canvases, activeCanvasIndex]);
 
     return null;

@@ -43,9 +43,9 @@ export default function CanvasControllerStyling() {
             // Direct property assignment for styling
             obj.borderScaleFactor = 3 / scale;
             obj.cornerSize = 12 / scale;
-            obj.borderColor = 'hsl(19, 87%, 65%)';
+            obj.borderColor = 'hsl(0, 0%, 0%)';
             obj.cornerColor = 'white';
-            obj.cornerStrokeColor = 'hsl(19, 87%, 65%)';
+            obj.cornerStrokeColor = 'hsl(0, 0%, 0%)';
             obj.transparentCorners = false;
             obj.cornerStyle = 'circle';
 
@@ -58,10 +58,10 @@ export default function CanvasControllerStyling() {
                 });
 
                 // Styling for text editing mode (Fabric 7++)
-                obj.selectionColor = 'rgba(235, 126, 75, 0.3)';
-                obj.cursorColor = 'hsl(19, 87%, 65%)';
+                obj.selectionColor = 'hsla(0, 0%, 0%, 0.1)';
+                obj.cursorColor = 'hsl(0, 0%, 0%)';
                 obj.cursorWidth = 2 / scale;
-                obj.editingBorderColor = 'hsl(19, 87%, 65%)';
+                obj.editingBorderColor = 'hsl(0, 0%, 0%)';
                 obj.padding = 0
             } else if (obj.type === 'activeselection') {
                 obj.setControlsVisibility({
@@ -107,9 +107,9 @@ export default function CanvasControllerStyling() {
                 if (obj.isHovered && obj !== canvas.getActiveObject()) {
                     ctx.save();
                     const bound = obj.getBoundingRect(true, true);
-                    ctx.strokeStyle = 'hsl(19, 87%, 65%)';
+                    ctx.strokeStyle = 'hsl(0, 0%, 0%)';
                     ctx.lineWidth = 2 / scale;
-                    
+
                     // Use dashed line for groups/selections, solid for regular objects
                     if (obj.type === 'group' || obj.type === 'activeselection' || (obj._objects && obj._objects.length > 0)) {
                         ctx.setLineDash([5 / scale, 5 / scale]);
@@ -117,7 +117,7 @@ export default function CanvasControllerStyling() {
                         ctx.setLineDash([]);
                     }
                     ctx.lineDashOffset = 0;
-                    
+
                     ctx.strokeRect(
                         bound.left,
                         bound.top,
@@ -185,18 +185,18 @@ export function CanvasDefaultControllerStyling(fabricInstance) {
 
     // Set Base Prototype Defaults
     Object.assign(fabricInstance.FabricObject.ownDefaults, {
-        borderColor: 'hsl(19, 87%, 65%)',
+        borderColor: 'hsl(0, 0%, 0%)',
         cornerColor: 'white',
-        cornerStrokeColor: 'hsl(19, 87%, 65%)',
+        cornerStrokeColor: 'hsl(0, 0%, 0%)',
         cornerSize: 12,
         cornerStyle: 'circle',
         transparentCorners: false,
         padding: 0,
         borderScaleFactor: 3,
         // Text editing defaults
-        selectionColor: 'rgba(235, 126, 75, 0.3)',
-        cursorColor: 'hsl(19, 87%, 65%)',
-        editingBorderColor: 'hsl(19, 87%, 65%)',
+        selectionColor: 'hsla(0, 0%, 0%, 0.1)',
+        cursorColor: 'hsl(0, 0%, 0%)',
+        editingBorderColor: 'hsl(0, 0%, 0%)',
     });
 }
 
@@ -217,7 +217,7 @@ function makeHoverControl(cornerName, x, y, baseColor, hoverColor, handler, scal
             ctx.arc(left, top, 6 / scale, 0, Math.PI * 2);
             ctx.fill();
             ctx.lineWidth = 2 / scale;
-            ctx.strokeStyle = 'hsl(19, 87%, 65%)';
+            ctx.strokeStyle = 'hsl(0, 0%, 0%)';
             ctx.stroke();
             ctx.restore();
         }
@@ -256,7 +256,7 @@ function makeHoverControlMiddle(cornerName, x, y, baseColor, hoverColor, handler
             else ctx.rect(-barW / 2, -barH / 2, barW, barH);
             ctx.fill();
             ctx.lineWidth = 2 / scale;
-            ctx.strokeStyle = 'hsl(19, 87%, 65%)';
+            ctx.strokeStyle = 'hsl(0, 0%, 0%)';
             ctx.stroke();
             ctx.restore();
         }
@@ -295,7 +295,7 @@ function makeHoverControlMiddleText(cornerName, x, y, baseColor, hoverColor, han
             else ctx.rect(-barW / 2, -barH / 2, barW, barH);
             ctx.fill();
             ctx.lineWidth = 3 / scale;
-            ctx.strokeStyle = 'hsl(19, 87%, 65%)';
+            ctx.strokeStyle = 'hsl(0, 0%, 0%)';
             ctx.stroke();
             ctx.restore();
         }

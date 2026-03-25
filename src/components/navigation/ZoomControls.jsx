@@ -37,10 +37,10 @@ const ZoomControls = () => {
     const zoomOut = () => setScale(prev => Math.max(0.2, prev - 0.1));
 
     return (
-        <div className="flex items-center bg-[#f0f0eb] rounded-lg border border-[#D4CBBA] p-0.5 shadow-sm">
+        <div className="flex items-center bg-[var(--bg-main)] rounded-lg border border-[var(--border-light)] p-0.5 shadow-sm">
             <button 
                 onClick={zoomOut}
-                className="w-7 h-7 flex items-center justify-center hover:bg-white rounded-md transition-colors mus-text-primary"
+                className="w-7 h-7 flex items-center justify-center hover:bg-[var(--bg-surface)] rounded-md transition-colors mus-text-primary"
                 aria-label="Zoom out"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -55,14 +55,14 @@ const ZoomControls = () => {
                     onChange={handleZoomChange}
                     onBlur={applyZoom}
                     onKeyDown={(e) => e.key === 'Enter' && applyZoom()}
-                    className="w-10 bg-transparent text-center mus-text-primary font-black text-[12px] outline-none"
+                    className="w-10 bg-transparent text-center mus-text-primary font-bold text-[12px] outline-none"
                 />
-                <span className="text-[10px] font-black mus-text-muted mr-1.5">%</span>
+                <span className="text-[10px] font-bold mus-text-muted mr-1.5">%</span>
             </div>
 
             <button 
                 onClick={zoomIn}
-                className="w-7 h-7 flex items-center justify-center hover:bg-white rounded-md transition-colors mus-text-primary"
+                className="w-7 h-7 flex items-center justify-center hover:bg-[var(--bg-surface)] rounded-md transition-colors mus-text-primary"
                 aria-label="Zoom in"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">

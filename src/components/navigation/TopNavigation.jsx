@@ -7,15 +7,17 @@ import ExportModal from './ExportModal';
  * TopNavigation - Floating top bar layout container.
  * Orchestrates modular sections like ProjectName and ZoomControls.
  */
-const TopNavigation = () => {
+import { useCanvasContext } from '../../context/CanvasContext';
+
+const TopNavigation = ({ title }) => {
+    const { isSaving } = useCanvasContext();
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     return (
         <>
-            <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-6 px-6 py-2.5 mus-panel min-w-[480px] justify-between shadow-lg">
+            <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-6 px-6 py-2.5 mus-panel min-w-[520px] justify-between shadow-[var(--shadow-md)]">
                 <div className="flex items-center gap-4">
-
-                    <ProjectName />
+                    <ProjectName title={title} isSaving={isSaving} />
                 </div>
 
                 <ZoomControls />

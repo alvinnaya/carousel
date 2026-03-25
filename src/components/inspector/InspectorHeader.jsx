@@ -7,11 +7,11 @@ const InspectorHeader = ({ activeTab, onTabChange }) => {
     const tabs = ['Elements', 'Layers'];
 
     return (
-        <div className="p-3 mus-border-light border-b">
-            <div className="relative flex p-1 bg-[#E0D8CC] rounded-xl border border-[#D4CBBA]/30">
+        <div className="p-3 mus-border-b-soft">
+            <div className="mus-nav-container">
                 {/* Animated Background Pill */}
                 <div
-                    className="absolute h-[calc(100%-8px)] rounded-lg mus-button-amber shadow-none border transition-all duration-300 ease-in-out"
+                    className="absolute h-[calc(100%-8px)] mus-nav-pill border transition-all duration-300 ease-in-out"
                     style={{
                         width: 'calc(50% - 4px)',
                         left: activeTab === 'Elements' ? '4px' : 'calc(50% + 0px)'
@@ -22,10 +22,7 @@ const InspectorHeader = ({ activeTab, onTabChange }) => {
                     <button
                         key={tab}
                         onClick={() => onTabChange(tab)}
-                        className={`
-              relative flex-1 py-1.5 text-[10px] uppercase tracking-wider font-black rounded-lg transition-colors duration-200 z-10
-              ${activeTab === tab ? 'mus-text-primary' : 'mus-text-muted hover:mus-text-primary'}
-            `}
+                        className={`mus-nav-btn ${activeTab === tab ? 'mus-nav-btn-active' : ''}`}
                     >
                         {tab}
                     </button>

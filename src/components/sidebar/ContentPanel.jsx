@@ -34,7 +34,7 @@ const ContentPanel = ({ activeTab, onClose }) => {
     }[activeTab] || (() => <p className="text-xs text-zinc-500">Section for {activeTab} content will go here.</p>);
 
     return (
-        <aside className="w-96 h-full mus-panel overflow-hidden flex flex-col transition-all duration-300 animate-in slide-in-from-left-4 fade-in relative">
+        <aside className="w-90 h-full mus-panel overflow-hidden flex flex-col transition-all duration-300 animate-in slide-in-from-left-4 fade-in relative">
             {/* If a sub-view is active, it takes over the entire panel (including header) */}
             {SubView ? (
                 <SubView onBack={() => setActiveSubView(null)} />

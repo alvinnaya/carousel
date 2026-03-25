@@ -70,6 +70,35 @@ export const FONT_LIST = [
     'Kalam',
 ];
 
+/**
+ * Extracts unique Google Font families and their used weights from an array of canvas JSON objects.
+ * Returns a map: { [fontName: string]: Set<number> }
+ */
+export const getUsedFonts = (canvases) => {
+    if (!Array.isArray(canvases)) return {};
+    
+    const fontMap = {};
+    canvases.forEach(canvas => {
+        if (canvas && canvas.objects) {
+            canvas.objects.forEach(obj => {
+                const type = obj.type ? obj.type.toLowerCase() : '';
+                if (obj.fontFamily && (type.includes('text') || type.includes('textbox'))) {
+                    const family = obj.fontFamily.split(',')[0].trim().replace(/['"|]/g, '');
+                    
+                    if (FONT_LIST.includes(family)) {
+                        if (!fontMap[family]) fontMap[family] = new Set();
+                        
+                        // Extract weight (default to 400 if not specified)
+                        const weight = parseInt(obj.fontWeight) || 400;
+                        fontMap[family].add(weight);
+                    }
+                }
+            });
+        }
+    });
+    return fontMap;
+};
+
 // ─── Font Loading Caches ─────────────────────────────────────────────────────
 const previewLoaded = new Set();   // Fonts with weight 400 loaded (preview only)
 const fullyLoaded = new Set();     // Fonts with ALL weights + italic loaded
@@ -115,47 +144,56 @@ export const loadFontPreview = async (fontName) => {
 
 /**
  * Full font loader for canvas use.
- * Loads ALL weights (100–900) + italic to support the weight selector and italic toggle.
- * Replaces the preview stylesheet if one exists to avoid duplicate requests.
+ * Optimized to load only requested weights. If weights array is empty, loads a standard set (400, 700).
  *
  * @param {string} fontName - The exact font name as it appears in FONT_LIST
+ * @param {number[]} requestedWeights - Array of weights to load (e.g. [400, 700, 900])
  * @returns {Promise<void>}
  */
-export const loadGoogleFont = async (fontName) => {
-    if (fullyLoaded.has(fontName)) return;
+export const loadGoogleFont = async (fontName, requestedWeights = []) => {
+    // Determine weights to load: use requested or default to common ones (400, 700)
+    let weightsToLoad = requestedWeights.length > 0 
+        ? [...new Set(requestedWeights)].sort((a, b) => a - b)
+        : [400, 700];
+
+    const weightString = weightsToLoad.join(';');
+    const cacheKey = `${fontName}:${weightString}`;
+
+    if (fullyLoaded.has(cacheKey)) return;
 
     const slug = fontName.replace(/\s+/g, '-').toLowerCase();
-
-    // Remove the lightweight preview link if it exists (will be replaced by full one)
     const previewLink = document.getElementById(`gfont-preview-${slug}`);
     if (previewLink) previewLink.remove();
 
-    const fullId = `gfont-full-${slug}`;
+    const fullId = `gfont-full-${slug}-${weightString.replace(/;/g, '-')}`;
     let link = document.getElementById(fullId);
 
     if (!link) {
         link = document.createElement('link');
         link.id = fullId;
         link.rel = 'stylesheet';
+        
+        // Prepare weights part of URL
+        const wghtPart = weightsToLoad.map(w => `0,${w};1,${w}`).join(';');
         link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
             fontName
-        )}:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap`;
+        )}:ital,wght@${wghtPart}&display=swap`;
 
         document.head.appendChild(link);
 
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
             link.onload = resolve;
-            link.onerror = reject;
+            link.onerror = (err) => {
+                console.warn(`Font load failed for ${fontName} with weights ${weightString}`, err);
+                resolve();
+            };
         });
     }
 
     try {
-        const weights = ['100', '200', '300', '400', '500', '600', '700', '800', '900'];
         const styles = ['normal', 'italic'];
-
-        // Force load semua kombinasi weight × style
         await Promise.all(
-            weights.flatMap(weight =>
+            weightsToLoad.flatMap(weight =>
                 styles.map(style =>
                     document.fonts.load(`${style} ${weight} 1em "${fontName}"`)
                 )
@@ -163,8 +201,8 @@ export const loadGoogleFont = async (fontName) => {
         );
 
         await document.fonts.ready;
-        fullyLoaded.add(fontName);
-        previewLoaded.add(fontName); // Mark preview as loaded too
+        fullyLoaded.add(cacheKey);
+        previewLoaded.add(fontName);
     } catch (err) {
         console.error(`Failed loading font ${fontName}`, err);
     }

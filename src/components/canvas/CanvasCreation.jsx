@@ -11,18 +11,20 @@ const CanvasCreation = () => {
         translate,
         canvases,
         activeCanvasIndex,
-        updateCanvasState
+        updateCanvasState,
+        isFontsReady,
+        viewportRef
     } = useCanvasContext();
 
 
-    console.log("canvas creation", activeCanvasIndex)
+    console.log("canvas creation", activeCanvasIndex, "fonts ready:", isFontsReady)
 
     const activeCanvasData = canvases[activeCanvasIndex] || {};
     const canvasWidth = activeCanvasData.width || 1080;
     const canvasHeight = activeCanvasData.height || 1080;
 
     useEffect(() => {
-        if (!canvasRef.current) return;
+        if (!canvasRef.current || !isFontsReady) return;
 
         CanvasDefaultControllerStyling(fabric);
 
@@ -31,6 +33,21 @@ const CanvasCreation = () => {
             height: canvasHeight,
             backgroundColor: '#ffffff',
         });
+
+        // Helper function to dynamically load Google Fonts
+        const loadGoogleFont = (fontFamily) => {
+            return new Promise((resolve) => {
+                const link = document.createElement('link');
+                link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, '+')}:wght@400;700&display=swap`;
+                link.rel = 'stylesheet';
+                link.onload = () => resolve();
+                link.onerror = () => {
+                    console.warn(`Failed to load Google Font: ${fontFamily}`);
+                    resolve(); // Resolve even on error to not block other fonts
+                };
+                document.head.appendChild(link);
+            });
+        };
 
         const syncCanvasState = () => {
             const currentJson = fabricCanvas.toJSON();
@@ -127,22 +144,23 @@ const CanvasCreation = () => {
         };
 
 
-    }, [setCanvas, activeCanvasIndex, canvasWidth, canvasHeight]);
+    }, [setCanvas, activeCanvasIndex, canvasWidth, canvasHeight, isFontsReady]);
 
     return (
         <>
-            <div className=""
+            <div ref={viewportRef} className=""
                 style={{
-                    transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
                     transformOrigin: 'center center',
-                    transition: 'transform 0.05s linear',
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden',
+                    WebkitFontSmoothing: 'antialiased',
+                    transformStyle: 'preserve-3d'
                 }}>
-                <div className="overflow-hidden relative border-black border-2 rounded-lg">
+                <div className="overflow-hidden relative border-black border-2 rounded-lg" style={{ backfaceVisibility: 'hidden' }}>
                     <canvas ref={canvasRef} id="main-canvas" />
                 </div>
             </div>
         </>
-
     );
 };
 

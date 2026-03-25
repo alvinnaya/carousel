@@ -79,7 +79,7 @@ const ContextMenu = ({ x, y, isOpen, onClose, children, className = "" }) => {
     return createPortal(
         <div
             ref={menuRef}
-            className={`fixed z-[999999] mus-card !bg-[#FDFAF5] !p-1.5 min-w-[200px] !transition-none select-none ${className}`}
+            className={`fixed z-[999999] mus-context-menu ${className}`}
             style={{
                 top: adjustedStyle.top !== undefined ? adjustedStyle.top : y,
                 left: adjustedStyle.left !== undefined ? adjustedStyle.left : x,

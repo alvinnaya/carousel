@@ -24,7 +24,7 @@ const InspectorContainer = () => {
             {activeTab === 'Layers' ? <LayersPanel /> : <ElementsPanel />}
 
             {/* Footer / Drag Indicator (Visual only) */}
-            <div className="p-2 border-t border-zinc-50 flex items-center justify-center opacity-20">
+            <div className="p-2 mus-border-t-soft flex items-center justify-center opacity-20">
                 {/* <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
                 </svg> */}

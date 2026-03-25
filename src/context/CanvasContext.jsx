@@ -1,14 +1,34 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import pageService from '../api/pageService';
+import { getUsedFonts, loadGoogleFont } from '../utils/fontList';
 
 const CanvasContext = createContext(undefined);
 
-export const CanvasProvider = ({ children }) => {
+export const CanvasProvider = ({ children, initialPages = [], designInfo = null }) => {
   const [canvas, setCanvas] = useState(null);
   const [scale, setScale] = useState(0.5);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [canvases, setCanvases] = useState([{}]); // Array of canvas JSON objects
-  const [previews, setPreviews] = useState(['']); // Array of data URLs for thumbnails
+  const [canvases, setCanvases] = useState(() => {
+    // Transform PageDto[] to CanvasJSON[] with metadata
+    return initialPages.map(p => {
+      let parsed = {};
+      try {
+        parsed = p.canvasJson ? JSON.parse(p.canvasJson) : {};
+      } catch (e) {
+        console.error('Failed to parse canvasJson', e);
+      }
+      return {
+        ...parsed,
+        _pageId: p.id || p.Id,
+        _order: typeof p.order !== 'undefined' ? p.order : p.Order,
+        width: parsed.width || 1080,
+        height: parsed.height || 1080
+      };
+    });
+  });
+  const [previews, setPreviews] = useState(initialPages.map(() => '')); // Array of data URLs for thumbnails
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
   const [activeSubView, setActiveSubView] = useState(null);
   const [activeObjectSrc, setActiveObjectSrc] = useState(null);
@@ -23,7 +43,39 @@ export const CanvasProvider = ({ children }) => {
     { type: 'radial', angle: 0, stops: [{ offset: 0, color: '#f6d365' }, { offset: 1, color: '#fda085' }] },
   ]);
   const [histories, setHistories] = useState([{ past: [], future: [] }]); // Per-canvas history stacks
+  const [isFontsReady, setIsFontsReady] = useState(false);
   const isInternalAction = useRef(false);
+  const viewportRef = useRef(null);
+
+  // Centralized Font Pre-loading: Extract all fonts from initialPages and load them once.
+  useEffect(() => {
+    const loadRequiredFonts = async () => {
+      const fontMap = getUsedFonts(canvases);
+      
+      // Always ensure "Inter" is loaded (common project default and UI font)
+      if (!fontMap['Inter']) fontMap['Inter'] = new Set();
+      fontMap['Inter'].add(400);
+      fontMap['Inter'].add(700);
+
+      const fontEntries = Object.entries(fontMap);
+
+      if (fontEntries.length > 0) {
+        console.log('Centralized Optimized Pre-loading design fonts:', fontMap);
+        try {
+          await Promise.all(fontEntries.map(([font, weights]) =>
+            loadGoogleFont(font, Array.from(weights))
+          ));
+          await document.fonts.ready;
+          console.log('Design fonts pre-loaded successfully');
+        } catch (err) {
+          console.error('Font pre-loading failed:', err);
+        }
+      }
+      setIsFontsReady(true);
+    };
+
+    loadRequiredFonts();
+  }, []); // Only on mount
 
   // Keep histories in sync with canvases
   useEffect(() => {
@@ -85,20 +137,165 @@ export const CanvasProvider = ({ children }) => {
     });
   };
 
-  const updateCanvasState = (index, json) => {
+  const updateCanvasState = async (index, json) => {
     setCanvases((prev) => {
       const newCanvases = [...prev];
-      newCanvases[index] = json;
+      if (newCanvases[index]) {
+        // Merge the new JSON into the existing object, preserving metadata
+        newCanvases[index] = { ...newCanvases[index], ...json };
+      }
       return newCanvases;
     });
+
+    // Autosave logic
+    const pageId = canvases[index]?._pageId;
+    if (pageId && !isInternalAction.current) {
+      debouncedSave(pageId, json, canvases[index]?._order);
+    }
+  };
+
+  const saveTimeoutRef = useRef(null);
+  const debouncedSave = (pageId, json, order) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        console.log('Autosaving page:', pageId);
+        setIsSaving(true);
+        await pageService.update(pageId, {
+          canvasJson: JSON.stringify(json),
+          order
+        });
+        console.log('Autosave successful for page:', pageId);
+      } catch (err) {
+        console.error('Autosave failed:', err);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 2000); // 2 second debounce
   };
 
   const updatePreview = (index, dataUrl) => {
     setPreviews((prev) => {
       const newPreviews = [...prev];
-      newPreviews[index] = dataUrl;
+      if (index < newPreviews.length) {
+        newPreviews[index] = dataUrl;
+      }
       return newPreviews;
     });
+  };
+
+  const addPage = async (initialJson = null, insertAt = null) => {
+    const designId = designInfo?.id;
+    if (!designId) return;
+
+    const width = initialJson?.width || 1080;
+    const height = initialJson?.height || 1080;
+    const index = insertAt !== null ? insertAt : canvases.length;
+
+    const newCanvas = {
+      objects: [],
+      ...(initialJson || {}),
+      width,
+      height
+    };
+
+    // Optimistic UI update
+    setCanvases(prev => {
+      const next = [...prev];
+      next.splice(index, 0, newCanvas);
+      return next;
+    });
+    setPreviews(prev => {
+      const next = [...prev];
+      next.splice(index, 0, '');
+      return next;
+    });
+
+    if (insertAt !== null || index === canvases.length) {
+      setActiveCanvasIndex(index);
+    }
+
+    try {
+      const response = await pageService.create(designId, {
+        order: index,
+        canvasJson: JSON.stringify(newCanvas)
+      });
+      if (response.success && response.data) {
+        const newId = response.data.id || response.data.Id;
+        const newOrder = typeof response.data.order !== 'undefined' ? response.data.order : response.data.Order;
+
+        setCanvases(prev => {
+          const next = [...prev];
+          if (next[index]) {
+            next[index] = { ...next[index], _pageId: newId, _order: newOrder };
+          }
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to create page', err);
+    }
+  };
+
+  const duplicatePage = async (index) => {
+    const source = canvases[index];
+    if (!source) return;
+
+    // Clone without internal metadata
+    const { _pageId, _order, ...canvasData } = source;
+    await addPage(JSON.parse(JSON.stringify(canvasData)), index + 1);
+  };
+
+  const removePage = async (index) => {
+    if (canvases.length <= 1) return;
+
+    const pageToBtn = canvases[index];
+    const pageId = pageToBtn?._pageId;
+
+    // Optimistic remove
+    setCanvases(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+
+    if (activeCanvasIndex === index) {
+      setActiveCanvasIndex(Math.max(0, index - 1));
+    } else if (activeCanvasIndex > index) {
+      setActiveCanvasIndex(activeCanvasIndex - 1);
+    }
+
+    if (pageId) {
+      try {
+        await pageService.delete(pageId);
+      } catch (err) {
+        console.error('Failed to delete page', err);
+      }
+    }
+  };
+
+  const movePage = async (fromIndex, toIndex) => {
+    setCanvases(prev => {
+      const next = [...prev];
+      const [movedItem] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, movedItem);
+      return next;
+    });
+    setPreviews(prev => {
+      const next = [...prev];
+      const [movedItem] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, movedItem);
+      return next;
+    });
+
+    // Update active index
+    if (activeCanvasIndex === fromIndex) {
+      setActiveCanvasIndex(toIndex);
+    } else if (fromIndex < toIndex && activeCanvasIndex > fromIndex && activeCanvasIndex <= toIndex) {
+      setActiveCanvasIndex(activeCanvasIndex - 1);
+    } else if (fromIndex > toIndex && activeCanvasIndex >= toIndex && activeCanvasIndex < fromIndex) {
+      setActiveCanvasIndex(activeCanvasIndex + 1);
+    }
+
+    // Backend update for orders would go here if needed
+    // Typically we'd call a bulk update endpoint or update both shifted pages
   };
 
   const recordHistory = (index, state) => {
@@ -215,7 +412,14 @@ export const CanvasProvider = ({ children }) => {
         activeSubView,
         setActiveSubView,
         activeObjectSrc,
-        setActiveObjectSrc
+        setActiveObjectSrc,
+        isSaving,
+        addPage,
+        duplicatePage,
+        removePage,
+        movePage,
+        isFontsReady,
+        viewportRef
       }}
     >
       {children}

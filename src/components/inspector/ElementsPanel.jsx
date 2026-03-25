@@ -50,15 +50,15 @@ const ElementsPanel = () => {
     const [dropPosition, setDropPosition] = useState(null); // 'top' or 'bottom'
     const [expandedIds, setExpandedIds] = useState(new Set());
     const [activeObject, setActiveObject] = useState(null);
-    const { 
-        isVisible, 
-        setIsVisible, 
-        position, 
-        setPosition, 
-        handleAction, 
-        isSelection, 
-        isGroup, 
-        clipboard 
+    const {
+        isVisible,
+        setIsVisible,
+        position,
+        setPosition,
+        handleAction,
+        isSelection,
+        isGroup,
+        clipboard
     } = useCanvasActions();
 
     useEffect(() => {
@@ -156,9 +156,9 @@ const ElementsPanel = () => {
             <React.Fragment key={el.id}>
                 <div
                     draggable
-                    className={`relative flex items-center p-2 rounded-xl border cursor-pointer transition-all duration-300 group
-                        ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed border-[#E8C04A]' : 'mus-surface hover:border-[#1A1A1A] hover:bg-white'}
-                        ${isActive ? 'border-[#1A1A1A] ring-4 ring-[#E8C04A]/30 shadow-lg' : ''}
+                    className={`relative flex items-center p-2 transition-all duration-300 group
+                        ${isDragged ? 'mus-element-dragged' : 'mus-element-item'}
+                        ${isActive ? 'mus-item-active z-10' : ''}
                     `}
                     style={{ marginLeft: `${depth * 16}px` }}
                     onClick={() => {
@@ -199,11 +199,11 @@ const ElementsPanel = () => {
                     onContextMenu={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        
+
                         // Select the object first
                         canvas.setActiveObject(el.ref);
                         canvas.requestRenderAll();
-                        
+
                         setPosition({ x: event.clientX, y: event.clientY });
                         setIsVisible(true);
                     }}
@@ -220,7 +220,7 @@ const ElementsPanel = () => {
                     {/* Drop Indicator Line */}
                     {isDropTarget && draggedItem?.id !== el.id && (
                         <div
-                            className={`absolute left-0 right-0 h-0.5 bg-[#E8C04A] z-50 rounded-full transition-all duration-200 shadow-[0_0_8px_rgba(232,192,74,0.5)]
+                            className={`mus-element-drop-indicator transition-all duration-200
                                 ${dropPosition === 'top' ? '-top-1' : '-bottom-1'}
                             `}
                         />
@@ -245,7 +245,7 @@ const ElementsPanel = () => {
                         )}
                     </div>
 
-                    <div className="w-10 h-10 rounded-lg bg-white border mus-border-light flex items-center justify-center mr-4 overflow-hidden shadow-inner flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-white border mus-border-soft flex items-center justify-center mr-4 overflow-hidden shadow-inner flex-shrink-0">
                         {el.preview ? (
                             <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
                         ) : (
@@ -254,7 +254,7 @@ const ElementsPanel = () => {
                     </div>
                     <div className="flex flex-col min-w-0">
                         <span className="text-[10px] font-black mus-text-muted uppercase tracking-widest">{el.type}</span>
-                        <span className="text-xs font-semibold text-zinc-800 truncate">
+                        <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
                             {el.type === 'group' ? `Group (${el.children.length})` :
                                 el.ref.text ? (el.ref.text.length > 15 ? el.ref.text.substring(0, 15) + '...' : el.ref.text) : 'Element'}
                         </span>

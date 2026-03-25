@@ -2,18 +2,42 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Serif+Display:ital@0;1&display=swap');
 
 :root {
-    --bg-main: #F2EDE4;
-    --bg-surface: #FDFAF5;
-    --border-dark: #1A1A1A;
-    --border-light: #D4CBBA;
-    --text-primary: #1A1A1A;
-    --text-muted: #7A7062;
-    --accent: #E8C04A;
-    --danger: #C0392B;
+    --bg-main: hsl(0, 0%, 96%);
+    /* #F5F5F5 - Gray 100 */
+    --bg-surface: hsl(0, 0%, 100%);
+    /* #FFFFFF - Base */
+    --border-dark: hsl(0, 0%, 15%);
+    /* #262626 - Gray 800 */
+    --border-light: hsl(0, 0%, 90%);
+    /* #E5E5E5 - Gray 200 */
+    --text-primary: hsl(0, 0%, 4%);
+    /* #0A0A0A - Gray 950 */
+    --text-muted: hsl(0, 0%, 45%);
+    /* #737373 - Gray 500 */
+    --text-inverse: hsl(0, 0%, 98%);
+    /* #FAFAFA - Gray 50 for dark backgrounds */
+    --accent: hsl(0, 0%, 9%);
+    /* #171717 - Gray 900 for high-contrast accent */
+    --accent-light: hsla(0, 0%, 9%, 0.1);
+    --danger: hsl(0, 84%, 44%);
+    /* Keeping a subtle semantic red */
 
-    --shadow-sm: 2px 2px 0px 0px rgba(26, 26, 26, 1);
-    --shadow-md: 4px 4px 0px 0px rgba(26, 26, 26, 1);
-    --shadow-subtle: 4px 4px 0px 0px rgba(26, 26, 26, 0.1);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-subtle: 0px 0px 0px 0px rgba(26, 26, 26, 0.1);
+
+    --border-main: 1px solid var(--border-dark);
+    --border-soft: 1px solid var(--border-light);
+    --border-dashed: 1px dashed var(--border-light);
+    --ring-active: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--accent-light);
+
+    --radius-xs: 0.25rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 9999px;
 
     font-family: 'DM Sans', sans-serif;
 }
@@ -21,23 +45,23 @@
 /* Musmentor Utility Classes */
 .mus-panel {
     background-color: var(--bg-main);
-    border: 2px solid var(--border-dark);
-    border-radius: 1rem;
+    border: var(--border-main);
+    border-radius: var(--radius-md);
     /* 16px */
     box-shadow: var(--shadow-subtle);
 }
 
 .mus-surface {
     background-color: var(--bg-surface);
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
+    border: var(--border-soft);
+    border-radius: var(--radius-md);
     /* 12px */
 }
 
 .mus-card {
     background-color: var(--bg-surface);
-    border: 2px solid var(--border-dark);
-    border-radius: 1rem;
+    border: var(--border-main);
+    border-radius: var(--radius-md);
     /* box-shadow: var(--shadow-sm); */
     transition: all 0.2s ease;
 }
@@ -50,10 +74,10 @@
 .mus-button-amber {
     @apply transition-all duration-200;
     background-color: var(--accent);
-    border: 2px solid var(--border-dark);
-    border-radius: 0.75rem;
+    border: var(--border-main);
+    border-radius: var(--radius-md);
     /* box-shadow: var(--shadow-sm); */
-    color: var(--text-primary);
+    color: var(--text-inverse);
 }
 
 .mus-button-amber:hover {
@@ -70,13 +94,13 @@
     @apply transition-all duration-200 outline-none;
     background-color: transparent;
     border: 1px solid transparent;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-full);
     color: var(--text-muted);
 }
 
 .mus-button-ghost:hover {
-    background-color: rgba(232, 192, 74, 0.2);
-    border-color: rgba(26, 26, 26, 0.1);
+    background-color: var(--accent-light);
+    border-color: var(--border-light);
     color: var(--text-primary);
 }
 
@@ -84,7 +108,9 @@
     background-color: var(--accent);
     border-color: var(--border-dark);
     /* box-shadow: var(--shadow-sm); */
-    color: var(--text-primary);
+    color: var(--text-inverse);
+    border-radius: var(--radius-full);
+    font-weight: 900;
 }
 
 .mus-input-range {
@@ -106,21 +132,344 @@
     color: var(--text-primary);
 }
 
+/* Design System Utilities */
+.mus-bg-main {
+    background-color: var(--bg-main);
+}
+
+.mus-bg-surface {
+    background-color: var(--bg-surface);
+}
+
+.mus-shadow-md {
+    box-shadow: var(--shadow-md);
+}
+
+.mus-shadow-inner {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+.mus-drop-shadow-sm {
+    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.05));
+}
+
+.mus-item-active {
+    border-color: var(--accent) !important;
+    box-shadow:
+        0 0 0 2px var(--bg-main),
+        0 0 0 4px var(--accent-light),
+        var(--shadow-md) !important;
+}
+
 .mus-border-light {
     border-color: var(--border-light);
 }
 
+/* Navigation & Tabs */
+.mus-nav-container {
+    background-color: var(--bg-main);
+    border: var(--border-soft);
+    border-radius: var(--radius-xl);
+    padding: 0.25rem;
+    position: relative;
+    display: flex;
+}
+
+.mus-nav-pill {
+    background-color: var(--accent);
+    box-shadow: none;
+    border: none;
+    border-radius: var(--radius-lg);
+    transition: all 0.3s ease-in-out;
+}
+
+.mus-nav-btn {
+    position: relative;
+    flex: 1;
+    padding: 0.375rem 0;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: var(--radius-lg);
+    transition: all 0.2s ease;
+    z-index: 10;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.mus-nav-btn:hover {
+    color: var(--text-primary);
+}
+
+.mus-nav-btn-active {
+    color: var(--text-inverse) !important;
+}
+
+/* List Items & Elements */
+.mus-element-item {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.mus-element-item:hover {
+    border-color: var(--accent);
+    background-color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.mus-element-item-active {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--accent-light) !important;
+}
+
+.mus-element-dragged {
+    opacity: 0.4;
+    filter: grayscale(1);
+    transform: scale(0.95);
+    border-style: dashed;
+    border-color: var(--accent);
+}
+
+.mus-element-drop-indicator {
+    height: 2px;
+    background-color: var(--accent);
+    border-radius: 9999px;
+    box-shadow: 0 0 8px var(--accent);
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 50;
+}
+
+/* Action Bars & Split Buttons */
+.mus-action-bar {
+    display: flex;
+    width: 100%;
+    background-color: var(--bg-main);
+    border: var(--border-soft);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+}
+
+.mus-action-btn {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.mus-action-btn:hover {
+    background-color: var(--accent-light);
+    color: var(--text-primary);
+}
+
+.mus-action-btn-icon {
+    padding: 0.625rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.mus-action-btn-icon:hover,
+.mus-action-btn-icon-active {
+    background-color: var(--accent-light);
+    color: var(--text-primary);
+}
+
+.mus-action-divider {
+    width: 1px;
+    background-color: var(--border-light);
+    align-self: stretch;
+}
+
+/* Semantic Utility Classes */
+.mus-rounded-xs {
+    border-radius: var(--radius-xs);
+}
+
+.mus-rounded-sm {
+    border-radius: var(--radius-sm);
+}
+
+.mus-rounded-md {
+    border-radius: var(--radius-md);
+}
+
+.mus-rounded-lg {
+    border-radius: var(--radius-lg);
+}
+
+.mus-rounded-xl {
+    border-radius: var(--radius-xl);
+}
+
+.mus-rounded-full {
+    border-radius: var(--radius-full);
+}
+
+/* Inspector Semantic Classes */
+.mus-inspector-item {
+    border-radius: var(--radius-lg);
+}
+
+.mus-inspector-item-sm {
+    border-radius: var(--radius-md);
+}
+
+.mus-inspector-preview {
+    border-radius: var(--radius-md);
+}
+
+.mus-inspector-tag {
+    border-radius: var(--radius-xs);
+}
+
+/* Shared Component Semantic Classes */
+.mus-context-menu {
+    background-color: var(--bg-surface);
+    border: var(--border-soft);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 0.375rem;
+    /* 6px */
+    min-width: 200px;
+    user-select: none;
+}
+
+.mus-menu-item {
+    @apply px-4 py-2 cursor-pointer flex items-center justify-between transition-all duration-200;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.mus-menu-item:hover {
+    background-color: var(--accent);
+    color: var(--text-inverse);
+}
+
+.mus-menu-item-danger {
+    color: var(--danger) !important;
+}
+
+.mus-menu-divider {
+    height: 1px;
+    background-color: var(--border-light);
+    margin: 0.375rem 0.25rem;
+}
+
+/* Modal Semantic Classes */
+.mus-modal-container {
+    background-color: var(--bg-surface);
+    border: var(--border-soft);
+    box-shadow: var(--shadow-xl);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.mus-modal-header {
+    @apply flex items-center justify-between px-6 py-4 border-b;
+    border-color: var(--border-light);
+    background-color: var(--bg-surface);
+}
+
+.mus-modal-title {
+    @apply text-xl font-bold m-0;
+    color: var(--text-primary);
+}
+
+.mus-modal-body {
+    @apply p-6;
+}
+
+.mus-modal-footer {
+    @apply px-6 py-4 border-t flex justify-end gap-3;
+    border-color: var(--border-light);
+    background-color: var(--bg-surface);
+}
+
+.mus-modal-close-btn {
+    @apply p-1 rounded-md transition-colors;
+    color: var(--text-primary);
+}
+
+.mus-modal-close-btn:hover {
+    background-color: var(--accent-light);
+}
+
+.mus-border-main {
+    border: var(--border-main);
+}
+
+.mus-border-soft {
+    border: var(--border-soft);
+}
+
+.mus-border-t-main {
+    border-top: var(--border-main);
+}
+
+.mus-border-t-soft {
+    border-top: var(--border-soft);
+}
+
+.mus-border-b-main {
+    border-bottom: var(--border-main);
+}
+
+.mus-border-b-soft {
+    border-bottom: var(--border-soft);
+}
+
+.mus-border-l-main {
+    border-left: var(--border-main);
+}
+
+.mus-border-l-soft {
+    border-left: var(--border-soft);
+}
+
+.mus-border-r-main {
+    border-right: var(--border-main);
+}
+
+.mus-border-r-soft {
+    border-right: var(--border-soft);
+}
+
 /* Color Picker Specific */
 .mus-color-box {
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
+    border: var(--border-soft);
+    border-radius: var(--radius-md);
     box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .mus-color-handle {
     border: 2px solid white;
     border-radius: 9999px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .mus-color-slider-track {
@@ -131,8 +480,8 @@
 .mus-color-input {
     @apply transition-all duration-200 outline-none;
     background-color: var(--bg-main);
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
+    border: var(--border-soft);
+    border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-size: 10px;
     font-weight: 700;
@@ -140,7 +489,7 @@
 
 .mus-color-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(232, 192, 74, 0.1);
+    box-shadow: 0 0 0 2px var(--accent-light);
 }
 
 .mus-color-label {
@@ -152,7 +501,7 @@
 }
 
 .mus-color-swatch {
-    border: 2px solid var(--border-dark);
+    border: var(--border-main);
     border-radius: 9999px;
     box-shadow: 2px 2px 0px 0px var(--border-dark);
     transition: all 0.2s ease;
@@ -169,7 +518,7 @@
 }
 
 .mus-color-swatch-add {
-    border: 2px dashed var(--border-light);
+    border: var(--border-dashed);
     border-radius: 9999px;
     color: var(--text-muted);
     transition: all 0.2s ease;
@@ -182,7 +531,7 @@
 }
 
 .mus-color-swatch-none {
-    border: 2px solid var(--border-dark);
+    border: var(--border-main);
     border-radius: 9999px;
     box-shadow: 2px 2px 0px 0px var(--border-dark);
     background-color: white;
@@ -241,8 +590,8 @@ body {
 /* Tool Design System */
 .mus-tool-section {
     background-color: var(--bg-surface);
-    border: 1px solid var(--border-light);
-    border-radius: 1rem;
+    border: var(--border-soft);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-subtle);
     padding: 1.25rem;
     display: flex;
@@ -272,12 +621,12 @@ body {
 }
 
 .mus-tool-badge-accent {
-    background-color: rgba(232, 192, 74, 0.2);
+    background-color: var(--accent-light);
     color: var(--text-primary);
 }
 
 .mus-tool-divider {
-    border-top: 1px solid var(--border-light);
+    border-top: var(--border-soft);
     padding-top: 0.5rem;
 }
 
@@ -290,8 +639,8 @@ body {
     width: 100%;
     padding: 0.625rem 0.75rem;
     background-color: var(--bg-main);
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
+    border: var(--border-soft);
+    border-radius: var(--radius-md);
     font-size: 0.75rem;
     /* 12px */
     font-weight: 600;
@@ -304,15 +653,15 @@ body {
 
 .mus-tool-select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(232, 192, 74, 0.1);
+    box-shadow: 0 0 0 2px var(--accent-light);
 }
 
 .mus-tool-input-group {
     display: flex;
     align-items: center;
     background-color: var(--bg-main);
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
+    border: var(--border-soft);
+    border-radius: var(--radius-md);
     overflow: hidden;
 }
 
@@ -327,7 +676,7 @@ body {
 }
 
 .mus-tool-input-btn:hover {
-    background-color: rgba(232, 192, 74, 0.1);
+    background-color: var(--accent-light);
     color: var(--text-primary);
 }
 
@@ -346,12 +695,12 @@ body {
 .mus-tool-btn-danger {
     width: 100%;
     padding: 0.75rem;
-    border-radius: 0.75rem;
-    background-color: rgba(192, 57, 43, 0.05);
+    border-radius: var(--radius-md);
+    background-color: hsla(0, 84%, 44%, 0.05);
     color: var(--danger);
     font-size: 0.625rem;
     font-weight: 800;
-    border: 1px solid rgba(192, 57, 43, 0.1);
+    border: 1px solid hsla(0, 84%, 44%, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -369,7 +718,7 @@ body {
 
 .mus-tool-btn {
     padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
     font-weight: 600;
     transition: all 0.2s ease;
@@ -383,7 +732,7 @@ body {
 
 .mus-tool-btn-surface {
     background-color: var(--bg-main);
-    border: 1px solid var(--border-light);
+    border: var(--border-soft);
     color: var(--text-primary);
 }
 
@@ -432,8 +781,8 @@ body {
     width: 100%;
     padding: 0.625rem 0.75rem;
     background-color: var(--bg-main);
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
+    border: var(--border-soft);
+    border-radius: var(--radius-md);
     padding-left: 1.75rem;
     font-size: 0.75rem;
     font-weight: 600;
@@ -444,7 +793,7 @@ body {
 
 .mus-tool-input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(232, 192, 74, 0.1);
+    box-shadow: 0 0 0 2px var(--accent-light);
 }
 
 .mus-tool-input-prefix {
@@ -470,13 +819,17 @@ body {
     user-select: none;
     pointer-events: none;
 }
+
 .hide-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none;    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-    display: none;             /* Chrome, Safari and Opera */
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 /* Image Filter System */
@@ -496,8 +849,9 @@ body {
 .mus-filter-thumb-wrapper {
     width: 100%;
     aspect-ratio: 1 / 1;
-    border-radius: 0.75rem; /* 12px */
-    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    /* 12px */
+    border: var(--border-soft);
     overflow: hidden;
     position: relative;
     transition: all 0.2s ease;
@@ -506,7 +860,7 @@ body {
 .mus-filter-thumb-wrapper.active {
     border: 3.5px solid var(--accent);
     padding: 2px;
-    background-color: white;
+    background-color: var(--bg-surface);
     box-shadow: 4px 4px 0px 0px var(--border-dark);
     transform: translate(-1px, -1px);
 }
@@ -514,7 +868,8 @@ body {
 .mus-filter-thumb-inner {
     width: 100%;
     height: 100%;
-    border-radius: 0.5rem; /* 8px */
+    border-radius: var(--radius-sm);
+    /* 8px */
     overflow: hidden;
     background-color: var(--bg-surface);
     display: flex;
@@ -523,7 +878,8 @@ body {
 }
 
 .mus-filter-label {
-    font-size: 0.625rem; /* 10px */
+    font-size: 0.625rem;
+    /* 10px */
     font-weight: 700;
     line-height: 1.25;
     text-align: center;
@@ -540,7 +896,8 @@ body {
 }
 
 .mus-carousel-nav-btn {
-    width: 1.75rem; /* 28px */
+    width: 1.75rem;
+    /* 28px */
     height: 1.75rem;
     border-radius: 9999px;
     background-color: var(--bg-surface);
@@ -564,7 +921,7 @@ body {
 .mus-subview-container {
     position: absolute;
     inset: 0;
-    background-color: white;
+    background-color: var(--bg-surface);
     z-index: 60;
     display: flex;
     flex-direction: column;
@@ -572,13 +929,20 @@ body {
 }
 
 @keyframes slideIn {
-    from { transform: translateX(1rem); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+        transform: translateX(1rem);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 .mus-subview-header {
     padding: 1rem;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: var(--border-soft);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -608,4 +972,3 @@ body {
 .mus-border-light {
     border-color: var(--border-light);
 }
-

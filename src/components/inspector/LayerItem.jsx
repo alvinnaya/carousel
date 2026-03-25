@@ -86,7 +86,7 @@ const LayerItem = ({
             {/* Drop Indicator Line */}
             {isDropTarget && draggedIndex !== index && (
                 <div
-                    className={`absolute left-0 right-0 h-1 bg-[#E8C04A] z-50 rounded-full transition-all duration-200 shadow-[0_0_10px_rgba(232,192,74,0.5)]
+                    className={`mus-element-drop-indicator transition-all duration-200
                         ${dropPosition === 'top' ? '-top-3' : '-bottom-3'}
                     `}
                 />
@@ -94,17 +94,16 @@ const LayerItem = ({
 
             <div
                 className={`
-                    relative rounded-2xl border-2 flex items-center justify-center overflow-hidden transition-all duration-200 cursor-pointer
-                    ${isActive ? 'border-[#1A1A1A] ring-4 ring-[#E8C04A]/30 shadow-lg' : 'border-[#D4CBBA] hover:border-[#1A1A1A]'}
-                    ${isDragged ? 'opacity-40 grayscale scale-95 border-dashed' : 'opacity-100 grayscale-0 scale-100'}
+                    relative rounded-2xl flex items-center justify-center overflow-hidden transition-all duration-200
+                    ${isActive ? 'mus-element-item-active' : 'mus-element-item'}
+                    ${isDragged ? 'mus-element-dragged' : ''}
                 `}
                 style={{
-                    backgroundColor: 'var(--bg-surface)',
                     width: '100%',
                     aspectRatio: '1 / 1'
                 }}
             >
-                <div className="absolute top-2 left-2 z-10 text-[10px] font-black mus-text-muted bg-[#FDFAF5] border border-[#D4CBBA] px-1.5 rounded-md shadow-sm">
+                <div className="absolute top-2 left-2 z-10 text-[10px] font-bold text-[var(--text-muted)] mus-bg-surface mus-border-soft px-1.5 rounded-md">
                     {index + 1}
                 </div>
 
@@ -130,7 +129,7 @@ const LayerItem = ({
                     >
                         <div className="flex flex-col min-w-[140px]">
                             <button
-                                className="text-left px-3 py-2 text-sm font-semibold hover:bg-[#E8C04A] hover:text-[#1A1A1A] rounded-lg transition-colors"
+                                className="mus-menu-item"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onDuplicate();
@@ -139,7 +138,7 @@ const LayerItem = ({
                                 Duplicate
                             </button>
                             <button
-                                className="text-left px-3 py-2 text-sm font-semibold hover:bg-[#E8C04A] hover:text-[#1A1A1A] rounded-lg transition-colors"
+                                className="mus-menu-item"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onInsert();
@@ -148,11 +147,7 @@ const LayerItem = ({
                                 Add New
                             </button>
                             <button
-                                className={`text-left px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                                    canDelete 
-                                    ? 'text-red-600 hover:bg-red-50' 
-                                    : 'text-zinc-300 cursor-not-allowed'
-                                }`}
+                                className="mus-menu-item mus-menu-item-danger"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (canDelete) onDelete();
@@ -182,7 +177,7 @@ const LayerItem = ({
             >
                 <div className="flex flex-col gap-0.5">
                     <button
-                        className="text-left px-4 py-2 text-[12px] font-bold hover:bg-[#E8C04A] hover:text-[#1A1A1A] rounded-lg transition-all duration-200 mus-text-primary flex items-center justify-between"
+                        className="mus-menu-item"
                         onClick={(e) => {
                             e.stopPropagation();
                             onDuplicate();
@@ -193,7 +188,7 @@ const LayerItem = ({
                         <span className="text-[9px] opacity-40 ml-3 font-black">⌘D</span>
                     </button>
                     <button
-                        className="text-left px-4 py-2 text-[12px] font-bold hover:bg-[#E8C04A] hover:text-[#1A1A1A] rounded-lg transition-all duration-200 mus-text-primary flex items-center justify-between"
+                        className="mus-menu-item"
                         onClick={(e) => {
                             e.stopPropagation();
                             onInsert();
@@ -204,11 +199,7 @@ const LayerItem = ({
                         <span className="text-[9px] opacity-40 ml-3 font-black">⌘N</span>
                     </button>
                     <button
-                        className={`text-left px-4 py-2 text-[12px] font-bold rounded-lg transition-all duration-200 flex items-center justify-between ${
-                            canDelete 
-                            ? 'text-red-600 hover:bg-red-50' 
-                            : 'text-zinc-300 cursor-not-allowed'
-                        }`}
+                        className="mus-menu-item mus-menu-item-danger"
                         onClick={(e) => {
                             e.stopPropagation();
                             if (canDelete) {

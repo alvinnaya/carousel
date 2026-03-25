@@ -1,0 +1,112 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import authService from '../api/authService';
+
+const RegisterPage = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [userName, setUserName] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setIsSubmitting(true);
+    
+    try {
+      const response = await authService.register({ email, password, userName });
+      if (response.success) {
+        setSuccess('Registration successful! Please check your email to confirm.');
+        // Optionally redirect to login after a delay
+        setTimeout(() => navigate('/login'), 3000);
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center p-6 font-['DM_Sans']">
+      <div className="w-full max-w-md mus-panel p-10 bg-[var(--bg-surface)]">
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-16 h-16 bg-[var(--accent)] border-2 border-[var(--border-dark)] rounded-2xl flex items-center justify-center shadow-[var(--shadow-md)] mb-4">
+            <span className="font-bold text-3xl">C</span>
+          </div>
+          <h2 className="text-3xl font-black tracking-tight">Create Account</h2>
+          <p className="text-[var(--text-muted)] font-bold text-sm mt-2">Start creating stunning carousels</p>
+        </div>
+
+        <form onSubmit={handleRegister} className="flex flex-col gap-6">
+          {error && (
+            <div className="p-3 bg-red-100 border border-red-200 text-[var(--danger)] text-xs font-bold rounded-lg">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="p-3 bg-green-100 border border-green-200 text-green-700 text-xs font-bold rounded-lg">
+              {success}
+            </div>
+          )}
+          
+          <div className="flex flex-col gap-2">
+            <label className="mus-tool-label">Full Name</label>
+            <input 
+              type="text" 
+              placeholder="Alex Doe"
+              className="mus-tool-input !pl-4"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="mus-tool-label">Email Address</label>
+            <input 
+              type="email" 
+              placeholder="alex@example.com"
+              className="mus-tool-input !pl-4"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="mus-tool-label">Password</label>
+            <input 
+              type="password" 
+              placeholder="••••••••"
+              className="mus-tool-input !pl-4"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="mus-button-amber py-4 font-black text-lg mt-4 shadow-[var(--shadow-sm)] disabled:opacity-50"
+          >
+            {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        <p className="text-center mt-8 text-[var(--text-muted)] font-bold text-sm">
+          Already have an account? <Link to="/login" className="text-[var(--text-primary)] hover:underline">Sign In</Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default RegisterPage;

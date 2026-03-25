@@ -52,10 +52,6 @@ const TextTools = ({ activeObject }) => {
 
             <TextStylingTools activeObject={activeObject} />
 
-            <OpacityTool activeObject={activeObject} />
-
-            <CommonActionTools activeObject={activeObject} objectTypeLabel="Text" />
-
             <CollapsibleToolSection
                 title="Fill Color"
                 actionButton={
@@ -71,13 +67,18 @@ const TextTools = ({ activeObject }) => {
                 />
             </CollapsibleToolSection>
 
+
             <HighlightColorTool activeObject={activeObject} />
 
             <ShadowTool activeObject={activeObject} />
 
             <StrokeTools activeObject={activeObject} />
 
+            <OpacityTool activeObject={activeObject} />
+
             <TransformTools activeObject={activeObject} />
+
+            <CommonActionTools activeObject={activeObject} objectTypeLabel="Text" />
         </div>
     );
 };

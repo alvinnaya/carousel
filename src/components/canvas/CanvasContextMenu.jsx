@@ -93,7 +93,7 @@ const CanvasContextMenu = () => {
                     {clipboard ? (
                         <MenuButton label="Paste" icon="⌘V" onClick={() => handleActionWithClose('paste')} />
                     ) : (
-                        <div className="px-4 py-2.5 mus-text-muted text-[11px] font-black uppercase tracking-widest italic">
+                        <div className="px-4 py-2.5 mus-text-muted text-[11px] font-bold uppercase tracking-widest italic">
                             Empty Canvas
                         </div>
                     )}
@@ -230,7 +230,7 @@ export const MenuSection = ({ children }) => (
 );
 
 export const Divider = () => (
-    <div className="h-px mus-border-light border-b my-1.5 mx-1" />
+    <div className="mus-menu-divider" />
 );
 
 export const MenuButton = ({ label, onClick, icon, variant = 'default' }) => (
@@ -240,13 +240,12 @@ export const MenuButton = ({ label, onClick, icon, variant = 'default' }) => (
             onClick();
         }}
         className={`
-            px-4 py-2 cursor-pointer text-[12px] font-bold flex items-center justify-between transition-all duration-200 rounded-lg
-            ${variant === 'danger' ? 'text-[#C0392B]' : 'mus-text-primary'}
-            hover:bg-[#E8C04A] hover:text-[#1A1A1A]
+            mus-menu-item
+            ${variant === 'danger' ? 'mus-menu-item-danger' : ''}
         `}
     >
         <span>{label}</span>
-        {icon && <span className="text-[9px] opacity-40 ml-3 font-black">{icon}</span>}
+        {icon && <span className="text-[9px] opacity-40 ml-3 font-bold">{icon}</span>}
     </div>
 );
 

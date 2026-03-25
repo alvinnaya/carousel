@@ -50,7 +50,7 @@ const CornerRadiusTool = ({ activeObject }) => {
     if (!isSupported) return null;
 
     return (
-        <CollapsibleToolSection title="Corner Radius">
+        <CollapsibleToolSection defaultOpen={true} title="Corner Radius">
             <div className="flex items-center gap-3">
                 <div className="mus-tool-badge w-12 h-7 flex items-center justify-center gap-0.5 flex-shrink-0 px-2">
                     <DelayedInput

@@ -45,8 +45,8 @@ const FontItem = ({ font, isActive, onSelect }) => {
             ref={ref}
             onClick={() => onSelect(font)}
             className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150 flex items-center justify-between group ${isActive
-                    ? 'bg-[#E8C04A] text-[#1A1A1A] font-bold border-2 border-[#1A1A1A] shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]'
-                    : 'hover:bg-[#E8C04A]/20 text-[#1A1A1A] border-2 border-transparent'
+                ? 'bg-[var(--accent)] text-white font-bold border border-[var(--accent)] shadow-[var(--shadow-sm)]'
+                : 'hover:bg-[var(--accent-light)] text-[var(--text-primary)] border border-transparent'
                 }`}
         >
             <div className="flex flex-col gap-0.5">
@@ -56,7 +56,7 @@ const FontItem = ({ font, isActive, onSelect }) => {
                 >
                     {font}
                 </span>
-                <span className="text-[9px] text-[#7A7062] font-black uppercase tracking-tighter">
+                <span className="text-[9px] text-[var(--text-muted)] font-black uppercase tracking-tighter">
                     {loaded ? 'Google Fonts' : 'Loading…'}
                 </span>
             </div>
@@ -69,8 +69,8 @@ const FontItem = ({ font, isActive, onSelect }) => {
                     Abgl
                 </span>
                 {isActive && (
-                    <div className="w-4 h-4 rounded-full bg-[#1A1A1A] flex items-center justify-center">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
                     </div>
@@ -255,7 +255,7 @@ const TextStylingTools = ({ activeObject }) => {
     ) : null;
 
     return (
-        <CollapsibleToolSection title="Text" actionButton={selectionBadge}>
+        <CollapsibleToolSection title="Text" defaultOpen={true} actionButton={selectionBadge}>
 
             {/* ── FONT FAMILY ────────────────────────────────────────── */}
             <div className="space-y-2 relative">
@@ -266,15 +266,15 @@ const TextStylingTools = ({ activeObject }) => {
                     trigger={
                         <button
                             onClick={() => setIsFontPickerOpen(!isFontPickerOpen)}
-                            className={`${selectClass} w-full text-left flex items-center gap-3 px-3 h-11 bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] hover:shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] transition-all duration-200`}
+                            className={`${selectClass} w-full text-left flex items-center gap-3 px-3 h-11 transition-all duration-200`}
                         >
-                            <div className="w-6 h-6 rounded-md bg-[#F2EDE4] border border-[#1A1A1A] flex items-center justify-center text-[#1A1A1A] shrink-0">
+                            <div className="w-6 h-6 rounded-md bg-[var(--bg-main)] border border-[var(--border-light)] flex items-center justify-center text-[var(--text-primary)] shrink-0">
                                 <span className="text-[10px] font-black uppercase">Ag</span>
                             </div>
                             <span className="truncate flex-1 text-xs font-bold uppercase tracking-tight" style={{ fontFamily }}>
                                 {fontFamily}
                             </span>
-                            <div className="text-[#1A1A1A]">
+                            <div className="text-[var(--text-muted)]">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M6 9l6 6 6-6" />
                                 </svg>
