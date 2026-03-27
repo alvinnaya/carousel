@@ -7,6 +7,7 @@ const authService = {
     apiClient.get(`/Auth/confirm-email?userId=${userId}&token=${token}`),
   refreshToken: (refreshToken) => apiClient.post('/Auth/refresh-token', { refreshToken }),
   logout: (refreshToken) => apiClient.post('/Auth/logout', { refreshToken }),
+  googleLogin: (idToken) => apiClient.post('/Auth/google', { idToken }),
 };
 
 export default authService;

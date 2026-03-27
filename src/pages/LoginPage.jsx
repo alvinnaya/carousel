@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,6 +17,18 @@ const LoginPage = () => {
     setIsSubmitting(true);
     
     const result = await login(email, password);
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.message);
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setIsSubmitting(true);
+    const result = await loginWithGoogle(credentialResponse.credential);
     if (result.success) {
       navigate('/dashboard');
     } else {
@@ -71,10 +84,29 @@ const LoginPage = () => {
           >
             {isSubmitting ? 'Signing In...' : 'Sign In'}
           </button>
+
+          <div className="relative my-4">
+             <div className="absolute inset-0 flex items-center">
+               <div className="w-full border-t border-[var(--border-light)]"></div>
+             </div>
+             <div className="relative flex justify-center text-xs font-bold uppercase">
+               <span className="bg-[var(--bg-surface)] px-2 text-[var(--text-muted)]">Or continue with</span>
+             </div>
+           </div>
+
+           <div className="flex justify-center">
+             <GoogleLogin
+               onSuccess={handleGoogleSuccess}
+               onError={() => setError('Google Sign-In failed')}
+               useOneTap
+               theme="filled_black"
+               shape="pill"
+             />
+           </div>
         </form>
 
         <p className="text-center mt-8 text-[var(--text-muted)] font-bold text-sm">
-          Don't have an account? <span className="text-[var(--text-primary)] cursor-pointer hover:underline">Sign Up</span>
+          Don't have an account? <Link to="/register" className="text-[var(--text-primary)] hover:underline">Sign Up</Link>
         </p>
       </div>
     </div>

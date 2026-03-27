@@ -70,9 +70,30 @@ export const AuthProvider = ({ children }) => {
         }
         return { success: true };
       }
-      return { success: false, message: response.message };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Login failed' };
+    }
+  };
+
+  const loginWithGoogle = async (idToken) => {
+    try {
+      const response = await authService.googleLogin(idToken);
+      if (response.success) {
+        const { token, refreshToken } = response.data;
+        setToken(token);
+        
+        const decodedUser = parseJwt(token);
+        setUser(decodedUser || response.data); 
+        
+        localStorage.setItem('token', token);
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
+        return { success: true };
+      }
+      return { success: false, message: response.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Google Login failed' };
     }
   };
 
@@ -93,7 +114,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, loginWithGoogle, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

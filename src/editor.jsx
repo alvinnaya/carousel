@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom'
 import designService from './api/designService'
 import pageService from './api/pageService'
 import { Loader2 } from 'lucide-react'
+import { refreshPagesImageUrls } from './utils/canvasUtils'
 
 function Editor() {
   const { id } = useParams()
@@ -37,11 +38,14 @@ function Editor() {
         }
 
         if (pagesRes?.success && Array.isArray(pagesRes.data)) {
-          setPages(pagesRes.data);
+          const refreshed = await refreshPagesImageUrls(pagesRes.data);
+          setPages(refreshed);
         } else if (Array.isArray(pagesRes)) {
-          setPages(pagesRes);
+          const refreshed = await refreshPagesImageUrls(pagesRes);
+          setPages(refreshed);
         } else if (pagesRes?.data && Array.isArray(pagesRes.data.items)) {
-          setPages(pagesRes.data.items);
+          const refreshed = await refreshPagesImageUrls(pagesRes.data.items);
+          setPages(refreshed);
         }
       } catch (err) {
         setError('Failed to load design data')

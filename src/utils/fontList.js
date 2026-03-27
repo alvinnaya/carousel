@@ -78,19 +78,39 @@ export const getUsedFonts = (canvases) => {
     if (!Array.isArray(canvases)) return {};
     
     const fontMap = {};
+
+    const addFont = (family, weight) => {
+        if (!family) return;
+        const normalizedFamily = family.split(',')[0].trim().replace(/['"|]/g, '');
+        if (FONT_LIST.includes(normalizedFamily)) {
+            if (!fontMap[normalizedFamily]) fontMap[normalizedFamily] = new Set();
+            fontMap[normalizedFamily].add(parseInt(weight) || 400);
+        }
+    };
+
     canvases.forEach(canvas => {
         if (canvas && canvas.objects) {
             canvas.objects.forEach(obj => {
                 const type = obj.type ? obj.type.toLowerCase() : '';
-                if (obj.fontFamily && (type.includes('text') || type.includes('textbox'))) {
-                    const family = obj.fontFamily.split(',')[0].trim().replace(/['"|]/g, '');
+                if (type.includes('text') || type.includes('textbox')) {
+                    // 1. Check top-level properties
+                    addFont(obj.fontFamily, obj.fontWeight);
                     
-                    if (FONT_LIST.includes(family)) {
-                        if (!fontMap[family]) fontMap[family] = new Set();
-                        
-                        // Extract weight (default to 400 if not specified)
-                        const weight = parseInt(obj.fontWeight) || 400;
-                        fontMap[family].add(weight);
+                    // 2. Deep scan styles (per-character/per-selection styling)
+                    // Fabric.js structure: obj.styles[lineIndex][charIndex] = { fontFamily, fontWeight, ... }
+                    if (obj.styles) {
+                        try {
+                            Object.values(obj.styles).forEach(line => {
+                                Object.values(line).forEach(charStyle => {
+                                    // If char has a specific family, use it. Otherwise it might inherit from obj.
+                                    const family = charStyle.fontFamily || obj.fontFamily;
+                                    const weight = charStyle.fontWeight || obj.fontWeight;
+                                    addFont(family, weight);
+                                });
+                            });
+                        } catch (err) {
+                            console.warn('Error scanning deep styles for fonts', err);
+                        }
                     }
                 }
             });
@@ -144,17 +164,17 @@ export const loadFontPreview = async (fontName) => {
 
 /**
  * Full font loader for canvas use.
- * Optimized to load only requested weights. If weights array is empty, loads a standard set (400, 700).
+ * Optimized to load only requested weights. If weights array is empty, loads a standard set (100-900).
  *
  * @param {string} fontName - The exact font name as it appears in FONT_LIST
  * @param {number[]} requestedWeights - Array of weights to load (e.g. [400, 700, 900])
  * @returns {Promise<void>}
  */
 export const loadGoogleFont = async (fontName, requestedWeights = []) => {
-    // Determine weights to load: use requested or default to common ones (400, 700)
+    // Determine weights to load: use requested or default to common ones (100-900)
     let weightsToLoad = requestedWeights.length > 0 
         ? [...new Set(requestedWeights)].sort((a, b) => a - b)
-        : [400, 700];
+        : [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
     const weightString = weightsToLoad.join(';');
     const cacheKey = `${fontName}:${weightString}`;

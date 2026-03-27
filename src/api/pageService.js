@@ -4,6 +4,7 @@ const pageService = {
   getByDesignId: (designId) => apiClient.get(`/designs/${designId}/pages`),
   create: (designId, data) => apiClient.post(`/designs/${designId}/pages`, data),
   update: (pageId, data) => apiClient.put(`/pages/${pageId}`, data),
+  reorder: (designId, pageOrders) => apiClient.put(`/designs/${designId}/pages/reorder`, { pageOrders }),
   delete: (pageId) => apiClient.delete(`/pages/${pageId}`),
 };
 

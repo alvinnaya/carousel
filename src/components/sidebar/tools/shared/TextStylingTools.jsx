@@ -175,6 +175,7 @@ const TextStylingTools = ({ activeObject }) => {
         setIsFontPickerOpen(false);
 
         // Wait for the font to load via the CSS Font Loading API
+        // By default, loadGoogleFont now loads ALL weights (100-900)
         await loadGoogleFont(family);
 
         // Optimistically update the UI dropdown
@@ -191,8 +192,12 @@ const TextStylingTools = ({ activeObject }) => {
         }
     };
 
-    const applyFontWeight = (weight) => {
+    const applyFontWeight = async (weight) => {
         if (!activeObject) return;
+
+        // Ensure this specific weight is loaded (in case it wasn't pre-loaded)
+        await loadGoogleFont(fontFamily, [weight]);
+
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {
             changeSelectedTextProperty(activeObject, 'fontWeight', weight, canvas);

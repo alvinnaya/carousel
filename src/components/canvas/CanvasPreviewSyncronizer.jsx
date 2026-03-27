@@ -1,17 +1,32 @@
 import { useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
 import { useCanvasContext } from '../../context/CanvasContext';
+import { getUsedFonts, loadGoogleFont } from '../../utils/fontList';
 
 const PREVIEW_MULTIPLIER = 0.2;
 const PREVIEW_QUALITY = 0.5;
 const DEFAULT_CANVAS_SIZE = 1080;
 
 const CanvasPreviewSyncronizer = () => {
-    const { canvases, activeCanvasIndex, updatePreview, canvas } = useCanvasContext();
+    const { canvases, activeCanvasIndex, updatePreview, canvas, isFontsReady } = useCanvasContext();
     const hasInitializedAllPreviewsRef = useRef(false);
 
     const syncPreviewForIndex = async (index, savedState) => {
         if (!savedState) return;
+
+        // Load fonts first before rendering preview
+        const usedFonts = getUsedFonts([savedState]);
+        const fontLoadPromises = Object.entries(usedFonts).map(([fontName, weightsSet]) => {
+            return loadGoogleFont(fontName, Array.from(weightsSet));
+        });
+
+        if (fontLoadPromises.length > 0) {
+            try {
+                await Promise.all(fontLoadPromises);
+            } catch (err) {
+                console.error('Error loading fonts for preview:', err);
+            }
+        }
 
         const offscreenEl = document.createElement('canvas');
         const offscreenCanvas = new fabric.StaticCanvas(offscreenEl, {
@@ -36,7 +51,7 @@ const CanvasPreviewSyncronizer = () => {
 
 
     useEffect(() => {
-        if (!Array.isArray(canvases) || canvases.length === 0) return;
+        if (!isFontsReady || !Array.isArray(canvases) || canvases.length === 0) return;
 
         const syncAllPreviews = async () => {
             for (let i = 0; i < canvases.length; i += 1) {
@@ -52,9 +67,11 @@ const CanvasPreviewSyncronizer = () => {
         };
 
         syncAllPreviews();
-    }, [canvases.length]); // Sync all when count changes
+    }, [canvases.length, isFontsReady]); // Sync all when count changes or fonts are ready
 
     useEffect(() => {
+        if (!isFontsReady) return;
+
         const savedState = canvases?.[activeCanvasIndex];
         if (!savedState) return;
         let isCancelled = false;
@@ -72,7 +89,7 @@ const CanvasPreviewSyncronizer = () => {
         syncPreview();
 
         return () => { isCancelled = true; };
-    }, [canvases, activeCanvasIndex]);
+    }, [canvases, activeCanvasIndex, isFontsReady]);
 
     return null;
 };

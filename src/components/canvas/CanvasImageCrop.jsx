@@ -268,7 +268,7 @@ function makeCropRender(isVertical, scale) {
         ctx.fill();
         
         ctx.lineWidth = 2 / scale;
-        ctx.strokeStyle = 'hsl(19, 87%, 65%)';
+        ctx.strokeStyle = 'hsl(0, 0%, 0%)';
         ctx.stroke();
         
         ctx.restore();

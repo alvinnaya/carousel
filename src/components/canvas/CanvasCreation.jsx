@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
 import { useCanvasContext } from '../../context/CanvasContext';
 import { CanvasDefaultControllerStyling } from './CanvasControllerStyling';
+import { ensureCORS } from '../../utils/canvasUtils';
 
 const CanvasCreation = () => {
     const canvasRef = useRef(null);
@@ -64,7 +65,9 @@ const CanvasCreation = () => {
             // Check if savedState is not empty and has objects
             if (savedState && savedState.objects && savedState.objects.length > 0) {
                 console.log('Loading state from context for index:', activeCanvasIndex);
-                await fabricCanvas.loadFromJSON(savedState);
+                // Extra safety: ensure CORS on all images in the JSON
+                const corsSafeState = ensureCORS(savedState);
+                await fabricCanvas.loadFromJSON(corsSafeState);
                 fabricCanvas.renderAll();
             } else {
                 // console.log('Initializing new canvas for index:', activeCanvasIndex);

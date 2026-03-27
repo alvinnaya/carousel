@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 import Dashboard from './pages/dashboard/Dashboard.jsx'
 import PrivateRoute from './PrivateRoute.jsx'
+import PublicRoute from './PublicRoute.jsx'
 
 function App() {
   return (
@@ -13,8 +14,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/editor/:id" element={<PrivateRoute><Editor /></PrivateRoute>} />
         </Routes>

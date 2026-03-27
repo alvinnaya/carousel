@@ -272,11 +272,19 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
   };
 
   const movePage = async (fromIndex, toIndex) => {
+    let updatedCanvases = [];
     setCanvases(prev => {
       const next = [...prev];
       const [movedItem] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, movedItem);
-      return next;
+      
+      // Update local _order property based on new index
+      updatedCanvases = next.map((canvas, index) => ({
+        ...canvas,
+        _order: index
+      }));
+      
+      return updatedCanvases;
     });
     setPreviews(prev => {
       const next = [...prev];
@@ -294,8 +302,26 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
       setActiveCanvasIndex(activeCanvasIndex + 1);
     }
 
-    // Backend update for orders would go here if needed
-    // Typically we'd call a bulk update endpoint or update both shifted pages
+    // Backend update for orders
+    const designId = designInfo?.id;
+    if (designId && updatedCanvases.length > 0) {
+      const pageOrders = updatedCanvases
+        .filter(c => c._pageId) // Only send pages that exist in DB
+        .map(c => ({
+          id: c._pageId,
+          order: c._order
+        }));
+
+      if (pageOrders.length > 0) {
+        try {
+          await pageService.reorder(designId, pageOrders);
+          console.log('Pages reordered successfully');
+        } catch (err) {
+          console.error('Failed to reorder pages backend', err);
+          // In a real app, you might want to revert the UI if this fails
+        }
+      }
+    }
   };
 
   const recordHistory = (index, state) => {

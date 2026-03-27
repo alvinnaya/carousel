@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  FolderOpen, 
-  Palette, 
+import {
+  LayoutDashboard,
+  FolderOpen,
+  Palette,
   Grid
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +16,8 @@ import DashboardHeader from './components/DashboardHeader';
 import ProjectsView from './components/ProjectsView';
 import UsersView from './components/UsersView';
 import UserStatsModal from './components/UserStatsModal';
+import AssetsView from './components/AssetsView';
+import { ConfirmModal } from '../../components/ui/Modal';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -27,6 +29,11 @@ const Dashboard = () => {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUserStats, setSelectedUserStats] = useState(null);
   const [error, setError] = useState('');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDanger: false });
+
+  const showConfirm = (title, message, onConfirm, isDanger = false) => {
+    setConfirmModal({ isOpen: true, title, message, onConfirm, isDanger });
+  };
 
   const isAdmin = user?.roles?.includes('Admin');
 
@@ -43,7 +50,7 @@ const Dashboard = () => {
       setLoading(true);
       const response = await designService.getAll();
       console.log('Dashboard fetch response full:', response);
-      
+
       let extractedDesigns = [];
       if (Array.isArray(response)) {
         extractedDesigns = response;
@@ -80,19 +87,24 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteDesign = async (e, id) => {
+  const handleDeleteDesign = (e, id) => {
     e.preventDefault();
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this design?')) {
-      try {
-        const response = await designService.delete(id);
-        if (response.success) {
-          setDesigns(designs.filter(d => d.id !== id));
+    showConfirm(
+      'Hapus Desain?',
+      'Desain ini akan dihapus secara permanen dan tidak dapat dikembalikan.',
+      async () => {
+        try {
+          const response = await designService.delete(id);
+          if (response.success) {
+            setDesigns(designs.filter(d => d.id !== id));
+          }
+        } catch (err) {
+          console.error('Failed to delete design', err);
         }
-      } catch (err) {
-        console.error('Failed to delete design', err);
-      }
-    }
+      },
+      true
+    );
   };
 
   const fetchUsers = async () => {
@@ -127,17 +139,22 @@ const Dashboard = () => {
     }
   };
 
-  const handlePromote = async (id) => {
-    if (window.confirm('Promote this user to Admin?')) {
-      try {
-        const response = await userService.promoteToAdmin(id);
-        if (response.success) {
-          fetchUsers();
+  const handlePromote = (id) => {
+    showConfirm(
+      'Promosikan ke Admin?',
+      'User ini akan diberikan hak akses Admin. Tindakan ini tidak dapat dibatalkan dengan mudah.',
+      async () => {
+        try {
+          const response = await userService.promoteToAdmin(id);
+          if (response.success) {
+            fetchUsers();
+          }
+        } catch (err) {
+          console.error('Failed to promote user', err);
         }
-      } catch (err) {
-        console.error('Failed to promote user', err);
-      }
-    }
+      },
+      true
+    );
   };
 
   const tools = [
@@ -149,11 +166,21 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-[var(--bg-main)] font-['DM_Sans'] overflow-hidden relative">
-      <Sidebar 
-        tools={tools} 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        logout={logout} 
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(s => ({ ...s, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        isDanger={confirmModal.isDanger}
+        confirmLabel="Ya, lanjutkan"
+        cancelLabel="Batal"
+      />
+      <Sidebar
+        tools={tools}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        logout={logout}
       />
 
       <main className="flex-1 flex flex-col ml-24 overflow-hidden h-full">
@@ -161,14 +188,16 @@ const Dashboard = () => {
 
         <div className="flex-1 overflow-y-auto px-10 pb-10 custom-scrollbar">
           {activeTab === 'Users' && isAdmin ? (
-            <UsersView 
-              users={users} 
-              loadingUsers={loadingUsers} 
-              fetchUserStats={fetchUserStats} 
-              handlePromote={handlePromote} 
+            <UsersView
+              users={users}
+              loadingUsers={loadingUsers}
+              fetchUserStats={fetchUserStats}
+              handlePromote={handlePromote}
             />
+          ) : activeTab === 'Assets' ? (
+            <AssetsView user={user} />
           ) : (
-            <ProjectsView 
+            <ProjectsView
               designs={designs}
               loading={loading}
               error={error}
@@ -181,9 +210,9 @@ const Dashboard = () => {
         </div>
       </main>
 
-      <UserStatsModal 
-        stats={selectedUserStats} 
-        onClose={() => setSelectedUserStats(null)} 
+      <UserStatsModal
+        stats={selectedUserStats}
+        onClose={() => setSelectedUserStats(null)}
       />
     </div>
   );
