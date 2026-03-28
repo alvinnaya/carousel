@@ -2,11 +2,17 @@ import React from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 import * as fabric from 'fabric';
 
+import { loadGoogleFont } from '../../utils/fontList';
+
 const AddText = () => {
     const { canvas } = useCanvasContext();
 
-    const handleAddText = (type) => {
+    const handleAddText = async (type) => {
         if (!canvas) return;
+
+        // Ensure the font is fully loaded and ready before creating the Fabric text object.
+        // Fabric measures text upon creation; if the font isn't loaded, measuring fails.
+        await loadGoogleFont('Inter', [400, 500, 700]);
 
         let text;
         const commonOptions = {
@@ -14,7 +20,7 @@ const AddText = () => {
             top: canvas.height / 2 - 20,
             width: 200,
             textAlign: 'left',
-            fontFamily: 'Inter, ui-sans-serif, system-ui',
+            fontFamily: 'Inter', // Must use exact font name without fallbacks for Fabric
         };
 
         switch (type) {

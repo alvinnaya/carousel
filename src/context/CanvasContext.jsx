@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import pageService from '../api/pageService';
 import { getUsedFonts, loadGoogleFont } from '../utils/fontList';
 
@@ -46,6 +46,13 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
   const [isFontsReady, setIsFontsReady] = useState(false);
   const isInternalAction = useRef(false);
   const viewportRef = useRef(null);
+  const scaleRef = useRef(scale);
+  const translateRef = useRef(translate);
+  const canvasesRef = useRef(canvases);
+
+  useEffect(() => {
+    canvasesRef.current = canvases;
+  }, [canvases]);
 
   // Centralized Font Pre-loading: Extract all fonts from initialPages and load them once.
   useEffect(() => {
@@ -137,25 +144,39 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     });
   };
 
-  const updateCanvasState = async (index, json) => {
-    setCanvases((prev) => {
-      const newCanvases = [...prev];
-      if (newCanvases[index]) {
-        // Merge the new JSON into the existing object, preserving metadata
-        newCanvases[index] = { ...newCanvases[index], ...json };
-      }
-      return newCanvases;
-    });
-
-    // Autosave logic
-    const pageId = canvases[index]?._pageId;
-    if (pageId && !isInternalAction.current) {
-      debouncedSave(pageId, json, canvases[index]?._order);
-    }
-  };
-
   const saveTimeoutRef = useRef(null);
-  const debouncedSave = (pageId, json, order) => {
+  
+  // Custom setters that update Refs instantly but state debounced
+  const syncTimeoutRef = useRef({ scale: null, translate: null });
+
+  const setScaleOptimized = useCallback((update) => {
+    const newScale = typeof update === 'function' ? update(scaleRef.current) : update;
+    scaleRef.current = newScale;
+
+    // Dispatch fast event for zero-latency UI feedback
+    window.dispatchEvent(new CustomEvent('canvas:scale:fast', { detail: newScale }));
+
+    if (syncTimeoutRef.current.scale) clearTimeout(syncTimeoutRef.current.scale);
+    syncTimeoutRef.current.scale = setTimeout(() => {
+      setScale(newScale);
+    }, 150); // Slightly longer debounce to ensure interaction priority
+  }, []);
+
+  const setTranslateOptimized = useCallback((update) => {
+    const currentTranslate = translateRef.current;
+    const newTranslate = typeof update === 'function' ? update(currentTranslate) : update;
+    translateRef.current = newTranslate;
+
+    // Dispatch fast event for zero-latency UI feedback
+    window.dispatchEvent(new CustomEvent('canvas:translate:fast', { detail: newTranslate }));
+
+    if (syncTimeoutRef.current.translate) clearTimeout(syncTimeoutRef.current.translate);
+    syncTimeoutRef.current.translate = setTimeout(() => {
+      setTranslate(newTranslate);
+    }, 150);
+  }, []);
+
+  const debouncedSave = useCallback((pageId, json, order) => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       try {
@@ -172,7 +193,26 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
         setIsSaving(false);
       }
     }, 2000); // 2 second debounce
-  };
+  }, []);
+
+  const updateCanvasState = useCallback(async (index, json) => {
+    const pageId = canvasesRef.current[index]?._pageId;
+    const order = canvasesRef.current[index]?._order;
+
+    setCanvases((prev) => {
+      const newCanvases = [...prev];
+      if (newCanvases[index]) {
+        // Merge the new JSON into the existing object, preserving metadata
+        newCanvases[index] = { ...newCanvases[index], ...json };
+      }
+      return newCanvases;
+    });
+
+    // Autosave logic
+    if (pageId && !isInternalAction.current) {
+      debouncedSave(pageId, json, order);
+    }
+  }, [debouncedSave]);
 
   const updatePreview = (index, dataUrl) => {
     setPreviews((prev) => {
@@ -324,7 +364,7 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     }
   };
 
-  const recordHistory = (index, state) => {
+  const recordHistory = useCallback((index, state) => {
     setHistories((prev) => {
       const newHistories = [...prev];
       if (!newHistories[index]) {
@@ -339,7 +379,7 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
       };
       return newHistories;
     });
-  };
+  }, []);
 
   const undo = (index) => {
     const history = histories[index];
@@ -408,9 +448,11 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
         canvas,
         setCanvas,
         scale,
-        setScale,
+        setScale: setScaleOptimized, // Optimized setter
+        scaleRef,                   // Shared Ref
         translate,
-        setTranslate,
+        setTranslate: setTranslateOptimized, // Optimized setter
+        translateRef,                // Shared Ref
         canvases,
         setCanvases,
         previews,

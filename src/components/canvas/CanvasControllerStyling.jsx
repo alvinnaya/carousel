@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import * as fabric from 'fabric';
 import { useCanvasContext } from '../../context/CanvasContext';
 
@@ -6,43 +6,42 @@ import { useCanvasContext } from '../../context/CanvasContext';
  * Component that manages the styling of Fabric.js object controls (handles).
  */
 export default function CanvasControllerStyling() {
-    const { canvas, scale } = useCanvasContext();
-
-    console.log("canvasControllerStyle")
+    const { canvas, scale, scaleRef } = useCanvasContext();
 
     useEffect(() => {
         if (!canvas) return;
-        console.log("canvasControllerStyle inside useEffect")
+        console.log("canvasControllerStyle initial setup")
         const baseColor = 'white';
         const hoverColor = 'white';
 
-        // Helpers inside useEffect to closure over 'scale'
+        // Helpers use scaleRef.current for dynamic sizing during render
         const createControlSet = () => ({
-            tl: makeHoverControl('tl', -0.5, -0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scale),
-            tr: makeHoverControl('tr', 0.5, -0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scale),
-            bl: makeHoverControl('bl', -0.5, 0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scale),
-            br: makeHoverControl('br', 0.5, 0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scale),
-            mtr: makeHoverControl('mtr', 0, -0.5, baseColor, hoverColor, fabric.controlsUtils.rotationWithSnapping, scale),
-            ml: makeHoverControlMiddle('ml', -0.5, 0, baseColor, hoverColor, fabric.controlsUtils.scalingX, scale),
-            mr: makeHoverControlMiddle('mr', 0.5, 0, baseColor, hoverColor, fabric.controlsUtils.scalingX, scale),
-            mt: makeHoverControlMiddle('mt', 0, -0.5, baseColor, hoverColor, fabric.controlsUtils.scalingY, scale),
-            mb: makeHoverControlMiddle('mb', 0, 0.5, baseColor, hoverColor, fabric.controlsUtils.scalingY, scale),
+            tl: makeHoverControl('tl', 'scale', -0.5, -0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scaleRef),
+            tr: makeHoverControl('tr', 'scale', 0.5, -0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scaleRef),
+            bl: makeHoverControl('bl', 'scale', -0.5, 0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scaleRef),
+            br: makeHoverControl('br', 'scale', 0.5, 0.5, baseColor, hoverColor, fabric.controlsUtils.scalingEqually, scaleRef),
+            mtr: makeHoverControl('mtr', 'rotate', 0, -0.5, baseColor, hoverColor, fabric.controlsUtils.rotationWithSnapping, scaleRef),
+            ml: makeHoverControlMiddle('ml', 'scaleX', -0.5, 0, baseColor, hoverColor, fabric.controlsUtils.scalingX, scaleRef),
+            mr: makeHoverControlMiddle('mr', 'scaleX', 0.5, 0, baseColor, hoverColor, fabric.controlsUtils.scalingX, scaleRef),
+            mt: makeHoverControlMiddle('mt', 'scaleY', 0, -0.5, baseColor, hoverColor, fabric.controlsUtils.scalingY, scaleRef),
+            mb: makeHoverControlMiddle('mb', 'scaleY', 0, 0.5, baseColor, hoverColor, fabric.controlsUtils.scalingY, scaleRef),
         });
 
         const createTextControlSet = () => {
             const controls = createControlSet();
-            controls.ml = makeHoverControlMiddleText('ml', -0.5, 0, baseColor, hoverColor, fabric.controlsUtils.changeWidth, scale);
-            controls.mr = makeHoverControlMiddleText('mr', 0.5, 0, baseColor, hoverColor, fabric.controlsUtils.changeWidth, scale);
-            controls.mtr.offsetY = -40 / scale;
+            controls.ml = makeHoverControlMiddleText('ml', 'scaleX', -0.5, 0, baseColor, hoverColor, fabric.controlsUtils.changeWidth, scaleRef);
+            controls.mr = makeHoverControlMiddleText('mr', 'scaleX', 0.5, 0, baseColor, hoverColor, fabric.controlsUtils.changeWidth, scaleRef);
+            controls.mtr.offsetY = -40 / scaleRef.current;
             return controls;
         };
 
         const applyInstanceStyle = (obj) => {
             if (!obj) return;
 
+            const currentScale = scaleRef.current;
             // Direct property assignment for styling
-            obj.borderScaleFactor = 3 / scale;
-            obj.cornerSize = 12 / scale;
+            obj.borderScaleFactor = 3 / currentScale;
+            obj.cornerSize = 12 / currentScale;
             obj.borderColor = 'hsl(0, 0%, 0%)';
             obj.cornerColor = 'white';
             obj.cornerStrokeColor = 'hsl(0, 0%, 0%)';
@@ -60,7 +59,7 @@ export default function CanvasControllerStyling() {
                 // Styling for text editing mode (Fabric 7++)
                 obj.selectionColor = 'hsla(0, 0%, 0%, 0.1)';
                 obj.cursorColor = 'hsl(0, 0%, 0%)';
-                obj.cursorWidth = 2 / scale;
+                obj.cursorWidth = 2 / currentScale;
                 obj.editingBorderColor = 'hsl(0, 0%, 0%)';
                 obj.padding = 0
             } else if (obj.type === 'activeselection') {
@@ -70,7 +69,7 @@ export default function CanvasControllerStyling() {
                 });
             } else {
                 obj.controls = createControlSet();
-                obj.controls.mtr.offsetY = -40 / scale;
+                obj.controls.mtr.offsetY = -40 / currentScale;
             }
 
             // Recursive styling for group members
@@ -103,16 +102,17 @@ export default function CanvasControllerStyling() {
 
         const hAfterRender = (opt) => {
             const ctx = opt.ctx;
+            const currentScale = scaleRef.current;
             canvas.getObjects().forEach(obj => {
                 if (obj.isHovered && obj !== canvas.getActiveObject()) {
                     ctx.save();
                     const bound = obj.getBoundingRect(true, true);
                     ctx.strokeStyle = 'hsl(0, 0%, 0%)';
-                    ctx.lineWidth = 2 / scale;
+                    ctx.lineWidth = 2 / currentScale;
 
                     // Use dashed line for groups/selections, solid for regular objects
                     if (obj.type === 'group' || obj.type === 'activeselection' || (obj._objects && obj._objects.length > 0)) {
-                        ctx.setLineDash([5 / scale, 5 / scale]);
+                        ctx.setLineDash([5 / currentScale, 5 / currentScale]);
                     } else {
                         ctx.setLineDash([]);
                     }
@@ -130,16 +130,13 @@ export default function CanvasControllerStyling() {
         };
 
 
-        // 1. Update all existing objects
+        // 1. Update all existing objects (Once)
         canvas.getObjects().forEach(applyInstanceStyle);
 
         // 2. Handle ActiveSelection (Multiselect Box)
         const activeObject = canvas.getActiveObject();
-        console.log("active", activeObject);
         if (activeObject && activeObject.type === 'activeselection') {
             applyInstanceStyle(activeObject);
-            console.log("active", activeObject);
-
         }
 
         canvas.requestRenderAll();
@@ -157,6 +154,44 @@ export default function CanvasControllerStyling() {
         };
         const hSelectionUpdated = hSelectionCreated;
 
+        // Final sync for debounced state changes (covers initial load, buttons, and interaction end)
+        const syncAllProperties = (s) => {
+            if (!canvas) return;
+            // 1. All objects
+            canvas.getObjects().forEach(obj => {
+                obj.set({
+                    borderScaleFactor: 3 / s,
+                    cornerSize: 12 / s
+                });
+                if (obj.controls && obj.controls.mtr) {
+                    obj.controls.mtr.offsetY = -40 / s;
+                }
+                if (obj.setCoords) obj.setCoords();
+            });
+            // 2. Active Object / Selection
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                activeObject.set({
+                    borderScaleFactor: 3 / s,
+                    cornerSize: 12 / s
+                });
+                if (activeObject.controls && activeObject.controls.mtr) {
+                    activeObject.controls.mtr.offsetY = -40 / s;
+                }
+                if (activeObject.setCoords) activeObject.setCoords();
+            }
+            canvas.renderAll();
+        };
+
+        // Fast-path for zero-latency handle sizing during high-frequency interaction
+        const handleFastScale = (e) => {
+            syncAllProperties(e.detail);
+        };
+
+        // Immediate sync on effect run
+        syncAllProperties(scale);
+
+        window.addEventListener('canvas:scale:fast', handleFastScale);
         canvas.on('selection:created', hSelectionCreated);
         canvas.on('selection:updated', hSelectionUpdated);
         canvas.on('object:added', hObjectAdded);
@@ -165,6 +200,7 @@ export default function CanvasControllerStyling() {
         canvas.on('after:render', hAfterRender);
 
         return () => {
+            window.removeEventListener('canvas:scale:fast', handleFastScale);
             canvas.off('selection:created', hSelectionCreated);
             canvas.off('selection:updated', hSelectionUpdated);
             canvas.off('object:added', hObjectAdded);
@@ -203,14 +239,17 @@ export function CanvasDefaultControllerStyling(fabricInstance) {
 /**
  * HELPER FUNCTIONS (ORIGINAL NAMES)
  */
-function makeHoverControl(cornerName, x, y, baseColor, hoverColor, handler, scale) {
+function makeHoverControl(cornerName, actionName, x, y, baseColor, hoverColor, handler, scaleRef) {
     return new fabric.Control({
         x, y,
-        cursorStyle: 'pointer',
+        actionName,
+        withConnection: cornerName === 'mtr',
+        cursorStyle: cornerName === 'mtr' ? 'crosshair' : 'pointer',
         actionHandler: handler,
-        sizeX: 14 / scale,
-        sizeY: 14 / scale,
+        sizeX: 14, // Internal fabric size, we handle scale in render
+        sizeY: 14,
         render: function (ctx, left, top, styleOverride, fabricObject) {
+            const scale = scaleRef.current;
             ctx.save();
             ctx.fillStyle = baseColor;
             ctx.beginPath();
@@ -224,15 +263,16 @@ function makeHoverControl(cornerName, x, y, baseColor, hoverColor, handler, scal
     });
 }
 
-function makeHoverControlMiddle(cornerName, x, y, baseColor, hoverColor, handler, scale) {
+
+function makeHoverControlMiddle(cornerName, actionName, x, y, baseColor, hoverColor, handler, scaleRef) {
     const isVertical = cornerName === 'ml' || cornerName === 'mr';
     return new fabric.Control({
         x, y,
+        actionName,
         cursorStyle: isVertical ? 'ew-resize' : 'ns-resize',
         actionHandler: handler,
-        sizeX: 12 / scale,
-        sizeY: 12 / scale,
         render: function (ctx, left, top, styleOverride, fabricObject) {
+            const scale = scaleRef.current;
             const angle = fabricObject.angle + (fabricObject.group ? fabricObject.group.angle : 0);
             let barW, barH;
             if (isVertical) {
@@ -244,8 +284,10 @@ function makeHoverControlMiddle(cornerName, x, y, baseColor, hoverColor, handler
                 barW = Math.min(80 / scale, canvasWidth * 0.5);
                 barH = 8 / scale;
             }
+            // Update control size for correct interaction box
             this.sizeX = isVertical ? 16 / scale : barW;
             this.sizeY = isVertical ? barH : 16 / scale;
+
             ctx.save();
             ctx.translate(left, top);
             ctx.rotate(fabric.util.degreesToRadians(angle));
@@ -263,15 +305,16 @@ function makeHoverControlMiddle(cornerName, x, y, baseColor, hoverColor, handler
     });
 }
 
-function makeHoverControlMiddleText(cornerName, x, y, baseColor, hoverColor, handler, scale) {
+
+function makeHoverControlMiddleText(cornerName, actionName, x, y, baseColor, hoverColor, handler, scaleRef) {
     const isVertical = cornerName === 'ml' || cornerName === 'mr';
     return new fabric.Control({
         x, y,
+        actionName,
         cursorStyle: isVertical ? 'ew-resize' : 'ns-resize',
         actionHandler: handler,
-        sizeX: 12 / scale,
-        sizeY: 12 / scale,
         render: function (ctx, left, top, styleOverride, fabricObject) {
+            const scale = scaleRef.current;
             const angle = fabricObject.angle + (fabricObject.group ? fabricObject.group.angle : 0);
             let barW, barH;
             if (isVertical) {
@@ -285,6 +328,7 @@ function makeHoverControlMiddleText(cornerName, x, y, baseColor, hoverColor, han
             }
             this.sizeX = isVertical ? 16 / scale : barW;
             this.sizeY = isVertical ? barH : 16 / scale;
+
             ctx.save();
             ctx.translate(left, top);
             ctx.rotate(fabric.util.degreesToRadians(angle));

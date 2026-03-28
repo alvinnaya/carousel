@@ -11,26 +11,33 @@ const CanvasStateHandler = () => {
 
         // Initialize history if empty
         const currentHistory = histories[activeCanvasIndex];
+        const initialJson = canvas.toJSON();
+        const jsonString = JSON.stringify(initialJson);
+        
         if (!currentHistory || currentHistory.past.length === 0) {
-            const initialJson = canvas.toJSON();
+            console.log('Initializing empty history for index:', activeCanvasIndex);
             recordHistory(activeCanvasIndex, {
                 ...initialJson,
                 width: canvas.width,
                 height: canvas.height
             });
-            lastJsonRef.current = JSON.stringify(initialJson);
         }
+        
+        // Always sync lastJsonRef to current page state when switching/rendering
+        lastJsonRef.current = jsonString;
 
         const syncState = (e) => {
             // Skip sync if this change was triggered internally (e.g. undo/redo)
             if (isInternalAction.current) {
                 console.log('Skipping sync for internal action');
-                
+
                 // Still update lastJsonRef to current to avoid double sync
                 const currentJson = canvas.toJSON();
                 lastJsonRef.current = JSON.stringify(currentJson);
                 return;
             }
+
+            console.log('Syncing canvas state');
 
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
@@ -42,6 +49,7 @@ const CanvasStateHandler = () => {
 
                 // Only update if the content actually changed
                 if (jsonString === lastJsonRef.current) {
+                    console.log('Skipping sync: No content change detected');
                     return;
                 }
 
@@ -65,7 +73,8 @@ const CanvasStateHandler = () => {
             'object:added',
             'object:removed',
             'path:created',
-            'text:changed'
+            'text:changed',
+            'canvas:modified' // Listen to custom canvas-level changes (e.g. background)
         ];
 
         events.forEach(eventName => {

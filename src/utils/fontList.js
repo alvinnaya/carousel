@@ -171,10 +171,12 @@ export const loadFontPreview = async (fontName) => {
  * @returns {Promise<void>}
  */
 export const loadGoogleFont = async (fontName, requestedWeights = []) => {
-    // Determine weights to load: use requested or default to common ones (100-900)
+    // Determine weights to load: use requested or default to common ones (400, 700)
+    // Requesting invalid weights (e.g. 100) on a font that doesn't support it causes 
+    // the entire Google Fonts CSS request to fail!
     let weightsToLoad = requestedWeights.length > 0 
         ? [...new Set(requestedWeights)].sort((a, b) => a - b)
-        : [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        : [400, 700];
 
     const weightString = weightsToLoad.join(';');
     const cacheKey = `${fontName}:${weightString}`;
@@ -221,6 +223,10 @@ export const loadGoogleFont = async (fontName, requestedWeights = []) => {
         );
 
         await document.fonts.ready;
+        
+        // Browsers need a tiny tick to make the font available to Canvas MeasureText API
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
         fullyLoaded.add(cacheKey);
         previewLoaded.add(fontName);
     } catch (err) {

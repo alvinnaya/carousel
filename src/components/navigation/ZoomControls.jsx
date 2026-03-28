@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 
 /**
@@ -7,11 +7,23 @@ import { useCanvasContext } from '../../context/CanvasContext';
 const ZoomControls = () => {
     const { scale, setScale } = useCanvasContext();
     const [zoomInput, setZoomInput] = useState(Math.round(scale * 100).toString());
+    const inputRef = useRef(null);
 
-    // Sync input with context scale (e.g. from mouse wheel)
+    // Sync input with context scale (debounced React state)
     useEffect(() => {
         setZoomInput(Math.round(scale * 100).toString());
     }, [scale]);
+
+    // Fast-path for zero-latency UI feedback during high-frequency interaction
+    useEffect(() => {
+        const handleFastScale = (e) => {
+            if (inputRef.current) {
+                inputRef.current.value = Math.round(e.detail * 100).toString();
+            }
+        };
+        window.addEventListener('canvas:scale:fast', handleFastScale);
+        return () => window.removeEventListener('canvas:scale:fast', handleFastScale);
+    }, []);
 
     const handleZoomChange = (e) => {
         const val = e.target.value;
@@ -50,6 +62,7 @@ const ZoomControls = () => {
             
             <div className="flex items-center px-1">
                 <input 
+                    ref={inputRef}
                     type="text"
                     value={zoomInput}
                     onChange={handleZoomChange}

@@ -2,29 +2,21 @@ import { useEffect, useRef } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 
 export default function CanvasViewController() {
-    const { setScale, setTranslate, scale, translate, viewportRef } = useCanvasContext();
+    const { setScale, setTranslate, scale, translate, viewportRef, scaleRef, translateRef, canvas } = useCanvasContext();
     
-    // Mutable refs for zero-latency access and transformation
-    const stateRef = useRef({ 
-        scale, 
-        translate,
-        isUpdating: false 
-    });
-
-    // Initialize stateRef with current context values (once)
-    useEffect(() => {
-        stateRef.current.scale = scale;
-        stateRef.current.translate = translate;
-    }, []);
-
     // Helper to apply direct DOM transformation
     const applyTransform = () => {
         if (!viewportRef.current) return;
-        const { scale, translate } = stateRef.current;
-        const tx = Math.round(translate.x);
-        const ty = Math.round(translate.y);
-        viewportRef.current.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+        const s = scaleRef.current;
+        const tx = Math.round(translateRef.current.x);
+        const ty = Math.round(translateRef.current.y);
+        viewportRef.current.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
     };
+
+    // Fallback synchronization for state changes (e.g. from ZoomControls)
+    useEffect(() => {
+        applyTransform();
+    }, [scale, translate]);
 
     useEffect(() => {
         const handleWheel = (e) => {
@@ -32,22 +24,20 @@ export default function CanvasViewController() {
                 e.preventDefault();
                 // Zoom
                 const delta = -e.deltaY * 0.0025;
-                const newScale = Math.max(0.2, Math.min(3, stateRef.current.scale + delta));
+                const newScale = Math.max(0.2, Math.min(3, scaleRef.current + delta));
                 
-                stateRef.current.scale = newScale;
-                setScale(newScale); // Sync for other components (Styling, etc)
+                setScale(newScale); // Sync (Debounced in context)
             } else {
                 // Pan
                 const newTranslate = {
-                    x: stateRef.current.translate.x - e.deltaX,
-                    y: stateRef.current.translate.y - e.deltaY
+                    x: translateRef.current.x - e.deltaX,
+                    y: translateRef.current.y - e.deltaY
                 };
                 
-                stateRef.current.translate = newTranslate;
-                setTranslate(newTranslate); // Sync for other components
+                setTranslate(newTranslate); // Sync (Debounced in context)
             }
 
-            // INSTANT visual update
+            // INSTANT visual update via Ref
             applyTransform();
         };
 

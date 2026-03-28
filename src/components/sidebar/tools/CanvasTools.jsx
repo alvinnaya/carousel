@@ -16,6 +16,9 @@ const CanvasTools = () => {
         setBackgroundColor(color);
         canvas.set('backgroundColor', color);
         canvas.requestRenderAll();
+        
+        // Fire custom event to trigger sync in CanvasStateHandler
+        canvas.fire('canvas:modified');
     };
 
     return (
