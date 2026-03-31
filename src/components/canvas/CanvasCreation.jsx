@@ -36,19 +36,19 @@ const CanvasCreation = () => {
         });
 
         // Helper function to dynamically load Google Fonts
-        const loadGoogleFont = (fontFamily) => {
-            return new Promise((resolve) => {
-                const link = document.createElement('link');
-                link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, '+')}:wght@400;700&display=swap`;
-                link.rel = 'stylesheet';
-                link.onload = () => resolve();
-                link.onerror = () => {
-                    console.warn(`Failed to load Google Font: ${fontFamily}`);
-                    resolve(); // Resolve even on error to not block other fonts
-                };
-                document.head.appendChild(link);
-            });
-        };
+        // const loadGoogleFont = (fontFamily) => {
+        //     return new Promise((resolve) => {
+        //         const link = document.createElement('link');
+        //         link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, '+')}:wght@400;700&display=swap`;
+        //         link.rel = 'stylesheet';
+        //         link.onload = () => resolve();
+        //         link.onerror = () => {
+        //             console.warn(`Failed to load Google Font: ${fontFamily}`);
+        //             resolve(); // Resolve even on error to not block other fonts
+        //         };
+        //         document.head.appendChild(link);
+        //     });
+        // };
 
         const syncCanvasState = () => {
             const currentJson = fabricCanvas.toJSON();
@@ -70,64 +70,7 @@ const CanvasCreation = () => {
                 await fabricCanvas.loadFromJSON(corsSafeState);
                 fabricCanvas.renderAll();
             } else {
-                // console.log('Initializing new canvas for index:', activeCanvasIndex);
-                // // Default objects for new canvas
-                // const rect = new fabric.Rect({
-                //     top: 100,
-                //     left: 100,
-                //     width: 150,
-                //     height: 150,
-                //     fill: '#4f46e5',
-                //     rx: 20,
-                //     ry: 20,
-                //     shadow: new fabric.Shadow({
-                //         color: 'rgba(0,0,0,0.3)',
-                //         blur: 15,
-                //         offsetX: 5,
-                //         offsetY: 5
-                //     })
-                // });
-                // fabricCanvas.add(rect);
 
-                // const text = new fabric.Textbox('Creative Design', {
-                //     top: 150,
-                //     left: 300,
-                //     width: 250,
-                //     fontSize: 32,
-                //     fill: '#1f2937',
-                //     fontFamily: 'Inter, ui-sans-serif, system-ui',
-                //     fontWeight: 'bold',
-                //     textAlign: 'center',
-                //     // globalCompositeOperation: "destination-out"
-                // });
-                // fabricCanvas.add(text);
-
-                // fabric.FabricImage.fromURL('https://picsum.photos/seed/picsum/400/300', {
-                //     crossOrigin: 'anonymous'
-                // }).then((img) => {
-                //     img.set({
-                //         top: 400,
-                //         left: 150,
-                //         scaleX: 0.6,
-                //         scaleY: 0.6,
-                //         strokeWidth: 0,
-                //         strokeUniform: true
-                //     });
-
-                //     const clipRect = new fabric.Rect({
-                //         width: img.width,
-                //         height: img.height,
-                //         rx: 40,
-                //         ry: 40,
-                //         originX: 'center',
-                //         originY: 'center',
-                //     });
-                //     img.clipPath = clipRect;
-
-                //     fabricCanvas.add(img);
-                //     fabricCanvas.renderAll();
-                //     syncCanvasState();
-                // });
             }
 
             syncCanvasState();

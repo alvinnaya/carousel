@@ -3,7 +3,7 @@ import { useCanvasContext } from '../../context/CanvasContext';
 
 export default function CanvasViewController() {
     const { setScale, setTranslate, scale, translate, viewportRef, scaleRef, translateRef, canvas } = useCanvasContext();
-    
+
     // Helper to apply direct DOM transformation
     const applyTransform = () => {
         if (!viewportRef.current) return;
@@ -25,7 +25,7 @@ export default function CanvasViewController() {
                 // Zoom
                 const delta = -e.deltaY * 0.0025;
                 const newScale = Math.max(0.2, Math.min(3, scaleRef.current + delta));
-                
+
                 setScale(newScale); // Sync (Debounced in context)
             } else {
                 // Pan
@@ -33,7 +33,7 @@ export default function CanvasViewController() {
                     x: translateRef.current.x - e.deltaX,
                     y: translateRef.current.y - e.deltaY
                 };
-                
+
                 setTranslate(newTranslate); // Sync (Debounced in context)
             }
 

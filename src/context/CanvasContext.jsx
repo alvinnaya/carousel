@@ -58,7 +58,7 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
   useEffect(() => {
     const loadRequiredFonts = async () => {
       const fontMap = getUsedFonts(canvases);
-      
+
       // Always ensure "Inter" is loaded (common project default and UI font)
       if (!fontMap['Inter']) fontMap['Inter'] = new Set();
       fontMap['Inter'].add(400);
@@ -145,7 +145,7 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
   };
 
   const saveTimeoutRef = useRef(null);
-  
+
   // Custom setters that update Refs instantly but state debounced
   const syncTimeoutRef = useRef({ scale: null, translate: null });
 
@@ -317,13 +317,13 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
       const next = [...prev];
       const [movedItem] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, movedItem);
-      
+
       // Update local _order property based on new index
       updatedCanvases = next.map((canvas, index) => ({
         ...canvas,
         _order: index
       }));
-      
+
       return updatedCanvases;
     });
     setPreviews(prev => {
