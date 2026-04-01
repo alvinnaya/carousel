@@ -2,29 +2,22 @@ import { useEffect, useRef } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
 
 const CanvasStateHandler = () => {
-    const { canvas, updateCanvasState, updatePreview, activeCanvasIndex, recordHistory, histories, isInternalAction } = useCanvasContext();
+    const { canvas, canvases, updateCanvasState, updatePreview, activeCanvasIndex, recordHistory, histories, isInternalAction } = useCanvasContext();
     const debounceTimerRef = useRef(null);
     const lastJsonRef = useRef(null);
 
     useEffect(() => {
         if (!canvas) return;
 
-        // Initialize history if empty
-        const currentHistory = histories[activeCanvasIndex];
-        const initialJson = canvas.toJSON();
-        const jsonString = JSON.stringify(initialJson);
-        
-        if (!currentHistory || currentHistory.past.length === 0) {
-            console.log('Initializing empty history for index:', activeCanvasIndex);
-            recordHistory(activeCanvasIndex, {
-                ...initialJson,
-                width: canvas.width,
-                height: canvas.height
-            });
+        // Sync lastJsonRef to current page state when switching/rendering
+        // This baseline ensures the next user action is correctly detected as a change
+        // and prevents "dirty" initialization steps in history.
+        const currentJson = canvas.toJSON(['imageKey']);
+        const artboard = canvas.getObjects().find(o => o.isArtboard);
+        if (artboard) {
+            currentJson.background = artboard.fill;
         }
-        
-        // Always sync lastJsonRef to current page state when switching/rendering
-        lastJsonRef.current = jsonString;
+        lastJsonRef.current = JSON.stringify(currentJson);
 
         const syncState = (e) => {
             // Skip sync if this change was triggered internally (e.g. undo/redo)
@@ -32,7 +25,11 @@ const CanvasStateHandler = () => {
                 console.log('Skipping sync for internal action');
 
                 // Still update lastJsonRef to current to avoid double sync
-                const currentJson = canvas.toJSON();
+                const currentJson = canvas.toJSON(['imageKey']);
+                const artboard = canvas.getObjects().find(o => o.isArtboard);
+                if (artboard) {
+                    currentJson.background = artboard.fill;
+                }
                 lastJsonRef.current = JSON.stringify(currentJson);
                 return;
             }
@@ -44,7 +41,11 @@ const CanvasStateHandler = () => {
             }
 
             debounceTimerRef.current = setTimeout(() => {
-                const currentJson = canvas.toJSON();
+                const currentJson = canvas.toJSON(['imageKey']);
+                const artboard = canvas.getObjects().find(o => o.isArtboard);
+                if (artboard) {
+                    currentJson.background = artboard.fill;
+                }
                 const jsonString = JSON.stringify(currentJson);
 
                 // Only update if the content actually changed
@@ -55,10 +56,15 @@ const CanvasStateHandler = () => {
 
                 lastJsonRef.current = jsonString;
 
+                // Use proper logical dimensions rather than arbitrary screen bounds
+                const ab = canvas.getObjects().find(o => o.isArtboard);
+                const finalWidth = ab ? ab.width : (canvases[activeCanvasIndex]?.width || 1080);
+                const finalHeight = ab ? ab.height : (canvases[activeCanvasIndex]?.height || 1080);
+
                 const stateUpdate = {
                     ...currentJson,
-                    width: canvas.width,
-                    height: canvas.height
+                    width: finalWidth,
+                    height: finalHeight
                 };
 
                 console.log('Recording canvas history for index:', activeCanvasIndex);

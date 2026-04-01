@@ -32,15 +32,41 @@ const CanvasPreviewSyncronizer = () => {
         const offscreenCanvas = new fabric.StaticCanvas(offscreenEl, {
             width: savedState.width || DEFAULT_CANVAS_SIZE,
             height: savedState.height || DEFAULT_CANVAS_SIZE,
-            backgroundColor: savedState.background || '#ffffff'
+            backgroundColor: 'transparent' // Rely entirely on the artboard shape
         });
 
         try {
             await offscreenCanvas.loadFromJSON(savedState);
+            
+            // Ensure an artboard exists to provide the background color
+            let artboard = offscreenCanvas.getObjects().find(o => o.isArtboard);
+            if (!artboard) {
+                let fallbackBg = savedState.background || '#ffffff';
+                if (fallbackBg === '#e5e5e5') fallbackBg = '#ffffff'; // Correct legacy corruption
+                
+                artboard = new fabric.Rect({
+                    width: savedState.width || DEFAULT_CANVAS_SIZE,
+                    height: savedState.height || DEFAULT_CANVAS_SIZE,
+                    fill: fallbackBg,
+                    left: 0,
+                    top: 0,
+                    originX: 'left',
+                    originY: 'top',
+                    isArtboard: true
+                });
+                offscreenCanvas.add(artboard);
+                offscreenCanvas.sendObjectToBack(artboard);
+            }
+            
+            // Force artboard to back just in case
+            offscreenCanvas.sendObjectToBack(artboard);
+            offscreenCanvas.renderAll();
+
             const previewDataUrl = offscreenCanvas.toDataURL({
                 format: 'png',
                 multiplier: PREVIEW_MULTIPLIER,
-                quality: PREVIEW_QUALITY
+                quality: PREVIEW_QUALITY,
+                enableRetinaScaling: true
             });
             updatePreview(index, previewDataUrl);
         } finally {

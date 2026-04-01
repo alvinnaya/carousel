@@ -8,10 +8,14 @@ const AddShape = () => {
     const handleAddShape = (type) => {
         if (!canvas) return;
 
+        const artboard = canvas.getObjects().find(o => o.isArtboard);
+        const cw = artboard ? artboard.width : canvas.width;
+        const ch = artboard ? artboard.height : canvas.height;
+
         let shape;
         const commonOptions = {
-            left: canvas.width / 2 - 50,
-            top: canvas.height / 2 - 50,
+            left: cw / 2 - 50,
+            top: ch / 2 - 50,
             fill: '#4f46e5',
             width: 100,
             height: 100,
@@ -38,8 +42,8 @@ const AddShape = () => {
                 break;
             case 'line':
                 shape = new fabric.Line([50, 50, 150, 50], {
-                    left: canvas.width / 2 - 50,
-                    top: canvas.height / 2,
+                    left: cw / 2 - 50,
+                    top: ch / 2,
                     stroke: '#4f46e5',
                     strokeWidth: 4,
                 });

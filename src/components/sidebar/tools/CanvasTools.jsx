@@ -8,17 +8,24 @@ const CanvasTools = () => {
 
     useEffect(() => {
         if (!canvas) return;
-        setBackgroundColor(canvas.backgroundColor || '#FFFFFF');
+        const artboard = canvas.getObjects().find(o => o.isArtboard);
+        if (artboard) {
+            setBackgroundColor(artboard.fill || '#FFFFFF');
+        } else {
+            setBackgroundColor('#FFFFFF');
+        }
     }, [canvas]);
 
     const handleBackgroundColor = (color) => {
         if (!canvas) return;
-        setBackgroundColor(color);
-        canvas.set('backgroundColor', color);
-        canvas.requestRenderAll();
-        
-        // Fire custom event to trigger sync in CanvasStateHandler
-        canvas.fire('canvas:modified');
+        const artboard = canvas.getObjects().find(o => o.isArtboard);
+        if (artboard) {
+            setBackgroundColor(color);
+            artboard.set('fill', color);
+            canvas.requestRenderAll();
+            // Fire custom event to trigger sync in CanvasStateHandler
+            canvas.fire('canvas:modified');
+        }
     };
 
     return (

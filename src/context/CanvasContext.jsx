@@ -42,7 +42,31 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     { type: 'linear', angle: 90, stops: [{ offset: 0, color: '#ff9a44' }, { offset: 1, color: '#fc6076' }] },
     { type: 'radial', angle: 0, stops: [{ offset: 0, color: '#f6d365' }, { offset: 1, color: '#fda085' }] },
   ]);
-  const [histories, setHistories] = useState([{ past: [], future: [] }]); // Per-canvas history stacks
+  const [histories, setHistories] = useState(() => {
+    // Pre-populate history with initial page states from DB
+    return (initialPages.length > 0 ? initialPages : [{}]).map(p => {
+      let parsed = {};
+      try {
+        if (typeof p === 'string') {
+          parsed = JSON.parse(p);
+        } else if (p && p.canvasJson) {
+          parsed = JSON.parse(p.canvasJson);
+        } else {
+          parsed = p || {};
+        }
+      } catch (e) {
+        console.error('Failed to parse initial history JSON', e);
+      }
+      return {
+        past: [{
+          ...parsed,
+          width: parsed.width || 1080,
+          height: parsed.height || 1080
+        }],
+        future: []
+      };
+    });
+  }); // Per-canvas history stacks
   const [isFontsReady, setIsFontsReady] = useState(false);
   const isInternalAction = useRef(false);
   const viewportRef = useRef(null);
@@ -84,25 +108,6 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     loadRequiredFonts();
   }, []); // Only on mount
 
-  // Keep histories in sync with canvases
-  useEffect(() => {
-    setHistories((prev) => {
-      // If same length, assume it might be a reorder or internal change handled elsewhere
-      // but actually we want to handle reorders too if possible.
-      // However, a simple length sync is a good start.
-      if (prev.length === canvases.length) return prev;
-
-      if (canvases.length > prev.length) {
-        // Canvases added
-        const diff = canvases.length - prev.length;
-        const newEntries = Array(diff).fill(null).map(() => ({ past: [], future: [] }));
-        return [...prev, ...newEntries];
-      } else {
-        // Canvases removed
-        return prev.slice(0, canvases.length);
-      }
-    });
-  }, [canvases.length]); // Only sync when length changes for now to avoid complexity with reorders
 
   const MAX_SWATCHES = 13;
 
@@ -250,6 +255,11 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
       next.splice(index, 0, '');
       return next;
     });
+    setHistories(prev => {
+      const next = [...prev];
+      next.splice(index, 0, { past: [{ ...newCanvas }], future: [] });
+      return next;
+    });
 
     if (insertAt !== null || index === canvases.length) {
       setActiveCanvasIndex(index);
@@ -295,6 +305,7 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     // Optimistic remove
     setCanvases(prev => prev.filter((_, i) => i !== index));
     setPreviews(prev => prev.filter((_, i) => i !== index));
+    setHistories(prev => prev.filter((_, i) => i !== index));
 
     if (activeCanvasIndex === index) {
       setActiveCanvasIndex(Math.max(0, index - 1));
@@ -327,6 +338,12 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
       return updatedCanvases;
     });
     setPreviews(prev => {
+      const next = [...prev];
+      const [movedItem] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, movedItem);
+      return next;
+    });
+    setHistories(prev => {
       const next = [...prev];
       const [movedItem] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, movedItem);
@@ -405,6 +422,10 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     if (index === activeCanvasIndex && canvas) {
       isInternalAction.current = true;
       canvas.loadFromJSON(previousState).then(() => {
+        // Heal artboard and workspace color after undo restoration
+        if (canvas.ensureArtboard) {
+          canvas.ensureArtboard(previousState.background || '#ffffff');
+        }
         canvas.renderAll();
         setTimeout(() => {
           isInternalAction.current = false;
@@ -434,6 +455,10 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     if (index === activeCanvasIndex && canvas) {
       isInternalAction.current = true;
       canvas.loadFromJSON(nextState).then(() => {
+        // Heal artboard and workspace color after redo restoration
+        if (canvas.ensureArtboard) {
+          canvas.ensureArtboard(nextState.background || '#ffffff');
+        }
         canvas.renderAll();
         setTimeout(() => {
           isInternalAction.current = false;

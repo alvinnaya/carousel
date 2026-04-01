@@ -14,10 +14,14 @@ const AddText = () => {
         // Fabric measures text upon creation; if the font isn't loaded, measuring fails.
         await loadGoogleFont('Inter', [400, 500, 700]);
 
+        const artboard = canvas.getObjects().find(o => o.isArtboard);
+        const cw = artboard ? artboard.width : canvas.width;
+        const ch = artboard ? artboard.height : canvas.height;
+
         let text;
         const commonOptions = {
-            left: canvas.width / 2 - 100,
-            top: canvas.height / 2 - 20,
+            left: cw / 2 - 100,
+            top: ch / 2 - 20,
             width: 200,
             textAlign: 'left',
             fontFamily: 'Inter', // Must use exact font name without fallbacks for Fabric

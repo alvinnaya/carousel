@@ -1,63 +1,84 @@
 import { useEffect, useRef } from 'react';
 import { useCanvasContext } from '../../context/CanvasContext';
+import * as fabric from 'fabric';
 
 export default function CanvasViewController() {
     const { setScale, setTranslate, scale, translate, viewportRef, scaleRef, translateRef, canvas } = useCanvasContext();
 
-    // Helper to apply direct DOM transformation
-    const applyTransform = () => {
-        if (!viewportRef.current) return;
-        const s = scaleRef.current;
-        const tx = Math.round(translateRef.current.x);
-        const ty = Math.round(translateRef.current.y);
-        viewportRef.current.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
-    };
-
-    // Fallback synchronization for state changes (e.g. from ZoomControls)
+    // Initial centering of the artboard
     useEffect(() => {
-        applyTransform();
-    }, [scale, translate]);
+        if (!canvas) return;
+        
+        const artboard = canvas.getObjects().find(o => o.isArtboard);
+        if (artboard) {
+            const vpt = canvas.viewportTransform;
+            vpt[4] = (canvas.width / 2) - (artboard.width * scale) / 2;
+            vpt[5] = (canvas.height / 2) - (artboard.height * scale) / 2;
+            canvas.setViewportTransform(vpt);
+            
+            // Sync initial translate
+            setTranslate({ x: vpt[4], y: vpt[5] });
+        }
+        
+    }, [canvas]); // Run once when canvas is ready
+
+    // Sync external scale changes into Fabric (e.g. from UI zoom controls)
+    useEffect(() => {
+        if (!canvas) return;
+        const currentScale = canvas.getZoom();
+        if (Math.abs(currentScale - scale) > 0.001) {
+            canvas.zoomToPoint(new fabric.Point(canvas.width / 2, canvas.height / 2), scale);
+        }
+    }, [scale, canvas]);
 
     useEffect(() => {
-        const handleWheel = (e) => {
+        if (!canvas) return;
+
+        const handleFabricWheel = (opt) => {
+            const e = opt.e;
             if (e.ctrlKey) {
                 e.preventDefault();
                 // Zoom
                 const delta = -e.deltaY * 0.0025;
                 const newScale = Math.max(0.2, Math.min(3, scaleRef.current + delta));
 
-                setScale(newScale); // Sync (Debounced in context)
+                const point = new fabric.Point(e.offsetX, e.offsetY);
+                canvas.zoomToPoint(point, newScale);
+                
+                setScale(newScale); // Sync
+                opt.e.stopPropagation();
             } else {
                 // Pan
-                const newTranslate = {
-                    x: translateRef.current.x - e.deltaX,
-                    y: translateRef.current.y - e.deltaY
-                };
+                const point = new fabric.Point(-e.deltaX, -e.deltaY);
+                canvas.relativePan(point);
 
-                setTranslate(newTranslate); // Sync (Debounced in context)
+                const vpt = canvas.viewportTransform;
+                setTranslate({ x: vpt[4], y: vpt[5] }); // Sync
+
+                opt.e.preventDefault();
+                opt.e.stopPropagation();
             }
-
-            // INSTANT visual update via Ref
-            applyTransform();
         };
 
         const handleKeyDown = (e) => {
             if (e.ctrlKey && (e.key === '=' || e.key === '-' || e.key === '+' || e.key === '0')) {
                 e.preventDefault();
             }
+            
+            // Handle spacebar panning (optional enhancement)
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+            }
         };
 
-        // Apply initial transform
-        applyTransform();
-
-        window.addEventListener('wheel', handleWheel, { passive: false });
+        canvas.on('mouse:wheel', handleFabricWheel);
         window.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            window.removeEventListener('wheel', handleWheel);
+            canvas.off('mouse:wheel', handleFabricWheel);
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [viewportRef, setScale, setTranslate]);
+    }, [canvas, setScale, setTranslate, scaleRef]);
 
     return null;
 }

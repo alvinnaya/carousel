@@ -1,6 +1,20 @@
-import { useEffect } from 'react';
+import React from 'react';
 import * as fabric from 'fabric';
 import { useCanvasContext } from '../../context/CanvasContext';
+
+/**
+ * Centralized styling configuration for the Crop Controls.
+ * Matches the premium appearance in CanvasControllerStyling.jsx.
+ */
+const CROP_CONFIG = {
+    cornerColor: '#FFFFFF',
+    cornerStrokeColor: '#000000',
+    midWidth: 6,
+    midHeight: 24,
+    midRadius: 4,
+    strokeWidth: 1.5,
+    hitAreaPadding: 10 // Extra clickable area around the visible handle
+};
 
 const MIN_SRC = 10;
 
@@ -237,52 +251,49 @@ function cropBottom(ev, tf, x, y) {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-function makeCropRender(isVertical, scale) {
+function makeCropRender(isVertical) {
     return function (ctx, left, top, _so, fabricObject) {
         const angle = fabricObject.angle + (fabricObject.group ? fabricObject.group.angle : 0);
-        
         let barW, barH;
-        if (isVertical) {
-            barW = 8 / scale;
-            const canvasHeight = fabricObject.height * fabricObject.scaleY;
-            barH = Math.min(80 / scale, canvasHeight * 0.5);
-        } else {
-            const canvasWidth = fabricObject.width * fabricObject.scaleX;
-            barW = Math.min(80 / scale, canvasWidth * 0.5);
-            barH = 8 / scale;
-        }
         
-        this.sizeX = isVertical ? 16 / scale : barW;
-        this.sizeY = isVertical ? barH : 16 / scale;
+        if (isVertical) {
+            barW = CROP_CONFIG.midWidth;
+            barH = CROP_CONFIG.midHeight;
+        } else {
+            barW = CROP_CONFIG.midHeight;
+            barH = CROP_CONFIG.midWidth;
+        }
         
         ctx.save();
         ctx.translate(left, top);
         ctx.rotate(fabric.util.degreesToRadians(angle));
         
-        // Exact styling cloned strictly from CanvasControllerStyling
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = CROP_CONFIG.cornerColor;
         ctx.beginPath();
-        const rx = 12 / scale;
+        const rx = CROP_CONFIG.midRadius;
         if (ctx.roundRect) ctx.roundRect(-barW / 2, -barH / 2, barW, barH, [rx]);
         else ctx.rect(-barW / 2, -barH / 2, barW, barH);
         ctx.fill();
         
-        ctx.lineWidth = 2 / scale;
-        ctx.strokeStyle = 'hsl(0, 0%, 0%)';
+        ctx.lineWidth = CROP_CONFIG.strokeWidth;
+        ctx.strokeStyle = CROP_CONFIG.cornerStrokeColor;
         ctx.stroke();
         
         ctx.restore();
     };
 }
 
-function injectCropControls(img, scale) {
+function injectCropControls(img) {
     if (img.type !== 'image') return;
+    const hitW = CROP_CONFIG.midHeight + CROP_CONFIG.hitAreaPadding;
+    const hitH = CROP_CONFIG.midWidth + CROP_CONFIG.hitAreaPadding;
+
     img.controls = {
         ...img.controls,
-        ml: new fabric.Control({ x: -0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropLeft,   sizeX: 16/scale, sizeY: 60/scale, render: makeCropRender(true,  scale) }),
-        mr: new fabric.Control({ x:  0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropRight,  sizeX: 16/scale, sizeY: 60/scale, render: makeCropRender(true,  scale) }),
-        mt: new fabric.Control({ x: 0,  y: -0.5, cursorStyle: 'ns-resize', actionHandler: cropTop,    sizeX: 60/scale, sizeY: 16/scale, render: makeCropRender(false, scale) }),
-        mb: new fabric.Control({ x: 0,  y:  0.5, cursorStyle: 'ns-resize', actionHandler: cropBottom, sizeX: 60/scale, sizeY: 16/scale, render: makeCropRender(false, scale) }),
+        ml: new fabric.Control({ x: -0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropLeft,   sizeX: hitH, sizeY: hitW, render: makeCropRender(true) }),
+        mr: new fabric.Control({ x:  0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropRight,  sizeX: hitH, sizeY: hitW, render: makeCropRender(true) }),
+        mt: new fabric.Control({ x: 0,  y: -0.5, cursorStyle: 'ns-resize', actionHandler: cropTop,    sizeX: hitW, sizeY: hitH, render: makeCropRender(false) }),
+        mb: new fabric.Control({ x: 0,  y:  0.5, cursorStyle: 'ns-resize', actionHandler: cropBottom, sizeX: hitW, sizeY: hitH, render: makeCropRender(false) }),
     };
     img.setCoords();
 }
@@ -290,12 +301,12 @@ function injectCropControls(img, scale) {
 export default function CanvasImageCrop() {
     const { canvas, scale } = useCanvasContext();
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (!canvas) return;
 
         const apply = (e) => {
             const targets = e.selected || (e.target ? [e.target] : []);
-            targets.forEach(obj => { if (obj.type === 'image') injectCropControls(obj, scale); });
+            targets.forEach(obj => { if (obj.type === 'image') injectCropControls(obj); });
             canvas.requestRenderAll();
         };
 
@@ -306,7 +317,7 @@ export default function CanvasImageCrop() {
         };
 
         const active = canvas.getActiveObject();
-        if (active?.type === 'image') { injectCropControls(active, scale); canvas.requestRenderAll(); }
+        if (active?.type === 'image') { injectCropControls(active); canvas.requestRenderAll(); }
 
         canvas.on('selection:created', apply);
         canvas.on('selection:updated', apply);

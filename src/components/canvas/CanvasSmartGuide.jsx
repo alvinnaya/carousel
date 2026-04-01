@@ -49,15 +49,16 @@ const CanvasSmartGuide = ({ snapThreshold = 15, edgePadding = 80 }) => {
             const ctx = opt.ctx;
             ctx.save();
 
-            const v = canvas.viewportTransform;
             const retina = canvas.getRetinaScaling();
+            const vpt = canvas.viewportTransform;
+            
+            // Set base identity, then apply viewport transform to draw directly in World space
             ctx.setTransform(retina, 0, 0, retina, 0, 0);
+            ctx.transform(vpt[0], vpt[1], vpt[2], vpt[3], vpt[4], vpt[5]);
 
-            // Compute font size based on current zoom scale inversely
-            // so text stays readable on screen when zoomed out
-            const currentScale = scaleRef?.current || 1;
-            const invScale = 1 / currentScale;
-            const fontSize = Math.round(10 * invScale);
+            const currentZoom = canvas.getZoom();
+            const invScale = 1 / currentZoom;
+            const fontSize = 10 * invScale;
 
             guides.forEach((guide) => {
                 if (guide.type === 'line') {

@@ -81,11 +81,15 @@ const AddImage = () => {
         fabric.FabricImage.fromURL(finalImageUrl, {
             crossOrigin: 'anonymous'
         }).then((img) => {
+            const artboard = canvas.getObjects().find(o => o.isArtboard);
+            const cw = artboard ? artboard.width : canvas.width || 0;
+            const ch = artboard ? artboard.height : canvas.height || 0;
+
             img.set({
                 imageKey: objectKey,
                 crossOrigin: 'anonymous',
-                left: (canvas.width || 0) / 2,
-                top: (canvas.height || 0) / 2,
+                left: cw / 2,
+                top: ch / 2,
                 originX: 'center',
                 originY: 'center',
                 scaleX: 0.5,

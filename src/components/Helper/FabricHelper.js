@@ -243,6 +243,12 @@ export const changeOpacity = (obj, opacity, canvas) => {
 export const bringToFront = (obj, canvas) => {
     if (!obj || !canvas) return;
     canvas.bringObjectToFront(obj);
+    
+    // Ensure artboard is STILL at the bottom in case it was accidentally brought front
+    // (though 'bringToFront' shouldn't do this to artboard, it's good safety)
+    const artboard = canvas.getObjects().find(o => o.isArtboard);
+    if (artboard) canvas.sendObjectToBack(artboard);
+
     canvas.fire('object:modified', { target: obj });
     canvas.requestRenderAll();
 };
@@ -254,7 +260,17 @@ export const bringToFront = (obj, canvas) => {
  */
 export const sendToBack = (obj, canvas) => {
     if (!obj || !canvas) return;
-    canvas.sendObjectToBack(obj);
+
+    const artboard = canvas.getObjects().find(o => o.isArtboard);
+    if (artboard) {
+        // Find current index of artboard (should be 0)
+        const artboardIndex = canvas.getObjects().indexOf(artboard);
+        // Move object to just above the artboard
+        canvas.moveObjectTo(obj, artboardIndex + 1);
+    } else {
+        canvas.sendObjectToBack(obj);
+    }
+
     canvas.fire('object:modified', { target: obj });
     canvas.requestRenderAll();
 };
@@ -273,6 +289,11 @@ export const deleteObject = (obj, canvas) => {
 };
 
 // ─── Alignment helpers ──────────────────────────────────────────────────────
+const getArtboardBounds = (canvas) => {
+    const artboard = canvas.getObjects().find(o => o.isArtboard);
+    return artboard ? { width: artboard.width, height: artboard.height } : { width: canvas.width, height: canvas.height };
+};
+
 export const alignLeft = (obj, canvas) => {
     if (!obj || !canvas) return;
     const bound = obj.getBoundingRect();
@@ -281,16 +302,27 @@ export const alignLeft = (obj, canvas) => {
 
 export const alignCenterH = (obj, canvas) => {
     if (!obj || !canvas) return;
-    const bound = obj.getBoundingRect();
-    const newLeft = obj.left + (canvas.width / 2 - (bound.left + bound.width / 2));
-    updateObjectProperty(obj, 'left', newLeft, canvas);
+    const { width: artboardWidth } = getArtboardBounds(canvas);
+    const bound = obj.getBoundingRect(true, true); // Get unscaled bounds from origin? No, getBoundingRect() is relative to view
+    // Wait, getBoundingRect() might return zoomed bounds in v7? Let's check. Assuming it returns internal coords.
+    // In Fabric v7, getBoundingRect(false, true) might be needed. Let's use obj.aCoords for absolute positioning.
+    
+    // Actually, earlier code was: `canvas.width / 2 - (bound.left + bound.width / 2)`.
+    const boundWidth = bound.width / canvas.getZoom(); // neutralize zoom
+    const boundLeft = bound.left / canvas.getZoom() - canvas.viewportTransform[4] / canvas.getZoom(); // Neutralize pan and zoom
+    
+    // Easier way: Use object's center point
+    const center = obj.getCenterPoint();
+    updateObjectProperty(obj, 'left', obj.left - center.x + (artboardWidth / 2), canvas);
 };
 
 export const alignRight = (obj, canvas) => {
     if (!obj || !canvas) return;
-    const bound = obj.getBoundingRect();
-    const newLeft = obj.left + (canvas.width - (bound.left + bound.width));
-    updateObjectProperty(obj, 'left', newLeft, canvas);
+    const { width: artboardWidth } = getArtboardBounds(canvas);
+    // Align right to artboard
+    const center = obj.getCenterPoint();
+    const halfWidth = obj.getBoundingRect().width / 2 / canvas.getZoom();
+    updateObjectProperty(obj, 'left', obj.left - center.x + artboardWidth - halfWidth, canvas);
 };
 
 export const alignTop = (obj, canvas) => {
@@ -301,9 +333,9 @@ export const alignTop = (obj, canvas) => {
 
 export const alignCenterV = (obj, canvas) => {
     if (!obj || !canvas) return;
-    const bound = obj.getBoundingRect();
-    const newTop = obj.top + (canvas.height / 2 - (bound.top + bound.height / 2));
-    updateObjectProperty(obj, 'top', newTop, canvas);
+    const { height: artboardHeight } = getArtboardBounds(canvas);
+    const center = obj.getCenterPoint();
+    updateObjectProperty(obj, 'top', obj.top - center.y + (artboardHeight / 2), canvas);
 };
 
 // ─── Corner Radius helper ──────────────────────────────────────────────────
@@ -344,9 +376,10 @@ export const changeCornerRadius = (obj, radius, canvas) => {
 
 export const alignBottom = (obj, canvas) => {
     if (!obj || !canvas) return;
-    const bound = obj.getBoundingRect();
-    const newTop = obj.top + (canvas.height - (bound.top + bound.height));
-    updateObjectProperty(obj, 'top', newTop, canvas);
+    const { height: artboardHeight } = getArtboardBounds(canvas);
+    const center = obj.getCenterPoint();
+    const halfHeight = obj.getBoundingRect().height / 2 / canvas.getZoom();
+    updateObjectProperty(obj, 'top', obj.top - center.y + artboardHeight - halfHeight, canvas);
 };
 
 // ─── Flip helpers ───────────────────────────────────────────────────────────
