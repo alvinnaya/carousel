@@ -243,7 +243,7 @@ export const changeOpacity = (obj, opacity, canvas) => {
 export const bringToFront = (obj, canvas) => {
     if (!obj || !canvas) return;
     canvas.bringObjectToFront(obj);
-    
+
     // Ensure artboard is STILL at the bottom in case it was accidentally brought front
     // (though 'bringToFront' shouldn't do this to artboard, it's good safety)
     const artboard = canvas.getObjects().find(o => o.isArtboard);
@@ -306,11 +306,11 @@ export const alignCenterH = (obj, canvas) => {
     const bound = obj.getBoundingRect(true, true); // Get unscaled bounds from origin? No, getBoundingRect() is relative to view
     // Wait, getBoundingRect() might return zoomed bounds in v7? Let's check. Assuming it returns internal coords.
     // In Fabric v7, getBoundingRect(false, true) might be needed. Let's use obj.aCoords for absolute positioning.
-    
+
     // Actually, earlier code was: `canvas.width / 2 - (bound.left + bound.width / 2)`.
     const boundWidth = bound.width / canvas.getZoom(); // neutralize zoom
     const boundLeft = bound.left / canvas.getZoom() - canvas.viewportTransform[4] / canvas.getZoom(); // Neutralize pan and zoom
-    
+
     // Easier way: Use object's center point
     const center = obj.getCenterPoint();
     updateObjectProperty(obj, 'left', obj.left - center.x + (artboardWidth / 2), canvas);
@@ -441,7 +441,7 @@ export const changeFontFamily = (obj, family, canvas) => {
     if (savedWidth) obj.set('width', savedWidth);
 
     obj.setCoords();
-    canvas.fire('object:modified', { target: obj });
+    // canvas.fire('object:modified', { target: obj });
     canvas.requestRenderAll();
 };
 

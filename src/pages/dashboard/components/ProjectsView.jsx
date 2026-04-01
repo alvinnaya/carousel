@@ -1,6 +1,73 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, Image as ImageIcon } from 'lucide-react';
+
+const IMAGE_CACHE_NAME = 'design-previews';
+
+const CachedImage = ({ src, alt, className, ...props }) => {
+  const [imgUrl, setImgUrl] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    let objectUrl = null;
+
+    const loadImage = async () => {
+      if (!src || !('caches' in window)) {
+        setImgUrl(src);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const cache = await caches.open(IMAGE_CACHE_NAME);
+        const cachedResponse = await cache.match(src);
+
+        if (cachedResponse) {
+          const blob = await cachedResponse.blob();
+          objectUrl = URL.createObjectURL(blob);
+          if (isMounted) setImgUrl(objectUrl);
+        } else {
+          // Fetch and cache
+          const response = await fetch(src);
+          if (response.ok) {
+            await cache.put(src, response.clone());
+            const blob = await response.blob();
+            objectUrl = URL.createObjectURL(blob);
+            if (isMounted) setImgUrl(objectUrl);
+          } else {
+            if (isMounted) setImgUrl(src); // Fallback
+          }
+        }
+      } catch (err) {
+        console.error('CachedImage: Failed to load from cache', err);
+        if (isMounted) setImgUrl(src);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      isMounted = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [src]);
+
+  if (loading) {
+    return <div className={`animate-pulse bg-[var(--bg-main)] ${className}`} />;
+  }
+
+  return (
+    <img 
+      src={imgUrl} 
+      alt={alt} 
+      className={className} 
+      {...props} 
+    />
+  );
+};
 
 const ProjectsView = ({ designs, loading, error, fetchDesigns, handleCreateNew, handleDeleteDesign, user }) => {
   if (loading) {
@@ -42,9 +109,21 @@ const ProjectsView = ({ designs, loading, error, fetchDesigns, handleCreateNew, 
                 className="absolute top-0 left-0 w-full h-2.5" 
                 style={{ backgroundColor: design.color || 'var(--accent)' }}
               />
-              <div className="flex-1 flex items-center justify-center p-6">
-                <div className="w-full h-full bg-[var(--bg-main)] rounded-2xl border-2 border-dashed border-[var(--border-light)] flex items-center justify-center group-hover:bg-[var(--bg-surface)] transition-colors overflow-hidden">
-                    <div className="w-full h-full p-4 flex flex-col gap-2">
+              <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
+                <div className="w-full h-full bg-[var(--bg-main)] rounded-2xl border-2 border-dashed border-[var(--border-light)] flex items-center justify-center group-hover:bg-[var(--bg-surface)] transition-colors overflow-hidden relative">
+                    {design.previewImageUrl ? (
+                      <CachedImage 
+                        src={design.previewImageUrl} 
+                        alt={design.title} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        decoding="async"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-full h-full p-4 flex flex-col gap-2 ${design.previewImageUrl ? 'hidden absolute inset-0' : 'flex'}`}>
                       <div className="w-full h-3/4 bg-white/50 rounded-lg flex items-center justify-center">
                           <span className="text-5xl opacity-20 group-hover:opacity-40 transition-opacity">🖼️</span>
                       </div>

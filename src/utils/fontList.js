@@ -88,34 +88,41 @@ export const getUsedFonts = (canvases) => {
         }
     };
 
+    const processObject = (obj) => {
+        if (!obj) return;
+        const type = obj.type ? obj.type.toLowerCase() : '';
+
+        // Handle Text/Textbox objects
+        if (type.includes('text') || type.includes('textbox')) {
+            addFont(obj.fontFamily, obj.fontWeight);
+            
+            // Deep scan styles (per-character styling)
+            if (obj.styles) {
+                try {
+                    Object.values(obj.styles).forEach(line => {
+                        Object.values(line).forEach(charStyle => {
+                            const family = charStyle.fontFamily || obj.fontFamily;
+                            const weight = charStyle.fontWeight || obj.fontWeight;
+                            addFont(family, weight);
+                        });
+                    });
+                } catch (err) {
+                    console.warn('Error scanning deep styles for fonts', err);
+                }
+            }
+        } 
+        // Handle Groups recursively
+        else if (type === 'group' && Array.isArray(obj.objects)) {
+            obj.objects.forEach(processObject);
+        }
+    };
+
     canvases.forEach(canvas => {
         if (canvas && canvas.objects) {
-            canvas.objects.forEach(obj => {
-                const type = obj.type ? obj.type.toLowerCase() : '';
-                if (type.includes('text') || type.includes('textbox')) {
-                    // 1. Check top-level properties
-                    addFont(obj.fontFamily, obj.fontWeight);
-                    
-                    // 2. Deep scan styles (per-character/per-selection styling)
-                    // Fabric.js structure: obj.styles[lineIndex][charIndex] = { fontFamily, fontWeight, ... }
-                    if (obj.styles) {
-                        try {
-                            Object.values(obj.styles).forEach(line => {
-                                Object.values(line).forEach(charStyle => {
-                                    // If char has a specific family, use it. Otherwise it might inherit from obj.
-                                    const family = charStyle.fontFamily || obj.fontFamily;
-                                    const weight = charStyle.fontWeight || obj.fontWeight;
-                                    addFont(family, weight);
-                                });
-                            });
-                        } catch (err) {
-                            console.warn('Error scanning deep styles for fonts', err);
-                        }
-                    }
-                }
-            });
+            canvas.objects.forEach(processObject);
         }
     });
+
     return fontMap;
 };
 

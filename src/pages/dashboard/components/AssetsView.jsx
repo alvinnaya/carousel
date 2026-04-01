@@ -8,7 +8,8 @@ const AssetsView = ({ user }) => {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState('user'); // 'user', 'public', 'admin'
+    const [activeTab, setActiveTab] = useState('user'); // 'user', 'public', 'admin', 'trash'
+    const [activeTrashSubTab, setActiveTrashSubTab] = useState('recycle'); // 'recycle', 'public_purge', 'private_purge'
     const [openMenuId, setOpenMenuId] = useState(null);
     const fileInputRef = useRef(null);
 
@@ -29,7 +30,7 @@ const AssetsView = ({ user }) => {
 
     useEffect(() => {
         fetchImages();
-    }, [activeTab]);
+    }, [activeTab, activeTrashSubTab]);
 
     const fetchImages = async () => {
         try {
@@ -44,6 +45,14 @@ const AssetsView = ({ user }) => {
                 response = await imageService.getPublicAssets(ts);
             } else if (activeTab === 'admin' && isAdmin) {
                 response = await imageService.getAdminPrivateImages(ts);
+            } else if (activeTab === 'trash') {
+                if (activeTrashSubTab === 'recycle') {
+                    response = await imageService.getTrash(ts);
+                } else if (activeTrashSubTab === 'public_purge' && isAdmin) {
+                    response = await imageService.getAdminPrivateImages(ts);
+                } else if (activeTrashSubTab === 'private_purge') {
+                    response = await imageService.getMyImages(ts);
+                }
             }
 
             if (response && response.success && response.data) {
@@ -153,6 +162,91 @@ const AssetsView = ({ user }) => {
         });
     };
 
+    const handleRestore = async (image) => {
+        try {
+            setLoading(true);
+            const res = await imageService.restoreImage(image.objectKey);
+            if (res.success || res.message) {
+                fetchImages();
+            }
+        } catch (err) {
+            console.error('Restore failed', err);
+            const errMsg = err.response?.data?.message || 'Terjadi kesalahan saat mengembalikan gambar.';
+            showAlert('Gagal Mengembalikan', errMsg, true);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePermanentDelete = (image) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Hapus Permanen?',
+            message: `Apakah Anda yakin ingin menghapus "${image.objectKey.split('/').pop()}" selamanya? File akan dihapus dari SEMUA storage (Privat & Publik). Tindakan ini tidak dapat dibatalkan.`,
+            isDanger: true,
+            onConfirm: async () => {
+                try {
+                    const res = await imageService.permanentDeleteImage(image.objectKey);
+                    if (res.success || res.message) {
+                        fetchImages();
+                    }
+                } catch (err) {
+                    console.error('Permanent delete failed', err);
+                    const errMsg = err.response?.data?.message || 'Terjadi kesalahan saat menghapus permanen.';
+                    showAlert('Gagal Menghapus', errMsg, true);
+                } finally {
+                    setConfirmModal(s => ({ ...s, isOpen: false }));
+                }
+            }
+        });
+    };
+
+    const handlePurgePublic = (image) => {
+        showConfirm(
+            'Purge Public Mirror?',
+            'Hapus file sisa di bucket publik untuk gambar ini? Karena status sekarang privat, file publik tidak lagi diperlukan.',
+            async () => {
+                try {
+                    setLoading(true);
+                    const res = await imageService.purgePublicMirror(image.objectKey);
+                    if (res.success || res.message) {
+                        fetchImages();
+                    }
+                } catch (err) {
+                    console.error('Purge public failed', err);
+                    const errMsg = err.response?.data?.message || 'Gagal menghapus file di bucket publik.';
+                    showAlert('Gagal Purge', errMsg, true);
+                } finally {
+                    setLoading(false);
+                }
+            },
+            true
+        );
+    };
+
+    const handlePurgePrivate = (image) => {
+        showConfirm(
+            'Purge Private Mirror?',
+            'Hapus file asli di bucket privat? Gunakan ini hanya jika Anda ingin menghemat ruang karena gambar sudah tersedia secara publik.',
+            async () => {
+                try {
+                    setLoading(true);
+                    const res = await imageService.purgePrivateMirror(image.objectKey);
+                    if (res.success || res.message) {
+                        fetchImages();
+                    }
+                } catch (err) {
+                    console.error('Purge private failed', err);
+                    const errMsg = err.response?.data?.message || 'Gagal menghapus file di bucket privat.';
+                    showAlert('Gagal Purge', errMsg, true);
+                } finally {
+                    setLoading(false);
+                }
+            },
+            true
+        );
+    };
+
     const handleRename = (image) => {
         const currentName = image.name || image.objectKey.split('/').pop();
         setPromptModal({
@@ -242,6 +336,13 @@ const AssetsView = ({ user }) => {
                             Admin
                         </button>
                     )}
+                    <button
+                        onClick={() => setActiveTab('trash')}
+                        className={`mus-dashboard-tab px-5 py-2 flex items-center gap-2 ${activeTab === 'trash' ? 'mus-dashboard-tab-active' : ''}`}
+                    >
+                        <Trash2 size={14} />
+                        Trash
+                    </button>
                 </div>
 
                 <button
@@ -269,6 +370,31 @@ const AssetsView = ({ user }) => {
                 </div>
             )}
 
+            {activeTab === 'trash' && (
+                <div className="flex bg-zinc-100/50 p-1 rounded-lg w-fit mb-6 border border-zinc-200">
+                    <button
+                        onClick={() => setActiveTrashSubTab('recycle')}
+                        className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTrashSubTab === 'recycle' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+                    >
+                        Recycle Bin
+                    </button>
+                    {isAdmin && (
+                        <button
+                            onClick={() => setActiveTrashSubTab('public_purge')}
+                            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTrashSubTab === 'public_purge' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+                        >
+                            Public Purge (Admin)
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setActiveTrashSubTab('private_purge')}
+                        className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTrashSubTab === 'private_purge' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+                    >
+                        Private Purge (Owner)
+                    </button>
+                </div>
+            )}
+
             {loading ? (
                 <div className="flex justify-center items-center h-64">
                     <Loader2 className="animate-spin text-zinc-400 h-8 w-8" />
@@ -284,23 +410,43 @@ const AssetsView = ({ user }) => {
                             ? "You haven't uploaded any images yet."
                             : activeTab === 'public'
                                 ? "The public gallery is currently empty."
-                                : "No user images found in the system."}
+                                : activeTrashSubTab === 'recycle'
+                                    ? "Your recycle bin is empty."
+                                    : activeTrashSubTab === 'public_purge'
+                                        ? "No redundant public mirrors found needing cleanup."
+                                        : "No redundant private mirrors found."}
                     </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {images.map((img, index) => (
-                        <AssetCard
-                            key={img.id || img.objectKey || index}
-                            image={img}
-                            onDelete={() => handleDelete(img)}
-                            onRename={() => handleRename(img)}
-                            onToggleStatus={(activeTab === 'user' || activeTab === 'admin') ? () => handleToggleStatus(img) : null}
-                            showControls={activeTab !== 'public' || isAdmin}
-                            isMenuOpen={openMenuId === (img.id || img.objectKey)}
-                            setOpenMenuId={setOpenMenuId}
-                        />
-                    ))}
+                    {images
+                        .filter(img => {
+                            if (activeTab === 'trash') {
+                                if (activeTrashSubTab === 'public_purge') return img.existsInPublic && !img.isPublic;
+                                if (activeTrashSubTab === 'private_purge') return img.existsInPrivate && img.isPublic;
+                            }
+                            return true;
+                        })
+                        .map((img, index) => (
+                            <AssetCard
+                                key={img.id || img.objectKey || index}
+                                image={img}
+                                isAdmin={isAdmin}
+                                isTrash={activeTab === 'trash' && activeTrashSubTab === 'recycle'}
+                                isPurgeView={activeTab === 'trash' && (activeTrashSubTab === 'public_purge' || activeTrashSubTab === 'private_purge')}
+                                isOwner={activeTab === 'user' || (activeTab === 'trash' && activeTrashSubTab === 'private_purge')}
+                                onDelete={() => handleDelete(img)}
+                                onRename={() => handleRename(img)}
+                                onRestore={() => handleRestore(img)}
+                                onPermanentDelete={() => handlePermanentDelete(img)}
+                                onPurgePublic={() => handlePurgePublic(img)}
+                                onPurgePrivate={() => handlePurgePrivate(img)}
+                                onToggleStatus={(activeTab === 'user' || activeTab === 'admin') && isAdmin ? () => handleToggleStatus(img) : null}
+                                showControls={activeTab !== 'public' || isAdmin}
+                                isMenuOpen={openMenuId === (img.id || img.objectKey)}
+                                setOpenMenuId={setOpenMenuId}
+                            />
+                        ))}
                 </div>
             )}
 
@@ -316,8 +462,26 @@ const AssetsView = ({ user }) => {
     );
 };
 
-const AssetCard = ({ image, onDelete, onRename, onToggleStatus, showControls, isMenuOpen, setOpenMenuId }) => {
+const AssetCard = ({ 
+    image, 
+    isAdmin, 
+    isTrash, 
+    isPurgeView,
+    isOwner,
+    onDelete, 
+    onRename, 
+    onRestore, 
+    onPermanentDelete, 
+    onPurgePublic, 
+    onPurgePrivate,
+    onToggleStatus, 
+    showControls, 
+    isMenuOpen, 
+    setOpenMenuId 
+}) => {
     const menuId = image.id || image.objectKey;
+    const isMirrored = image.existsInPublic && image.existsInPrivate;
+
     return (
         <div className="mus-asset-card group flex flex-col hover:shadow-md">
             <div className="aspect-square bg-zinc-100 relative items-center justify-center flex overflow-hidden">
@@ -326,82 +490,181 @@ const AssetCard = ({ image, onDelete, onRename, onToggleStatus, showControls, is
                     alt="Asset"
                     loading="lazy"
                     crossOrigin="anonymous"
-                    className="mus-asset-image"
+                    className={`mus-asset-image ${isPurgeView ? 'opacity-75 grayscale-[0.5]' : ''}`}
                 />
 
                 {showControls && (
                     <div className="mus-asset-actions">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(isMenuOpen ? null : menuId);
-                            }}
-                            className="mus-asset-action-btn"
-                        >
-                            <MoreVertical size={16} />
-                        </button>
+                        {!isPurgeView && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenMenuId(isMenuOpen ? null : menuId);
+                                }}
+                                className="mus-asset-action-btn"
+                            >
+                                <MoreVertical size={16} />
+                            </button>
+                        )}
+
+                        {isPurgeView && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isAdmin && image.existsInPublic && !image.isPublic) {
+                                        onPurgePublic();
+                                    } else if (isOwner && image.existsInPrivate && image.isPublic) {
+                                        onPurgePrivate();
+                                    }
+                                }}
+                                className="bg-white/90 backdrop-blur shadow-sm text-zinc-900 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-white transition-all flex items-center gap-2"
+                            >
+                                <Trash2 size={12} />
+                                Purge Mirror
+                            </button>
+                        )}
 
                         {isMenuOpen && (
-                            <div className="mus-context-menu absolute right-0 top-10 w-40">
-                                {onToggleStatus && (
-                                    <div
-                                        className="mus-menu-item"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setOpenMenuId(null);
-                                            onToggleStatus();
-                                        }}
-                                    >
-                                        <span className="flex items-center gap-2">
-                                            {image.isPublic ? <Lock size={13} /> : <Globe size={13} />}
-                                            {image.isPublic ? 'Make Private' : 'Make Public'}
-                                        </span>
-                                    </div>
+                            <div className="mus-context-menu absolute right-0 top-10 w-44">
+                                {isTrash ? (
+                                    <>
+                                        <div
+                                            className="mus-menu-item"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(null);
+                                                onRestore();
+                                            }}
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Upload size={13} className="rotate-180" />
+                                                Restore Image
+                                            </span>
+                                        </div>
+                                        <div className="mus-menu-divider" />
+                                        <div
+                                            className="mus-menu-item mus-menu-item-danger"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(null);
+                                                onPermanentDelete();
+                                            }}
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Trash2 size={13} />
+                                                Delete Permanently
+                                            </span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        {isAdmin && onToggleStatus && (
+                                            <div
+                                                className="mus-menu-item"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(null);
+                                                    onToggleStatus();
+                                                }}
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    {image.isPublic ? <Lock size={13} /> : <Globe size={13} />}
+                                                    {image.isPublic ? 'Make Private' : 'Make Public'}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {isAdmin && isMirrored && !image.isPublic && (
+                                            <div
+                                                className="mus-menu-item mus-text-primary"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(null);
+                                                    onPurgePublic();
+                                                }}
+                                            >
+                                                <span className="flex items-center gap-2 font-medium">
+                                                    <Trash2 size={13} />
+                                                    Purge Public Mirror
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {isOwner && isMirrored && image.isPublic && (
+                                            <div
+                                                className="mus-menu-item mus-text-primary"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(null);
+                                                    onPurgePrivate();
+                                                }}
+                                            >
+                                                <span className="flex items-center gap-2 font-medium">
+                                                    <Trash2 size={13} />
+                                                    Purge Private Mirror
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        <div
+                                            className="mus-menu-item"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(null);
+                                                onRename();
+                                            }}
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Edit2 size={13} />
+                                                Rename
+                                            </span>
+                                        </div>
+                                        <div className="mus-menu-divider" />
+                                        <div
+                                            className="mus-menu-item mus-menu-item-danger"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(null);
+                                                onDelete();
+                                            }}
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Trash2 size={13} />
+                                                Delete to Trash
+                                            </span>
+                                        </div>
+                                    </>
                                 )}
-                                <div
-                                    className="mus-menu-item"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenMenuId(null);
-                                        onRename();
-                                    }}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Edit2 size={13} />
-                                        Rename
-                                    </span>
-                                </div>
-                                <div className="mus-menu-divider" />
-                                <div
-                                    className="mus-menu-item mus-menu-item-danger"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenMenuId(null);
-                                        onDelete();
-                                    }}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Trash2 size={13} />
-                                        Delete
-                                    </span>
-                                </div>
                             </div>
                         )}
                     </div>
                 )}
 
-                {image.isPublic && (
-                    <div className="mus-asset-badge">
+                <div className="mus-asset-badge flex gap-1">
+                    {image.isPublic && (
                         <div className="mus-asset-status-indicator bg-green-500" title="Public Asset">
                             <Globe size={14} />
                         </div>
-                    </div>
-                )}
+                    )}
+                    {isMirrored && (
+                        <div 
+                            className={`mus-asset-status-indicator ${image.isPublic ? 'bg-blue-500' : 'bg-amber-500 animate-pulse'}`} 
+                            title={image.isPublic ? "Mirrored in Private" : "Redundant Public Mirror (Needs Purge)"}
+                        >
+                            <Lock size={14} />
+                        </div>
+                    )}
+                </div>
             </div>
             <div className="p-3 mus-border-t-soft mus-bg-main flex items-center justify-between">
-                <p className="text-xs mus-text-muted font-medium truncate" title={image.name || image.objectKey}>
-                    {image.name || image.objectKey.split('/').pop()}
-                </p>
+                <div className="flex flex-col min-w-0">
+                    <p className="text-xs mus-text-muted font-medium truncate" title={image.name || image.objectKey}>
+                        {image.name || image.objectKey.split('/').pop()}
+                    </p>
+                    {isMirrored && (
+                        <span className="text-[10px] text-zinc-400 font-normal">Mirrored Storage</span>
+                    )}
+                </div>
                 {!image.isPublic && <Lock size={12} className="mus-text-muted opacity-50" title="Private" />}
             </div>
         </div>

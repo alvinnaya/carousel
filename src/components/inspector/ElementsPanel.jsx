@@ -99,7 +99,10 @@ const ElementsPanel = () => {
     }, [canvas]);
 
     const elements = canvas
-        ? [...canvas.getObjects()].reverse().map((obj) => buildElementNode(obj, null))
+        ? [...canvas.getObjects()]
+            .filter((obj) => !obj.isArtboard)
+            .reverse()
+            .map((obj) => buildElementNode(obj, null))
         : [];
 
     const toggleExpand = (id) => {

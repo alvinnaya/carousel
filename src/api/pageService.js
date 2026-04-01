@@ -5,7 +5,11 @@ const pageService = {
   create: (designId, data) => apiClient.post(`/designs/${designId}/pages`, data),
   update: (pageId, data) => apiClient.put(`/pages/${pageId}`, data),
   reorder: (designId, pageOrders) => apiClient.put(`/designs/${designId}/pages/reorder`, { pageOrders }),
-  delete: (pageId) => apiClient.delete(`/pages/${pageId}`),
+  updatePreview: (pageId, formData) => apiClient.put(`/pages/${pageId}/preview`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
 };
 
 export default pageService;

@@ -6,6 +6,7 @@ import CanvasStateHandler from "./CanvasStateHandler"
 import CanvasCopyPasteHandler from "./CanvasCopyPasteHandler"
 import CanvasTextScaleNormalizer from "./CanvasTextScaleNormalizer"
 import CanvasPreviewSyncronizer from "./CanvasPreviewSyncronizer"
+import CanvasPreviewUploader from "./CanvasPreviewUploader"
 import CanvasContextMenu from "./CanvasContextMenu"
 import CanvasSmartGuide from "./CanvasSmartGuide"
 import CanvasSmartGuideScale from "./CanvasSmartGuideScale"
@@ -30,6 +31,7 @@ export default function Canvas() {
             <CanvasConfig />
             <CanvasStateHandler />
             <CanvasPreviewSyncronizer />
+            <CanvasPreviewUploader />
             <CanvasCopyPasteHandler />
             <CanvasUndoRedoHandler />
             <CanvasTextScaleNormalizer />

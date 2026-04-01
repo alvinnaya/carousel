@@ -91,6 +91,14 @@ const CanvasCreation = () => {
                 originY: 'top',
                 selectable: false,
                 evented: false,
+                hasControls: false,
+                hasBorders: false,
+                lockMovementX: true,
+                lockMovementY: true,
+                lockRotation: true,
+                lockScalingX: true,
+                lockScalingY: true,
+                hoverCursor: 'default',
                 excludeFromExport: true, // IMPORTANT: Never let server see this!
                 isArtboard: true, // Identify as the artboard
                 shadow: new fabric.Shadow({

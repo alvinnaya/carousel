@@ -171,6 +171,8 @@ const TextStylingTools = ({ activeObject }) => {
     const applyFontFamily = async (family) => {
         if (!activeObject) return;
 
+        console.log('applyFontFamily', activeObject);
+
         // Close the font picker
         setIsFontPickerOpen(false);
 
@@ -181,8 +183,9 @@ const TextStylingTools = ({ activeObject }) => {
         // Optimistically update the UI dropdown
         setFontFamily(family);
 
-        // Ensure canvas and activeObject are still valid after the async delay
-        if (!canvas || !canvas.getObjects().includes(activeObject)) return;
+        // Ensure canvas is still valid after the async delay and activeObject hasn't been disposed
+        // We do not use canvas.getObjects().includes because it fails for sub-targets (objects inside a Group).
+        if (!canvas || activeObject.isType === undefined) return;
 
         const selection = getTextSelection(activeObject);
         if (selection.hasSelection) {

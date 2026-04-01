@@ -512,7 +512,8 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
         removePage,
         movePage,
         isFontsReady,
-        viewportRef
+        viewportRef,
+        designInfo
       }}
     >
       {children}

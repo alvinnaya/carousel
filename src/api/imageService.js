@@ -42,9 +42,34 @@ const imageService = {
     return apiClient.put(`/Images/make-private?key=${key}`);
   },
 
-  // Delete Image
+  // Soft Delete Image (Move to Trash)
   deleteImage: async (key) => {
     return apiClient.delete(`/Images?key=${key}`);
+  },
+
+  // Get Trash (Recycle Bin)
+  getTrash: async (ts) => {
+    return apiClient.get(`/Images/trash${ts ? `?ts=${ts}` : ''}`);
+  },
+
+  // Restore Image from Trash
+  restoreImage: async (key) => {
+    return apiClient.put(`/Images/restore?key=${key}`);
+  },
+
+  // Permanent Delete Image (All Buckets)
+  permanentDeleteImage: async (key) => {
+    return apiClient.delete(`/Images/permanent?key=${key}`);
+  },
+
+  // Purge Public Mirror (Admin Only)
+  purgePublicMirror: async (key) => {
+    return apiClient.delete(`/Images/admin/purge-public?key=${key}`);
+  },
+
+  // Purge Private Mirror (Owner Only)
+  purgePrivateMirror: async (key) => {
+    return apiClient.delete(`/Images/admin/purge-private?key=${key}`);
   },
 
   /**
