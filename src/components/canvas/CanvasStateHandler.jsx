@@ -12,7 +12,7 @@ const CanvasStateHandler = () => {
         // Sync lastJsonRef to current page state when switching/rendering
         // This baseline ensures the next user action is correctly detected as a change
         // and prevents "dirty" initialization steps in history.
-        const currentJson = canvas.toJSON(['imageKey']);
+        const currentJson = canvas.toJSON();
         const artboard = canvas.getObjects().find(o => o.isArtboard);
         if (artboard) {
             currentJson.background = artboard.fill;
@@ -25,7 +25,7 @@ const CanvasStateHandler = () => {
                 console.log('Skipping sync for internal action');
 
                 // Still update lastJsonRef to current to avoid double sync
-                const currentJson = canvas.toJSON(['imageKey']);
+                const currentJson = canvas.toJSON();
                 const artboard = canvas.getObjects().find(o => o.isArtboard);
                 if (artboard) {
                     currentJson.background = artboard.fill;
@@ -41,7 +41,7 @@ const CanvasStateHandler = () => {
             }
 
             debounceTimerRef.current = setTimeout(() => {
-                const currentJson = canvas.toJSON(['imageKey']);
+                const currentJson = canvas.toJSON();
                 const artboard = canvas.getObjects().find(o => o.isArtboard);
                 if (artboard) {
                     currentJson.background = artboard.fill;

@@ -13,19 +13,17 @@ const CanvasActiveObjectHandler = () => {
         const handleSelection = () => {
             // When an element is selected, switch the active tool to 'Tools'
             setActiveTool('Tools');
-            console.log('selection:created');
+            console.log('selection:created', canvas.getActiveObject());
         };
 
         // Listen to Fabric.js selection events
         canvas.on('selection:created', handleSelection);
         canvas.on('selection:updated', handleSelection);
 
-
         return () => {
             // Cleanup listeners
             canvas.off('selection:created', handleSelection);
             canvas.off('selection:updated', handleSelection);
-
         };
     }, [canvas]);
 

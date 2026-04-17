@@ -28,6 +28,22 @@ export default function CanvasTextScaleNormalizer() {
                 scaleY: 1,
             };
 
+            if (target.styles && Object.keys(target.styles).length > 0) {
+                const newStyles = JSON.parse(JSON.stringify(target.styles));
+                let hasStyleUpdates = false;
+                for (const lineIndex in newStyles) {
+                    for (const charIndex in newStyles[lineIndex]) {
+                        if (newStyles[lineIndex][charIndex].fontSize !== undefined) {
+                            newStyles[lineIndex][charIndex].fontSize = Math.max(1, Math.round(newStyles[lineIndex][charIndex].fontSize * scaleY));
+                            hasStyleUpdates = true;
+                        }
+                    }
+                }
+                if (hasStyleUpdates) {
+                    updates.styles = newStyles;
+                }
+            }
+
             if (target.type === 'textbox' && target.width) {
                 updates.width = Math.max(1, target.width * scaleX);
             }

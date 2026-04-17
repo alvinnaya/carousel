@@ -1,6 +1,8 @@
 import React from 'react';
-import { useCanvasContext } from '../../context/CanvasContext';
+import { useCanvasContext } from '../../../context/CanvasContext';
 import * as fabric from 'fabric';
+import { centerObject } from '../../../utils/canvasUtils';
+import ElementGallery from '../shared/ElementGallery';
 
 const AddShape = () => {
     const { canvas } = useCanvasContext();
@@ -8,14 +10,8 @@ const AddShape = () => {
     const handleAddShape = (type) => {
         if (!canvas) return;
 
-        const artboard = canvas.getObjects().find(o => o.isArtboard);
-        const cw = artboard ? artboard.width : canvas.width;
-        const ch = artboard ? artboard.height : canvas.height;
-
         let shape;
         const commonOptions = {
-            left: cw / 2 - 50,
-            top: ch / 2 - 50,
             fill: '#4f46e5',
             width: 100,
             height: 100,
@@ -42,8 +38,6 @@ const AddShape = () => {
                 break;
             case 'line':
                 shape = new fabric.Line([50, 50, 150, 50], {
-                    left: cw / 2 - 50,
-                    top: ch / 2,
                     stroke: '#4f46e5',
                     strokeWidth: 4,
                 });
@@ -61,7 +55,6 @@ const AddShape = () => {
                 });
                 break;
             case 'star':
-                // Simplified star for demo
                 shape = new fabric.Polygon([
                     { x: 50, y: 0 }, { x: 61, y: 35 }, { x: 98, y: 35 },
                     { x: 68, y: 57 }, { x: 79, y: 91 }, { x: 50, y: 70 },
@@ -76,6 +69,7 @@ const AddShape = () => {
         }
 
         if (shape) {
+            centerObject(canvas, shape);
             canvas.add(shape);
             canvas.setActiveObject(shape);
             canvas.renderAll();
@@ -100,20 +94,11 @@ const AddShape = () => {
             </section>
 
             <section>
-                <h3 className="text-[10px] font-black mus-text-muted uppercase tracking-widest mb-3">Icons</h3>
-                <div className="grid grid-cols-4 gap-2">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                        <div key={i} className="aspect-square mus-card flex items-center justify-center !p-2 !rounded-lg mus-text-muted cursor-pointer">
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <circle cx="12" cy="12" r="5" />
-                            </svg>
-                        </div>
-                    ))}
-                </div>
+                <h3 className="text-[10px] font-black mus-text-muted uppercase tracking-widest mb-3">Shape Library</h3>
+                <ElementGallery category="Shape" emptyMessage="No shapes saved" />
             </section>
         </div>
     );
 };
 
 export default AddShape;
-

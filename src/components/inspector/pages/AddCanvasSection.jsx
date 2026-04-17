@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import SmartDropdown from '../shared/SmartDropdown';
-import Modal from '../shared/Modal';
+import SmartDropdown from '../../shared/SmartDropdown';
+import Modal from '../../shared/Modal';
 
 const AddCanvasSection = ({
     onAddDefault,
@@ -67,39 +67,45 @@ const AddCanvasSection = ({
                         </button>
                     }
                 >
-                    <div className="flex flex-col min-w-[180px]">
+                    <div className="mus-menu-container min-w-[180px]">
                         <button
-                            className="mus-button-ghost text-left px-3 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer w-full"
+                            className="mus-menu-item"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onDuplicateActive();
                                 setAddDropdownOpen(false);
                             }}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            Duplicate Active
+                            <div className="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>Duplicate Active</span>
+                            </div>
                         </button>
                         <button
-                            className="mus-button-ghost text-left px-3 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer w-full"
+                            className="mus-menu-item"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onAddNewNextToActive();
                                 setAddDropdownOpen(false);
                             }}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            Add New Canvas
+                            <div className="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Add New Canvas</span>
+                            </div>
                         </button>
-                        <hr className="mus-border-t-soft my-1 mx-2" />
+                        <div className="mus-menu-divider" />
                         <button
-                            className="mus-button-ghost text-left px-3 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer w-full"
+                            className="mus-menu-item"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleCreateCustomOpen();
                             }}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                            Custom Size...
+                            <div className="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                <span>Custom Size...</span>
+                            </div>
                         </button>
                     </div>
                 </SmartDropdown>

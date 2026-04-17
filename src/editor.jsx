@@ -38,13 +38,13 @@ function Editor() {
         }
 
         if (pagesRes?.success && Array.isArray(pagesRes.data)) {
-          const refreshed = await refreshPagesImageUrls(pagesRes.data);
+          const refreshed = await refreshPagesImageUrls(pagesRes.data, id);
           setPages(refreshed);
         } else if (Array.isArray(pagesRes)) {
-          const refreshed = await refreshPagesImageUrls(pagesRes);
+          const refreshed = await refreshPagesImageUrls(pagesRes, id);
           setPages(refreshed);
         } else if (pagesRes?.data && Array.isArray(pagesRes.data.items)) {
-          const refreshed = await refreshPagesImageUrls(pagesRes.data.items);
+          const refreshed = await refreshPagesImageUrls(pagesRes.data.items, id);
           setPages(refreshed);
         }
       } catch (err) {

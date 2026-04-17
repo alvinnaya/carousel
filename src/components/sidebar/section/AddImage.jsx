@@ -1,18 +1,20 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { useCanvasContext } from '../../context/CanvasContext';
-import { useAuth } from '../../context/AuthContext';
+import { useCanvasContext } from '../../../context/CanvasContext';
+import { useAuth } from '../../../context/AuthContext';
 import * as fabric from 'fabric';
-import imageService from '../../api/imageService';
+import imageService from '../../../api/imageService';
+import canvasAssetService from '../../../api/canvasAssetService';
+import { computeSHA256 } from '../../../utils/cryptoUtils';
 import { Loader2, Globe, Lock, MoreVertical, Trash2, Upload } from 'lucide-react';
-import { extractObjectKey } from '../../utils/canvasUtils';
-import { ConfirmModal, AlertModal } from '../ui/Modal';
+import { ConfirmModal, AlertModal } from '../../ui/Modal';
 
 const AddImage = () => {
-    const { canvas } = useCanvasContext();
+    const { canvas, activeId, isTemplate } = useCanvasContext();  // Using helpers from context
     const fileInputRef = useRef(null);
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [addingToCanvas, setAddingToCanvas] = useState(false); // NEW: upload-to-canvas loading state
     const [activeTab, setActiveTab] = useState('user'); // 'user', 'public', or 'admin'
     const { user } = useAuth();
     const isAdmin = user?.roles?.includes('Admin');
@@ -61,32 +63,85 @@ const AddImage = () => {
         }
     };
 
-    const handleAddImage = async (imageUrl) => {
-        if (!canvas || !imageUrl) return;
+    /**
+     * [FLOW A] Stealth Handshake: For any single image source
+     * 1. Add ghost object instantly (isTransient: true, src = blob URL)
+     * 2. Hash in background
+     * 3. Handshake check with backend (scoped to this design/template)
+     * 4. Upload only if hash not found (404)
+     * 5. Finalize: swap blob for official R2 URL, set isTransient: false
+     */
+    const promoteAsset = async (blob, imgFabricObj) => {
+        const tempBlobUrl = imgFabricObj.getSrc();
+        try {
+            // Step 2: Compute SHA-256 hash
+            const hash = await computeSHA256(blob);
 
-        let finalImageUrl = imageUrl;
-        const objectKey = extractObjectKey(imageUrl);
+            // Step 3: Handshake — check if this hash already exists in this design/template
+            const checkFn = isTemplate
+                ? canvasAssetService.checkAssetInTemplate
+                : canvasAssetService.checkAssetInDesign;
+            const checkResult = await checkFn(activeId, hash);
 
-        if (objectKey && (activeTab === 'user' || activeTab === 'admin')) {
-            try {
-                const res = await imageService.getStableUrl(objectKey);
-                if (res?.success && res.data?.url) {
-                    finalImageUrl = res.data.url;
-                }
-            } catch (err) {
-                console.warn('Gagal mendapatkan stable URL, menggunakan signed URL sementara', err);
+            let assetId, officialSrc;
+
+            if (checkResult?.data) {
+                // Step 4a: Match found — reuse existing asset
+                assetId = checkResult.data.assetId;
+                officialSrc = checkResult.data.preSignedUrl;
+            } else {
+                // Step 4b: No match — upload binary as a new CanvasAsset
+                const file = new File([blob], `asset_${Date.now()}`, { type: blob.type });
+                const uploadFn = isTemplate
+                    ? canvasAssetService.uploadToTemplate
+                    : canvasAssetService.uploadToDesign;
+                const uploadResult = await uploadFn(activeId, file);
+                if (!uploadResult?.data) throw new Error('Upload failed.');
+                assetId = uploadResult.data.assetId;
+                officialSrc = uploadResult.data.preSignedUrl;
             }
+
+            // Step 5: Atomic finalization — swap blob URL with official R2 URL
+            await imgFabricObj.setSrc(officialSrc, { crossOrigin: 'anonymous' });
+            imgFabricObj.set({ assetId, isTransient: false });
+            canvas.renderAll();
+
+            // Trigger a sync so this finalized object is persisted to the database
+            canvas.fire('object:modified', { target: imgFabricObj });
+        } catch (err) {
+            console.error('[promoteAsset] Failed to promote asset:', err);
+            // On failure, remove ghost object to avoid stuck transient state
+            canvas.remove(imgFabricObj);
+            canvas.renderAll();
+            showAlert('Gagal Memuat Gambar', 'Terjadi kesalahan saat memproses gambar.', true);
+        } finally {
+            URL.revokeObjectURL(tempBlobUrl);
+        }
+    };
+
+    const handleAddImage = async (imgData) => {
+        if (!canvas || !imgData?.url) return;
+        if (!activeId) {
+            showAlert('Error', 'ID tidak ditemukan. Pastikan Anda berada di dalam editor.', true);
+            return;
         }
 
-        fabric.FabricImage.fromURL(finalImageUrl, {
-            crossOrigin: 'anonymous'
-        }).then((img) => {
+        setAddingToCanvas(true);
+        try {
+            // Step 1a: Fetch image binary from gallery URL
+            const blob = await fetch(imgData.url, { mode: 'cors' }).then(r => r.blob());
+            const tempBlobUrl = URL.createObjectURL(blob);
+
+            // Step 1b: Add ghost object to canvas INSTANTLY using local blob URL
+            const img = await fabric.FabricImage.fromURL(tempBlobUrl, { crossOrigin: 'anonymous' });
+
+            // Determine placement
             const artboard = canvas.getObjects().find(o => o.isArtboard);
             const cw = artboard ? artboard.width : canvas.width || 0;
             const ch = artboard ? artboard.height : canvas.height || 0;
 
             img.set({
-                imageKey: objectKey,
+                isTransient: true,  // Ghost: excluded from DB sync until promoted
                 crossOrigin: 'anonymous',
                 left: cw / 2,
                 top: ch / 2,
@@ -95,14 +150,22 @@ const AddImage = () => {
                 scaleX: 0.5,
                 scaleY: 0.5,
             });
+
             canvas.add(img);
             canvas.setActiveObject(img);
             canvas.renderAll();
-        }).catch(err => {
-            console.error('Failed to load image onto canvas:', err);
-            showAlert('Gagal Memuat Gambar', 'Tidak dapat memuat gambar ke kanvas. Pastikan pengaturan CORS pada R2 sudah benar.', true);
-        });
+
+            // Steps 2-5: Background promotion (hash -> check -> upload -> finalize)
+            // Do NOT await — user can continue working while this happens
+            promoteAsset(blob, img);
+        } catch (err) {
+            console.error('Failed to add image to canvas:', err);
+            showAlert('Gagal Memuat Gambar', 'Terjadi kesalahan saat memproses gambar untuk kanvas ini.', true);
+        } finally {
+            setAddingToCanvas(false);
+        }
     };
+
 
     const handleUpload = async (e) => {
         const file = e.target.files[0];
@@ -231,7 +294,7 @@ const AddImage = () => {
                         {images.map((img, idx) => (
                             <div
                                 key={img.id || img.objectKey || idx}
-                                onClick={() => handleAddImage(img.url)}
+                                onClick={() => handleAddImage(img)}
                                 className="aspect-square mus-asset-card group cursor-pointer"
                             >
                                 <img

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useCanvasContext } from '../../context/CanvasContext';
-import CanvasTools from './tools/CanvasTools';
-import ImageTools from './tools/ImageTools';
-import TextTools from './tools/TextTools';
-import ShapeTools from './tools/ShapeTools';
+import { useCanvasContext } from '../../../context/CanvasContext';
+import CanvasTools from '../tools/CanvasTools';
+import ImageTools from '../tools/ImageTools';
+import TextTools from '../tools/TextTools';
+import ShapeTools from '../tools/ShapeTools';
 
 /**
  * EditTool - Dynamically renders the appropriate toolset based on the active object on the canvas.

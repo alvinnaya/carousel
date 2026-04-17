@@ -97,7 +97,7 @@ const ShapeTools = ({ activeObject }) => {
 
             <TransformTools activeObject={activeObject} />
 
-            <CommonActionTools activeObject={activeObject} objectTypeLabel="Shape" />
+
 
         </div>
     );

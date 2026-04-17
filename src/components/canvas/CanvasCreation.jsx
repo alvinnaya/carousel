@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
 import { useCanvasContext } from '../../context/CanvasContext';
 import { CanvasDefaultControllerStyling } from './CanvasControllerStyling';
-import { ensureCORS } from '../../utils/canvasUtils';
+import { sanitizeImages } from '../../utils/canvasUtils';
 
 const CanvasCreation = () => {
     const canvasRef = useRef(null);
@@ -157,7 +157,7 @@ const CanvasCreation = () => {
         resizeObserver.observe(container);
 
         const syncCanvasState = () => {
-            const currentJson = fabricCanvas.toJSON(['imageKey']); // isArtboard is irrelevant since it's excluded
+            const currentJson = fabricCanvas.toJSON(); // imageKey now auto-included via prototype patch in CanvasConfig
 
             const artboard = fabricCanvas.getObjects().find(o => o.isArtboard);
             if (artboard) {
@@ -177,11 +177,18 @@ const CanvasCreation = () => {
 
             if (savedState && savedState.objects && savedState.objects.length > 0) {
                 console.log('Loading state from context for index:', activeCanvasIndex);
-                const corsSafeState = ensureCORS(savedState);
-                await fabricCanvas.loadFromJSON(corsSafeState);
+                try {
+                    // Validasi Gambar & Fallback (Proxy) untuk menangani URL rusak/deleted
+                    const safeState = await sanitizeImages(savedState);
+                    await fabricCanvas.loadFromJSON(safeState);
+                } catch (err) {
+                    console.error('Failed to load canvas JSON content (possibly missing images or CORS issues):', err);
+                    // Continue execution so artboard logic still runs
+                }
             }
 
             // Apply artboard logic (this heals the artboard missing from loadFromJSON + sets workspace color)
+            // This MUST run even if loadFromJSON fails partially.
             let artboardColor = savedState?.background || '#ffffff';
             applyArtboardLogic(fabricCanvas, artboardColor);
 

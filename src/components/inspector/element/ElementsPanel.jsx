@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useCanvasContext } from '../../context/CanvasContext';
-import ContextMenu from '../shared/ContextMenu';
-import { useCanvasActions, MenuSection, Divider, MenuButton } from '../canvas/CanvasContextMenu';
+import { useCanvasContext } from '../../../context/CanvasContext';
+import ContextMenu from '../../shared/ContextMenu';
+import { useCanvasActions, MenuSection, Divider, MenuButton } from '../../canvas/CanvasContextMenu';
+import TemplateSaveModal from '../../modals/TemplateSaveModal';
+import Toast from '../../shared/Toast';
+import textTemplateService from '../../../api/textTemplateService';
+import { captureObjectAsHDImage, getDeepPresetCategory } from '../../../utils/typographyCapture';
 
 const ensureStableId = (obj) => {
     if (!obj.__elementsPanelId) {
@@ -60,6 +64,72 @@ const ElementsPanel = () => {
         isGroup,
         clipboard
     } = useCanvasActions();
+
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+    const [templateApiError, setTemplateApiError] = useState('');
+    const [toastState, setToastState] = useState({ message: '', type: 'success' });
+    const [currentPreviewUrl, setCurrentPreviewUrl] = useState(null);
+    const [captureData, setCaptureData] = useState(null);
+    const [detectedCategory, setDetectedCategory] = useState(null);
+
+    const handleSaveAsTemplateClick = async () => {
+        try {
+            // Deep recursive category detection
+            const preset = getDeepPresetCategory(activeObject);
+            if (!preset) {
+                setToastState({ message: 'Could not determine element category.', type: 'error' });
+                return;
+            }
+
+            setDetectedCategory(preset.category);
+
+            const data = await captureObjectAsHDImage(activeObject);
+            if (data) {
+                setCaptureData(data);
+                setCurrentPreviewUrl(data.dataUrl);
+                setIsTemplateModalOpen(true);
+            }
+        } catch (error) {
+            console.error('Failed to capture high quality preview:', error);
+            setToastState({ message: 'Failed to generate preview for template.', type: 'error' });
+        }
+    };
+
+    const handleSaveTemplate = async (templateName) => {
+        if (!captureData) return;
+
+        setIsSavingTemplate(true);
+        setTemplateApiError('');
+        try {
+            const formData = new FormData();
+            formData.append('name', templateName);
+            formData.append('canvasJson', JSON.stringify(captureData.json));
+            formData.append('previewImage', captureData.file);
+            formData.append('category', detectedCategory || 'Group');
+            formData.append('type', 'JSON');
+
+            const response = await textTemplateService.createTextTemplate(formData);
+
+            if (response && response.success !== false) {
+                setIsTemplateModalOpen(false);
+                setCaptureData(null);
+                setCurrentPreviewUrl(null);
+                setDetectedCategory(null);
+                setToastState({ message: 'Style saved successfully!', type: 'success' });
+            } else {
+                const errorMsg = response?.message || 'Failed to save template.';
+                console.error(errorMsg);
+                setTemplateApiError(errorMsg);
+            }
+        } catch (error) {
+            console.error('Error saving template:', error);
+            const errorMsg = error.response?.data?.message || error.message || 'An unexpected error occurred.';
+            setTemplateApiError(errorMsg);
+        } finally {
+            setIsSavingTemplate(false);
+        }
+    };
 
     useEffect(() => {
         if (!canvas) return;
@@ -159,9 +229,9 @@ const ElementsPanel = () => {
             <React.Fragment key={el.id}>
                 <div
                     draggable
-                    className={`relative flex items-center p-2 transition-all duration-300 group
-                        ${isDragged ? 'mus-element-dragged' : 'mus-element-item'}
-                        ${isActive ? 'mus-item-active z-10' : ''}
+                    className={`mus-layer-card group
+                        ${isDragged ? 'mus-element-dragged' : ''}
+                        ${isActive ? 'mus-layer-card-active z-10' : ''}
                     `}
                     style={{ marginLeft: `${depth * 16}px` }}
                     onClick={() => {
@@ -248,18 +318,18 @@ const ElementsPanel = () => {
                         )}
                     </div>
 
-                    <div className="w-10 h-10 rounded-lg bg-white border mus-border-soft flex items-center justify-center mr-4 overflow-hidden shadow-inner flex-shrink-0">
+                    <div className="mus-layer-card-preview">
                         {el.preview ? (
                             <img src={el.preview} alt={el.type} className="max-w-full max-h-full object-contain" />
                         ) : (
-                            <div className="text-[10px] mus-text-muted font-black uppercase">{el.type.charAt(0)}</div>
+                            <div className="text-[10px] mus-text-muted font-black uppercase text-center">{el.type.charAt(0)}</div>
                         )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] font-black mus-text-muted uppercase tracking-widest">{el.type}</span>
-                        <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                        <span className="mus-tool-label !text-[9px] mb-0.5">{el.type}</span>
+                        <span className="text-[11px] font-bold mus-text-primary truncate">
                             {el.type === 'group' ? `Group (${el.children.length})` :
-                                el.ref.text ? (el.ref.text.length > 15 ? el.ref.text.substring(0, 15) + '...' : el.ref.text) : 'Element'}
+                                el.ref.text ? (el.ref.text.length > 20 ? el.ref.text.substring(0, 20) + '...' : el.ref.text) : 'Element'}
                         </span>
                     </div>
                 </div>
@@ -278,7 +348,7 @@ const ElementsPanel = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
-                    <p className="text-[10px] font-bold">No elements found</p>
+                    <p className="mus-tool-label">No elements found</p>
                 </div>
             )}
 
@@ -311,6 +381,7 @@ const ElementsPanel = () => {
                         <MenuSection>
                             {isSelection && <MenuButton label="Group" icon="⌘G" onClick={() => { handleAction('group'); setIsVisible(false); }} />}
                             {isGroup && <MenuButton label="Ungroup" icon="⇧⌘G" onClick={() => { handleAction('ungroup'); setIsVisible(false); }} />}
+                            <MenuButton label="Save as Element Preset" onClick={() => { setIsVisible(false); handleSaveAsTemplateClick(); }} />
                             <MenuButton label="Delete" icon="⌫" onClick={() => { handleAction('delete'); setIsVisible(false); }} variant="danger" />
                         </MenuSection>
                     </>
@@ -319,13 +390,38 @@ const ElementsPanel = () => {
                         {clipboard ? (
                             <MenuButton label="Paste" icon="⌘V" onClick={() => { handleAction('paste'); setIsVisible(false); }} />
                         ) : (
-                            <div className="px-4 py-2.5 mus-text-muted text-[11px] font-black uppercase tracking-widest italic">
+                            <div className="px-4 py-2.5 mus-text-muted text-[10px] font-bold uppercase tracking-widest italic opacity-50">
                                 No Element Selected
                             </div>
                         )}
                     </MenuSection>
                 )}
             </ContextMenu>
+            
+            <TemplateSaveModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => {
+                    if (!isSavingTemplate) {
+                        setIsTemplateModalOpen(false);
+                        setCaptureData(null);
+                        setCurrentPreviewUrl(null);
+                        setTemplateApiError('');
+                    }
+                }}
+                onSave={handleSaveTemplate}
+                isLoading={isSavingTemplate}
+                previewUrl={currentPreviewUrl}
+                apiError={templateApiError}
+                detectedCategory={detectedCategory}
+            />
+
+            {toastState.message && (
+                <Toast
+                    message={toastState.message}
+                    type={toastState.type}
+                    onClose={() => setToastState({ message: '', type: 'success' })}
+                />
+            )}
         </div>
     );
 };

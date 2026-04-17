@@ -33,18 +33,18 @@ const ProjectName = ({ title, isSaving }) => {
                     onChange={(e) => setProjectName(e.target.value)}
                     onBlur={handleSave}
                     onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                    className="bg-transparent border-b border-[var(--accent)] mus-text-primary font-bold text-sm outline-none px-1 py-0.5 min-w-[150px]"
+                    className="mus-project-input"
                 />
             ) : (
                 <div className="flex items-center gap-2">
                     <div
                         onClick={() => setIsEditing(true)}
-                        className="mus-text-primary font-bold text-base cursor-text hover:text-black transition-colors px-1 py-0.5 border-b border-transparent hover:border-[var(--border-light)]"
+                        className="mus-project-title"
                     >
                         {projectName || 'Untitled Project'}
                     </div>
                     {isSaving && (
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest bg-[var(--accent-light)] px-2 py-0.5 rounded-full border border-[var(--accent-light)] animate-pulse">
+                        <div className="mus-status-badge">
                             <Loader2 size={10} className="animate-spin" />
                             Saving
                         </div>

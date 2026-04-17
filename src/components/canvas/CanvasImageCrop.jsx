@@ -79,11 +79,21 @@ function cropRight(ev, tf, x, y) {
     const img = tf.target;
     if (img.clipPath) img.clipPath = undefined;
     const s = snap(tf);
-    const { nW, nH } = getNatural(img);
-    const maxFullW = nW - s.cropX;
-    
     const local = getLocalDelta(img, x, y, tf); 
     const newCanvasW = s.width * s.scaleX + local.x; // dragging right = +local.x
+    
+    executeCropRight(img, s, newCanvasW);
+    pin(img, s.ml, 'left', 'center');
+    
+    img.canvas?.fire('object:resizing', { target: img, e: ev, transform: tf, pointer: { x, y } });
+    
+    commit(img);
+    return true;
+}
+
+export function executeCropRight(img, s, newCanvasW) {
+    const { nW, nH } = getNatural(img);
+    const maxFullW = nW - s.cropX;
     let nextW = newCanvasW / s.scaleX;
     
     if (nextW < MIN_SRC) nextW = MIN_SRC;
@@ -112,24 +122,30 @@ function cropRight(ev, tf, x, y) {
         
         img.set({ scaleX: nSX, scaleY: nSY, width: maxFullW, height: newH, cropX: s.cropX, cropY: newCropY });
     }
-    
-    // Pin exactly to the Middle-Left point
-    pin(img, s.ml, 'left', 'center');
-    commit(img);
-    return true;
 }
+
 
 // ── ml: left edge follows pointer, middle-right is pinned ────────────────────
 function cropLeft(ev, tf, x, y) {
     const img = tf.target;
     if (img.clipPath) img.clipPath = undefined;
     const s = snap(tf);
-    const { nW, nH } = getNatural(img);
-    const maxFullW = s.cropX + s.width; 
-    
     const local = getLocalDelta(img, x, y, tf);
     // Dragging left (negative local.x) means widening the box
     const newCanvasW = s.width * s.scaleX - local.x; 
+    
+    executeCropLeft(img, s, newCanvasW);
+    pin(img, s.mr, 'right', 'center');
+    
+    img.canvas?.fire('object:resizing', { target: img, e: ev, transform: tf, pointer: { x, y } });
+    
+    commit(img);
+    return true;
+}
+
+export function executeCropLeft(img, s, newCanvasW) {
+    const { nW, nH } = getNatural(img);
+    const maxFullW = s.cropX + s.width; 
     let nextW = newCanvasW / s.scaleX;
     
     if (nextW < MIN_SRC) nextW = MIN_SRC;
@@ -158,23 +174,30 @@ function cropLeft(ev, tf, x, y) {
         
         img.set({ scaleX: nSX, scaleY: nSY, width: maxFullW, height: newH, cropX: 0, cropY: newCropY });
     }
-    
-    pin(img, s.mr, 'right', 'center');
-    commit(img);
-    return true;
 }
+
 
 // ── mt: top edge follows pointer, bottom-center is pinned ────────────────────
 function cropTop(ev, tf, x, y) {
     const img = tf.target;
     if (img.clipPath) img.clipPath = undefined;
     const s = snap(tf);
-    const { nW, nH } = getNatural(img);
-    const maxFullH = s.cropY + s.height;
-    
     const local = getLocalDelta(img, x, y, tf);
     // Dragging up (negative local.y) means increasing height
     const newCanvasH = s.height * s.scaleY - local.y;
+    
+    executeCropTop(img, s, newCanvasH);
+    pin(img, s.bc, 'center', 'bottom');
+    
+    img.canvas?.fire('object:resizing', { target: img, e: ev, transform: tf, pointer: { x, y } });
+
+    commit(img);
+    return true;
+}
+
+export function executeCropTop(img, s, newCanvasH) {
+    const { nW, nH } = getNatural(img);
+    const maxFullH = s.cropY + s.height;
     let nextH = newCanvasH / s.scaleY;
     
     if (nextH < MIN_SRC) nextH = MIN_SRC;
@@ -203,23 +226,30 @@ function cropTop(ev, tf, x, y) {
         
         img.set({ scaleX: nSX, scaleY: nSY, width: newW, height: maxFullH, cropX: newCropX, cropY: 0 });
     }
-    
-    pin(img, s.bc, 'center', 'bottom');
-    commit(img);
-    return true;
 }
+
 
 // ── mb: bottom edge follows pointer, top-center is pinned ────────────────────
 function cropBottom(ev, tf, x, y) {
     const img = tf.target;
     if (img.clipPath) img.clipPath = undefined;
     const s = snap(tf);
-    const { nW, nH } = getNatural(img);
-    const maxFullH = nH - s.cropY;
-    
     const local = getLocalDelta(img, x, y, tf);
     // Dragging down (positive local.y) means increasing height
     const newCanvasH = s.height * s.scaleY + local.y;
+    
+    executeCropBottom(img, s, newCanvasH);
+    pin(img, s.tc, 'center', 'top');
+    
+    img.canvas?.fire('object:resizing', { target: img, e: ev, transform: tf, pointer: { x, y } });
+
+    commit(img);
+    return true;
+}
+
+export function executeCropBottom(img, s, newCanvasH) {
+    const { nW, nH } = getNatural(img);
+    const maxFullH = nH - s.cropY;
     let nextH = newCanvasH / s.scaleY;
     
     if (nextH < MIN_SRC) nextH = MIN_SRC;
@@ -244,11 +274,8 @@ function cropBottom(ev, tf, x, y) {
         
         img.set({ scaleX: nSX, scaleY: nSY, width: newW, height: maxFullH, cropX: newCropX, cropY: s.cropY });
     }
-    
-    pin(img, s.tc, 'center', 'top');
-    commit(img);
-    return true;
 }
+
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function makeCropRender(isVertical) {
@@ -290,11 +317,46 @@ function injectCropControls(img) {
 
     img.controls = {
         ...img.controls,
-        ml: new fabric.Control({ x: -0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropLeft,   sizeX: hitH, sizeY: hitW, render: makeCropRender(true) }),
-        mr: new fabric.Control({ x:  0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropRight,  sizeX: hitH, sizeY: hitW, render: makeCropRender(true) }),
-        mt: new fabric.Control({ x: 0,  y: -0.5, cursorStyle: 'ns-resize', actionHandler: cropTop,    sizeX: hitW, sizeY: hitH, render: makeCropRender(false) }),
-        mb: new fabric.Control({ x: 0,  y:  0.5, cursorStyle: 'ns-resize', actionHandler: cropBottom, sizeX: hitW, sizeY: hitH, render: makeCropRender(false) }),
+        ml: new fabric.Control({ actionName: 'resizing', x: -0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropLeft,   sizeX: hitH, sizeY: hitW, render: makeCropRender(true) }),
+        mr: new fabric.Control({ actionName: 'resizing', x:  0.5, y: 0,  cursorStyle: 'ew-resize', actionHandler: cropRight,  sizeX: hitH, sizeY: hitW, render: makeCropRender(true) }),
+        mt: new fabric.Control({ actionName: 'resizing', x: 0,  y: -0.5, cursorStyle: 'ns-resize', actionHandler: cropTop,    sizeX: hitW, sizeY: hitH, render: makeCropRender(false) }),
+        mb: new fabric.Control({ actionName: 'resizing', x: 0,  y:  0.5, cursorStyle: 'ns-resize', actionHandler: cropBottom, sizeX: hitW, sizeY: hitH, render: makeCropRender(false) }),
     };
+
+    img.__applyCropSnap = function(corner, multiplier) {
+        const tf = this.canvas._currentTransform;
+        if (!tf) return;
+        
+        const s = snap(tf);
+        if (img.clipPath) img.clipPath = undefined;
+
+        if (corner === 'mr' || corner === 'ml') {
+            const currentVisW = this.width * this.scaleX;
+            const targetVisW = currentVisW * multiplier;
+            
+            if (corner === 'mr') {
+                executeCropRight(this, s, targetVisW);
+                pin(this, s.ml, 'left', 'center');
+            } else {
+                executeCropLeft(this, s, targetVisW);
+                pin(this, s.mr, 'right', 'center');
+            }
+        } else if (corner === 'mt' || corner === 'mb') {
+            const currentVisH = this.height * this.scaleY;
+            const targetVisH = currentVisH * multiplier;
+            
+            if (corner === 'mt') {
+                executeCropTop(this, s, targetVisH);
+                pin(this, s.bc, 'center', 'bottom');
+            } else {
+                executeCropBottom(this, s, targetVisH);
+                pin(this, s.tc, 'center', 'top');
+            }
+        }
+        
+        commit(this);
+    };
+
     img.setCoords();
 }
 

@@ -1,8 +1,9 @@
 import React from 'react';
-import { useCanvasContext } from '../../context/CanvasContext';
+import { useCanvasContext } from '../../../context/CanvasContext';
 import * as fabric from 'fabric';
-
-import { loadGoogleFont } from '../../utils/fontList';
+import { loadGoogleFont } from '../../../utils/fontList';
+import { centerObject } from '../../../utils/canvasUtils';
+import ElementGallery from '../shared/ElementGallery';
 
 const AddText = () => {
     const { canvas } = useCanvasContext();
@@ -14,17 +15,11 @@ const AddText = () => {
         // Fabric measures text upon creation; if the font isn't loaded, measuring fails.
         await loadGoogleFont('Inter', [400, 500, 700]);
 
-        const artboard = canvas.getObjects().find(o => o.isArtboard);
-        const cw = artboard ? artboard.width : canvas.width;
-        const ch = artboard ? artboard.height : canvas.height;
-
         let text;
         const commonOptions = {
-            left: cw / 2 - 100,
-            top: ch / 2 - 20,
             width: 200,
             textAlign: 'left',
-            fontFamily: 'Inter', // Must use exact font name without fallbacks for Fabric
+            fontFamily: 'Inter',
         };
 
         switch (type) {
@@ -54,6 +49,7 @@ const AddText = () => {
         }
 
         if (text) {
+            centerObject(canvas, text);
             canvas.add(text);
             canvas.setActiveObject(text);
             canvas.renderAll();
@@ -87,18 +83,11 @@ const AddText = () => {
             </section>
 
             <section>
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Text Effects</h3>
-                <div className="grid grid-cols-2 gap-2">
-                    {['Neon', 'Outline', 'Shadow', 'Gradient'].map((effect) => (
-                        <div key={effect} className="aspect-square rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-center text-[10px] font-bold text-zinc-400 cursor-pointer hover:border-zinc-300 transition-all">
-                            {effect}
-                        </div>
-                    ))}
-                </div>
+                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Text Styles</h3>
+                <ElementGallery category="Text" emptyMessage="No text styles saved" />
             </section>
         </div>
     );
 };
 
 export default AddText;
-

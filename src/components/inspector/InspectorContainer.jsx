@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import InspectorHeader from './InspectorHeader';
-import LayersPanel from './LayersPanel';
-import ElementsPanel from './ElementsPanel';
+import LayersPanel from './pages/LayersPanel';
+import ElementsPanel from './element/ElementsPanel';
 
 /**
  * InspectorContainer - The main right sidebar for element and layer management.

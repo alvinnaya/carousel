@@ -8,7 +8,7 @@ import CanvasTextScaleNormalizer from "./CanvasTextScaleNormalizer"
 import CanvasPreviewSyncronizer from "./CanvasPreviewSyncronizer"
 import CanvasPreviewUploader from "./CanvasPreviewUploader"
 import CanvasContextMenu from "./CanvasContextMenu"
-import CanvasSmartGuide from "./CanvasSmartGuide"
+import CanvasAligningGuidelines from "./CanvasAligningGuidelines"
 import CanvasSmartGuideScale from "./CanvasSmartGuideScale"
 import CanvasUndoRedoHandler from "./CanvasUndoRedoHandler"
 import CanvasImageCrop from "./CanvasImageCrop"
@@ -39,8 +39,7 @@ export default function Canvas() {
             <CanvasCreation />
             <CanvasViewController />
             <CanvasContextMenu />
-            <CanvasSmartGuide />
-            {/* <CanvasSmartGuideScale /> */}
+            <CanvasAligningGuidelines />
             <CanvasKeyHandler />
             <CanvasImageCrop />
             <CanvasActiveObjectHandler />

@@ -215,17 +215,11 @@ const TextStylingTools = ({ activeObject }) => {
 
     const applyFontSize = (size) => {
         if (!activeObject) return;
-        const selection = getTextSelection(activeObject);
-        if (selection.hasSelection) {
-            changeSelectedTextProperty(activeObject, 'fontSize', size, canvas);
-            const newFontSize = getDisplayProp('fontSize', 24);
-            setFontSize(newFontSize);
-        } else {
-            changeFontSize(activeObject, size, canvas);
-            const newFontSize = getDisplayProp('fontSize', 24);
-            setFontSize(newFontSize);
-        }
+        changeFontSize(activeObject, size, canvas);
+        const newFontSize = getDisplayProp('fontSize', 24);
+        setFontSize(newFontSize);
     };
+
 
     const applyLineHeight = (val) => {
         if (!activeObject) return;

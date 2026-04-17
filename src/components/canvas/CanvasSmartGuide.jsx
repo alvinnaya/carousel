@@ -51,7 +51,7 @@ const CanvasSmartGuide = ({ snapThreshold = 15, edgePadding = 80 }) => {
 
             const retina = canvas.getRetinaScaling();
             const vpt = canvas.viewportTransform;
-            
+
             // Set base identity, then apply viewport transform to draw directly in World space
             ctx.setTransform(retina, 0, 0, retina, 0, 0);
             ctx.transform(vpt[0], vpt[1], vpt[2], vpt[3], vpt[4], vpt[5]);

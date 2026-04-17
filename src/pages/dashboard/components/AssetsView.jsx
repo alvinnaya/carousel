@@ -1,7 +1,65 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Globe, Lock, MoreVertical, Trash2, Edit2, Upload } from 'lucide-react';
 import imageService from '../../../api/imageService';
 import { ConfirmModal, AlertModal, PromptModal } from '../../../components/ui/Modal';
+
+// Manual Icons
+const LoaderIcon = ({ size = 14, className = "" }) => (
+    <svg className={`animate-spin ${className}`} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="2" x2="12" y2="6"></line>
+        <line x1="12" y1="18" x2="12" y2="22"></line>
+        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+        <line x1="2" y1="12" x2="6" y2="12"></line>
+        <line x1="18" y1="12" x2="22" y2="12"></line>
+        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+        <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+    </svg>
+);
+
+const GlobeIcon = ({ size = 14, className = "" }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+    </svg>
+);
+
+const LockIcon = ({ size = 14, className = "" }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+);
+
+const MoreVerticalIcon = ({ size = 16, className = "" }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="1.5"></circle>
+        <circle cx="12" cy="5" r="1.5"></circle>
+        <circle cx="12" cy="19" r="1.5"></circle>
+    </svg>
+);
+
+const TrashIcon = ({ size = 14, className = "" }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </svg>
+);
+
+const EditIcon = ({ size = 14, className = "" }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+    </svg>
+);
+
+const UploadIcon = ({ size = 14, className = "" }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>
+);
 
 const AssetsView = ({ user }) => {
     const [images, setImages] = useState([]);
@@ -278,7 +336,7 @@ const AssetsView = ({ user }) => {
     if (loading && images.length === 0) {
         return (
             <div className="flex-1 flex justify-center items-center h-64">
-                <Loader2 className="animate-spin text-zinc-400 h-8 w-8" />
+                <LoaderIcon className="text-zinc-400 h-8 w-8" />
             </div>
         );
     }
@@ -340,7 +398,7 @@ const AssetsView = ({ user }) => {
                         onClick={() => setActiveTab('trash')}
                         className={`mus-dashboard-tab px-5 py-2 flex items-center gap-2 ${activeTab === 'trash' ? 'mus-dashboard-tab-active' : ''}`}
                     >
-                        <Trash2 size={14} />
+                        <TrashIcon size={14} />
                         Trash
                     </button>
                 </div>
@@ -352,12 +410,12 @@ const AssetsView = ({ user }) => {
                 >
                     {uploading ? (
                         <>
-                            <Loader2 size={16} className="animate-spin" />
+                            <LoaderIcon size={16} />
                             <span>Uploading...</span>
                         </>
                     ) : (
                         <>
-                            <Upload size={16} />
+                            <UploadIcon size={16} />
                             <span>Upload Asset</span>
                         </>
                     )}
@@ -397,12 +455,12 @@ const AssetsView = ({ user }) => {
 
             {loading ? (
                 <div className="flex justify-center items-center h-64">
-                    <Loader2 className="animate-spin text-zinc-400 h-8 w-8" />
+                    <LoaderIcon className="text-zinc-400 h-8 w-8" />
                 </div>
             ) : images.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-16 border border-zinc-200 border-dashed rounded-xl bg-white/50">
                     <div className="p-4 bg-zinc-100 rounded-full mb-4">
-                        <Trash2 className="text-zinc-300" size={32} />
+                        <TrashIcon className="text-zinc-300" size={32} />
                     </div>
                     <h3 className="text-lg font-medium text-zinc-900 mb-1">No images found</h3>
                     <p className="text-sm text-zinc-500 text-center max-w-sm">
@@ -503,7 +561,7 @@ const AssetCard = ({
                                 }}
                                 className="mus-asset-action-btn"
                             >
-                                <MoreVertical size={16} />
+                                <MoreVerticalIcon size={16} />
                             </button>
                         )}
 
@@ -519,7 +577,7 @@ const AssetCard = ({
                                 }}
                                 className="bg-white/90 backdrop-blur shadow-sm text-zinc-900 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-white transition-all flex items-center gap-2"
                             >
-                                <Trash2 size={12} />
+                                <TrashIcon size={12} />
                                 Purge Mirror
                             </button>
                         )}
@@ -537,7 +595,7 @@ const AssetCard = ({
                                             }}
                                         >
                                             <span className="flex items-center gap-2">
-                                                <Upload size={13} className="rotate-180" />
+                                                <UploadIcon size={13} className="rotate-180" />
                                                 Restore Image
                                             </span>
                                         </div>
@@ -551,7 +609,7 @@ const AssetCard = ({
                                             }}
                                         >
                                             <span className="flex items-center gap-2">
-                                                <Trash2 size={13} />
+                                                <TrashIcon size={13} />
                                                 Delete Permanently
                                             </span>
                                         </div>
@@ -568,7 +626,7 @@ const AssetCard = ({
                                                 }}
                                             >
                                                 <span className="flex items-center gap-2">
-                                                    {image.isPublic ? <Lock size={13} /> : <Globe size={13} />}
+                                                    {image.isPublic ? <LockIcon size={13} /> : <GlobeIcon size={13} />}
                                                     {image.isPublic ? 'Make Private' : 'Make Public'}
                                                 </span>
                                             </div>
@@ -584,7 +642,7 @@ const AssetCard = ({
                                                 }}
                                             >
                                                 <span className="flex items-center gap-2 font-medium">
-                                                    <Trash2 size={13} />
+                                                    <TrashIcon size={13} />
                                                     Purge Public Mirror
                                                 </span>
                                             </div>
@@ -600,7 +658,7 @@ const AssetCard = ({
                                                 }}
                                             >
                                                 <span className="flex items-center gap-2 font-medium">
-                                                    <Trash2 size={13} />
+                                                    <TrashIcon size={13} />
                                                     Purge Private Mirror
                                                 </span>
                                             </div>
@@ -615,7 +673,7 @@ const AssetCard = ({
                                             }}
                                         >
                                             <span className="flex items-center gap-2">
-                                                <Edit2 size={13} />
+                                                <EditIcon size={13} />
                                                 Rename
                                             </span>
                                         </div>
@@ -629,7 +687,7 @@ const AssetCard = ({
                                             }}
                                         >
                                             <span className="flex items-center gap-2">
-                                                <Trash2 size={13} />
+                                                <TrashIcon size={13} />
                                                 Delete to Trash
                                             </span>
                                         </div>
@@ -643,7 +701,7 @@ const AssetCard = ({
                 <div className="mus-asset-badge flex gap-1">
                     {image.isPublic && (
                         <div className="mus-asset-status-indicator bg-green-500" title="Public Asset">
-                            <Globe size={14} />
+                            <GlobeIcon size={14} />
                         </div>
                     )}
                     {isMirrored && (
@@ -651,7 +709,7 @@ const AssetCard = ({
                             className={`mus-asset-status-indicator ${image.isPublic ? 'bg-blue-500' : 'bg-amber-500 animate-pulse'}`} 
                             title={image.isPublic ? "Mirrored in Private" : "Redundant Public Mirror (Needs Purge)"}
                         >
-                            <Lock size={14} />
+                            <LockIcon size={14} />
                         </div>
                     )}
                 </div>
@@ -665,7 +723,7 @@ const AssetCard = ({
                         <span className="text-[10px] text-zinc-400 font-normal">Mirrored Storage</span>
                     )}
                 </div>
-                {!image.isPublic && <Lock size={12} className="mus-text-muted opacity-50" title="Private" />}
+                {!image.isPublic && <LockIcon size={12} className="mus-text-muted opacity-50" title="Private" />}
             </div>
         </div>
     );

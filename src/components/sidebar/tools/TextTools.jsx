@@ -1,7 +1,6 @@
 import TransformTools from './shared/TransformTools';
 import TextStylingTools from './shared/TextStylingTools';
 import OpacityTool from './shared/OpacityTool';
-import CommonActionTools from './shared/CommonActionTools';
 import ColorPaletteSelector from './shared/ColorPaletteSelector';
 import HighlightColorTool from './shared/HighlightColorTool';
 import { changeSelectedTextProperty, getTextSelection } from '../../Helper/FabricHelper';
@@ -67,7 +66,6 @@ const TextTools = ({ activeObject }) => {
                 />
             </CollapsibleToolSection>
 
-
             <HighlightColorTool activeObject={activeObject} />
 
             <ShadowTool activeObject={activeObject} />
@@ -78,7 +76,7 @@ const TextTools = ({ activeObject }) => {
 
             <TransformTools activeObject={activeObject} />
 
-            <CommonActionTools activeObject={activeObject} objectTypeLabel="Text" />
+
         </div>
     );
 };

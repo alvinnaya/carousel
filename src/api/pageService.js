@@ -10,6 +10,7 @@ const pageService = {
       'Content-Type': 'multipart/form-data',
     },
   }),
+  delete: (pageId) => apiClient.delete(`/pages/${pageId}`),
 };
 
 export default pageService;

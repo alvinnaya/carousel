@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import pageService from '../api/pageService';
+import templateService from '../api/templateService';
 import { getUsedFonts, loadGoogleFont } from '../utils/fontList';
 
 const CanvasContext = createContext(undefined);
@@ -68,6 +69,7 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     });
   }); // Per-canvas history stacks
   const [isFontsReady, setIsFontsReady] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(() => designInfo?.isAutoSave || false);
   const isInternalAction = useRef(false);
   const viewportRef = useRef(null);
   const scaleRef = useRef(scale);
@@ -185,20 +187,26 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        console.log('Autosaving page:', pageId);
         setIsSaving(true);
-        await pageService.update(pageId, {
-          canvasJson: JSON.stringify(json),
-          order
-        });
-        console.log('Autosave successful for page:', pageId);
+        if (designInfo?.isTemplateMode) {
+          console.log('Autosaving template to Redis:', designInfo.id);
+          // When in template mode, we save the entire collection of canvases
+          await templateService.updateAutoSave(designInfo.id, JSON.stringify(canvasesRef.current));
+        } else {
+          console.log('Autosaving page:', pageId);
+          await pageService.update(pageId, {
+            canvasJson: JSON.stringify(json),
+            order
+          });
+          console.log('Autosave successful for page:', pageId);
+        }
       } catch (err) {
         console.error('Autosave failed:', err);
       } finally {
         setIsSaving(false);
       }
     }, 2000); // 2 second debounce
-  }, []);
+  }, [designInfo]);
 
   const updateCanvasState = useCallback(async (index, json) => {
     const pageId = canvasesRef.current[index]?._pageId;
@@ -214,10 +222,15 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     });
 
     // Autosave logic
-    if (pageId && !isInternalAction.current) {
-      debouncedSave(pageId, json, order);
+    if (!isInternalAction.current) {
+      if (designInfo?.isTemplateMode) {
+        setHasUnsavedChanges(true); // Immediately show unsaved changes in UI
+        debouncedSave(designInfo.id, json, 0);
+      } else if (pageId) {
+        debouncedSave(pageId, json, order);
+      }
     }
-  }, [debouncedSave]);
+  }, [debouncedSave, designInfo]);
 
   const updatePreview = (index, dataUrl) => {
     setPreviews((prev) => {
@@ -263,6 +276,11 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
 
     if (insertAt !== null || index === canvases.length) {
       setActiveCanvasIndex(index);
+    }
+
+    if (designInfo?.isTemplateMode) {
+      setHasUnsavedChanges(true); // Signal unsaved changes for bulk template save
+      return;
     }
 
     try {
@@ -313,6 +331,11 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
       setActiveCanvasIndex(activeCanvasIndex - 1);
     }
 
+    if (designInfo?.isTemplateMode) {
+      setHasUnsavedChanges(true);
+      return;
+    }
+
     if (pageId) {
       try {
         await pageService.delete(pageId);
@@ -360,6 +383,11 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
     }
 
     // Backend update for orders
+    if (designInfo?.isTemplateMode) {
+      setHasUnsavedChanges(true);
+      return;
+    }
+
     const designId = designInfo?.id;
     if (designId && updatedCanvases.length > 0) {
       const pageOrders = updatedCanvases
@@ -513,7 +541,12 @@ export const CanvasProvider = ({ children, initialPages = [], designInfo = null 
         movePage,
         isFontsReady,
         viewportRef,
-        designInfo
+        designInfo,
+        activeId: designInfo?.id || designInfo?.Id,
+        isTemplate: designInfo?.isTemplateMode || false,
+        hasUnsavedChanges,
+        setHasUnsavedChanges,
+        triggerPreviewUpload: useRef(null),
       }}
     >
       {children}

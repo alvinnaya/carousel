@@ -15,15 +15,15 @@ const SidebarContainer = () => {
 
     return (
         <div
-            className="fixed left-4 top-4 bottom-4 flex z-50 pointer-events-none"
+            className="fixed left-6 top-[55%] -translate-y-1/2 flex items-center z-50 pointer-events-none"
             onWheel={(e) => e.stopPropagation()}
         >
             {/* 1. Vertical Navigation Bar (Slim Sidebar) */}
-            <div className="pointer-events-auto h-full">
+            <div className="pointer-events-auto">
                 <NavPanel activeTab={activeTool} onTabClick={toggleTab} />
             </div>
             {/* 2. Dynamic Content Panel (Expands to the right) */}
-            <div className="pointer-events-auto h-full ml-2">
+            <div className="pointer-events-auto h-[85vh] max-h-[800px] ml-4 flex items-center">
                 <ContentPanel activeTab={activeTool} onClose={() => setActiveTool(null)} />
             </div>
         </div>

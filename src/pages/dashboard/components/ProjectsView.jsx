@@ -103,19 +103,15 @@ const ProjectsView = ({ designs, loading, error, fetchDesigns, handleCreateNew, 
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {designs.map((design) => (
-          <Link key={design.id} to={`/editor/${design.id}`} className="group">
-            <div className="mus-panel p-4 h-80 flex flex-col justify-between bg-white overflow-hidden relative border-2 border-[var(--border-dark)] hover:shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] transition-all duration-300">
-              <div 
-                className="absolute top-0 left-0 w-full h-2.5" 
-                style={{ backgroundColor: design.color || 'var(--accent)' }}
-              />
-              <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
-                <div className="w-full h-full bg-[var(--bg-main)] rounded-2xl border-2 border-dashed border-[var(--border-light)] flex items-center justify-center group-hover:bg-[var(--bg-surface)] transition-colors overflow-hidden relative">
+          <Link key={design.id} to={`/editor/${design.id}`} className="group block">
+            <div className="p-3 h-80 flex flex-col justify-between mus-project-card">
+              <div className="flex-1 flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center overflow-hidden relative mus-project-card-image-wrap">
                     {design.previewImageUrl ? (
                       <CachedImage 
                         src={design.previewImageUrl} 
                         alt={design.title} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                         decoding="async"
                         onError={(e) => {
                           e.target.style.display = 'none';
@@ -134,16 +130,21 @@ const ProjectsView = ({ designs, loading, error, fetchDesigns, handleCreateNew, 
                     </div>
                 </div>
               </div>
-              <div className="mt-2 p-3 flex justify-between items-start">
-                <div>
-                  <h3 className="font-black text-xl leading-tight group-hover:text-[var(--accent)] transition-colors line-clamp-1">{design.title}</h3>
-                  <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mt-2">
-                    {design.updatedAt ? new Date(design.updatedAt).toLocaleDateString() : 'Recently'}
-                  </p>
+              <div className="mt-3 px-2 flex justify-between items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-base mus-text-primary group-hover:text-[var(--accent)] transition-colors line-clamp-1">{design.title}</h3>
+                  <div className="flex items-center gap-1.5 mt-1.5 text-[13px] mus-text-muted">
+                    <span className="text-[10px]">📷</span> 
+                    <span className="truncate">• {design.updatedAt ? `Diedit ${new Date(design.updatedAt).toLocaleDateString()}` : 'Baru saja'}</span>
+                  </div>
                 </div>
                 <button 
-                  onClick={(e) => handleDeleteDesign(e, design.id)}
-                  className="p-1 mus-button-ghost rounded-lg text-[var(--danger)] hover:bg-red-50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteDesign(e, design.id);
+                  }}
+                  className="p-1.5 transition-colors mus-rounded-md mus-text-primary hover:bg-[var(--accent-light)] flex-shrink-0 mt-0.5"
                 >
                   <Trash2 size={16} />
                 </button>

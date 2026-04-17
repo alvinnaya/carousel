@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import LayerThumbnail from './LayerThumbnail';
-import SmartDropdown from '../shared/SmartDropdown';
-import ContextMenu from '../shared/ContextMenu';
+import SmartDropdown from '../../shared/SmartDropdown';
+import ContextMenu from '../../shared/ContextMenu';
 
 const LayerItem = ({
     index,
@@ -24,7 +24,8 @@ const LayerItem = ({
     onDuplicate,
     onInsert,
     onDelete,
-    canDelete
+    canDelete,
+    onSaveAsTemplate
 }) => {
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -113,7 +114,7 @@ const LayerItem = ({
                         onClose={closeDropdown}
                         trigger={
                             <button
-                                className="p-1 rounded-md opacity-0 group-hover:opacity-100 transition-all mus-text-primary hover:text-black hover:bg-black/10 text-zinc-500"
+                                className="p-1 rounded-md opacity-0 group-hover:opacity-100 transition-all mus-button-ghost"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     toggleDropdown();
@@ -127,7 +128,7 @@ const LayerItem = ({
                             </button>
                         }
                     >
-                        <div className="flex flex-col min-w-[140px]">
+                        <div className="mus-menu-container min-w-[140px]">
                             <button
                                 className="mus-menu-item"
                                 onClick={(e) => {
@@ -145,6 +146,16 @@ const LayerItem = ({
                                 }}
                             >
                                 Add New
+                            </button>
+                            <button
+                                className="mus-menu-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSaveAsTemplate();
+                                    closeDropdown();
+                                }}
+                            >
+                                Save as Template
                             </button>
                             <button
                                 className="mus-menu-item mus-menu-item-danger"
@@ -175,7 +186,7 @@ const LayerItem = ({
                 isOpen={isMenuVisible}
                 onClose={() => setIsMenuVisible(false)}
             >
-                <div className="flex flex-col gap-0.5">
+                <div className="mus-menu-container">
                     <button
                         className="mus-menu-item"
                         onClick={(e) => {
@@ -197,6 +208,16 @@ const LayerItem = ({
                     >
                         <span>Add New</span>
                         <span className="text-[9px] opacity-40 ml-3 font-black">⌘N</span>
+                    </button>
+                    <button
+                        className="mus-menu-item"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSaveAsTemplate();
+                            setIsMenuVisible(false);
+                        }}
+                    >
+                        <span>Save as Template</span>
                     </button>
                     <button
                         className="mus-menu-item mus-menu-item-danger"

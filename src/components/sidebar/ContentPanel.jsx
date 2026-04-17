@@ -1,10 +1,10 @@
 import React from 'react';
-import EditTool from './EditTool';
-import AddText from './AddText';
-import AddShape from './AddShape';
-import AddImage from './AddImage';
-import AddComponentGroup from './AddComponentGroup';
-import AddTemplate from './AddTemplate';
+import EditTool from './section/EditTool';
+import AddText from './section/AddText';
+import AddShape from './section/AddShape';
+import AddImage from './section/AddImage';
+import AddComponentGroup from './section/AddComponentGroup';
+import AddTemplate from './section/AddTemplate';
 import { useCanvasContext } from '../../context/CanvasContext';
 import FilterList from './tools/shared/ImageFilterTool/FilterList';
 

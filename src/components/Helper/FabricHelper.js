@@ -421,9 +421,45 @@ export const rotate90 = (obj, canvas) => {
 };
 
 // ─── Text helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Recalculates the bounding box of parent groups when a child text object's size changes.
+ * This prevents the group cache canvas from clipping the text if it wraps or grows.
+ */
+export const triggerGroupLayout = (obj) => {
+    if (!obj || !obj.group) return;
+    let parent = obj.group;
+    while (parent) {
+        if (typeof parent.triggerLayout === 'function') {
+            parent.triggerLayout({ type: 'imperative' });
+        }
+        parent.dirty = true;
+        parent.setCoords();
+        parent = parent.group;
+    }
+};
+
 export const changeFontSize = (obj, size, canvas) => {
     if (!obj || !canvas) return;
+
+    if (obj.styles) {
+        let stylesChanged = false;
+        for (const line in obj.styles) {
+            for (const char in obj.styles[line]) {
+                if (obj.styles[line][char].fontSize !== undefined) {
+                    delete obj.styles[line][char].fontSize;
+                    stylesChanged = true;
+                }
+            }
+        }
+        if (stylesChanged) {
+            obj.dirty = true;
+        }
+    }
+
     updateObjectProperty(obj, 'fontSize', size, canvas);
+    triggerGroupLayout(obj);
+    canvas.requestRenderAll();
 };
 
 export const changeFontFamily = (obj, family, canvas) => {
@@ -441,13 +477,17 @@ export const changeFontFamily = (obj, family, canvas) => {
     if (savedWidth) obj.set('width', savedWidth);
 
     obj.setCoords();
-    // canvas.fire('object:modified', { target: obj });
+
+    triggerGroupLayout(obj);
+
     canvas.requestRenderAll();
 };
 
 export const changeFontWeight = (obj, weight, canvas) => {
     if (!obj || !canvas) return;
     updateObjectProperty(obj, 'fontWeight', weight, canvas);
+    triggerGroupLayout(obj);
+    canvas.requestRenderAll();
 };
 
 /**
@@ -480,11 +520,14 @@ export const changeSelectedTextProperty = (obj, property, value, canvas) => {
         // Apply style only to the selected range
         obj.setSelectionStyles({ [property]: value }, start, end);
         obj.dirty = true;
+        triggerGroupLayout(obj);
         canvas.fire('object:modified', { target: obj });
         canvas.requestRenderAll();
     } else {
         // Fall back to whole-object change
         updateObjectProperty(obj, property, value, canvas);
+        triggerGroupLayout(obj);
+        canvas.requestRenderAll();
     }
 };
 

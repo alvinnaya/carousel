@@ -3,90 +3,108 @@ import { useCanvasContext } from '../../context/CanvasContext';
 
 const IMAGE_CACHE_NAME = 'design-previews';
 
+/**
+ * Sync helper to convert dataURI to Blob
+ * Critical for beforeunload/visibilitychange because browser might kill async fetch(dataUrl)
+ */
+const dataURLToBlob = (dataURL) => {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+};
+
 const CanvasPreviewUploader = () => {
-    const { canvases, previews, designInfo } = useCanvasContext();
-    const previewsRef = useRef(previews);
-    const canvasesRef = useRef(canvases);
-    const designInfoRef = useRef(designInfo);
+  const { previews, designInfo, triggerPreviewUpload } = useCanvasContext();
+  const previewsRef = useRef(previews);
+  const designInfoRef = useRef(designInfo);
 
-    // Keep refs in sync with latest state for the closing/unmount effect
-    useEffect(() => {
-        previewsRef.current = previews;
-    }, [previews]);
+  /**
+   * Uploads the first page thumbnail as the design cover.
+   * @param {boolean} isClosing - If true, uses keepalive:true (subject to 64KB browser limit)
+   */
+  const uploadFinalPreview = async (isClosing = false) => {
+    // If called via Event Listener, isClosing might be an event object
+    const closing = isClosing === true || (isClosing && isClosing.type === 'beforeunload');
+    
+    const dataUrl = previewsRef.current?.[0];
+    const designId = designInfoRef.current?.id;
+    const oldPreviewUrl = designInfoRef.current?.previewImageUrl;
 
-    useEffect(() => {
-        canvasesRef.current = canvases;
-    }, [canvases]);
+    if (!dataUrl || !designId) return;
 
-    useEffect(() => {
-        designInfoRef.current = designInfo;
-    }, [designInfo]);
+    try {
+      const blob = dataURLToBlob(dataUrl);
+      const file = new File([blob], 'preview.webp', { type: 'image/webp' });
 
-    useEffect(() => {
-        const uploadFinalPreview = async () => {
-            const dataUrl = previewsRef.current?.[0];
-            const pageId = canvasesRef.current?.[0]?._pageId;
-            const oldPreviewUrl = designInfoRef.current?.previewImageUrl;
+      const formData = new FormData();
+      formData.append('File', file);
 
-            if (!dataUrl || !pageId) {
-                console.log('CanvasPreviewUploader: Missing dataUrl or pageId, skipping upload');
-                return;
-            }
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5209/api';
+      const token = localStorage.getItem('token');
 
-            try {
-                // 1. Convert DataURL to Blob/File (WebP format as requested by integration guide)
-                const response = await fetch(dataUrl);
-                const blob = await response.blob();
-                const file = new File([blob], 'preview.webp', { type: 'image/webp' });
+      console.log(`CanvasPreviewUploader: Uploading preview for ${designId} (isClosing: ${closing})`);
+      
+      await fetch(`${baseUrl}/Designs/${designId}/preview`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+        // Only use keepalive when tab is closing to avoid 64KB limit for manual navigations
+        keepalive: closing
+      });
 
-                const formData = new FormData();
-                formData.append('File', file);
+      if (oldPreviewUrl && 'caches' in window) {
+        try {
+          const cache = await caches.open(IMAGE_CACHE_NAME);
+          await cache.delete(oldPreviewUrl);
+        } catch (e) {}
+      }
+    } catch (err) {
+      console.error('CanvasPreviewUploader: Failed to process preview upload:', err);
+    }
+  };
 
-                const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5209/api';
-                const token = localStorage.getItem('token');
-                
-                // 2. Perform upload
-                // Use native fetch with keepalive to ensure upload completes during tab closure
-                await fetch(`${baseUrl}/pages/${pageId}/preview`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData,
-                    keepalive: true
-                });
-                
-                // 3. Selective Invalidation: Delete the old image from browser's CacheStorage
-                // This is the "Menghapus gambarnya di local" part based on URL signature
-                if (oldPreviewUrl && 'caches' in window) {
-                    try {
-                        const cache = await caches.open(IMAGE_CACHE_NAME);
-                        const deleted = await cache.delete(oldPreviewUrl);
-                        console.log(`CanvasPreviewUploader: Cache invalidation for ${oldPreviewUrl}: ${deleted ? 'Success' : 'Not found/Failed'}`);
-                    } catch (cacheErr) {
-                        console.error('CanvasPreviewUploader: Failed to delete cache entry:', cacheErr);
-                    }
-                }
+  useEffect(() => {
+    // Expose the upload function to the context ref
+    triggerPreviewUpload.current = () => uploadFinalPreview(false);
+  }, []);
 
-                console.log('CanvasPreviewUploader: Final preview processed successfully');
-            } catch (err) {
-                console.error('CanvasPreviewUploader: Failed to process preview upload:', err);
-            }
-        };
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
 
-        const handleBeforeUnload = () => {
-            uploadFinalPreview();
-        };
+  useEffect(() => {
+    designInfoRef.current = designInfo;
+  }, [designInfo]);
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      uploadFinalPreview(true);
+    }
+  };
 
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-            uploadFinalPreview(); // Trigger on navigate away (unmount)
-        };
-    }, []);
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+        uploadFinalPreview(true);
+    };
 
-    return null;
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  return null;
 };
 
 export default CanvasPreviewUploader;

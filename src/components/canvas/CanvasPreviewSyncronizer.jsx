@@ -3,8 +3,8 @@ import * as fabric from 'fabric';
 import { useCanvasContext } from '../../context/CanvasContext';
 import { getUsedFonts, loadGoogleFont } from '../../utils/fontList';
 
-const PREVIEW_MULTIPLIER = 0.2;
-const PREVIEW_QUALITY = 0.5;
+const PREVIEW_MULTIPLIER = 0.2; // 20% size (approx 216px)
+const PREVIEW_QUALITY = 0.6;    // 60% WebP quality
 const DEFAULT_CANVAS_SIZE = 1080;
 
 const CanvasPreviewSyncronizer = () => {
@@ -63,7 +63,7 @@ const CanvasPreviewSyncronizer = () => {
             offscreenCanvas.renderAll();
 
             const previewDataUrl = offscreenCanvas.toDataURL({
-                format: 'png',
+                format: 'webp',
                 multiplier: PREVIEW_MULTIPLIER,
                 quality: PREVIEW_QUALITY,
                 enableRetinaScaling: true

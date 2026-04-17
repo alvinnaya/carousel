@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   FolderOpen,
   Palette,
-  Grid
+  Grid,
+  Component
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import designService from '../../api/designService';
 import userService from '../../api/userService';
+import templateService from '../../api/templateService';
 
 // Modular Components
 import Sidebar from './components/Sidebar';
 import DashboardHeader from './components/DashboardHeader';
 import ProjectsView from './components/ProjectsView';
+import TemplatesView from './components/TemplatesView';
 import UsersView from './components/UsersView';
 import UserStatsModal from './components/UserStatsModal';
 import AssetsView from './components/AssetsView';
@@ -21,12 +24,19 @@ import { ConfirmModal } from '../../components/ui/Modal';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('Projects');
+  
+  // Derive activeTab from URL safely (handling trailing slashes)
+  const segments = location.pathname.split('/').filter(Boolean);
+  const activeTab = segments[segments.length - 1] === 'dashboard' ? 'design' : (segments[segments.length - 1] || 'design');
+
   const [designs, setDesigns] = useState([]);
   const [users, setUsers] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [selectedUserStats, setSelectedUserStats] = useState(null);
   const [error, setError] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDanger: false });
@@ -38,9 +48,11 @@ const Dashboard = () => {
   const isAdmin = user?.roles?.includes('Admin');
 
   useEffect(() => {
-    if (activeTab === 'Projects') {
+    if (activeTab === 'design') {
       fetchDesigns();
-    } else if (activeTab === 'Users' && isAdmin) {
+    } else if (activeTab === 'template') {
+      fetchTemplates();
+    } else if (activeTab === 'user' && isAdmin) {
       fetchUsers();
     }
   }, [activeTab]);
@@ -76,6 +88,27 @@ const Dashboard = () => {
     }
   };
 
+  const fetchTemplates = async () => {
+    try {
+      setLoadingTemplates(true);
+      const response = await templateService.listTemplates(1, 50);
+
+      let extractedTemplates = [];
+      if (Array.isArray(response)) {
+        extractedTemplates = response;
+      } else if (response?.success && Array.isArray(response.data?.items)) {
+        extractedTemplates = response.data.items;
+      }
+
+      setTemplates(extractedTemplates);
+    } catch (err) {
+      console.error('Fetch templates error:', err);
+      setError('Failed to load templates.');
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
   const handleCreateNew = async () => {
     try {
       const response = await designService.create({ title: 'Untitled Design' });
@@ -96,14 +129,60 @@ const Dashboard = () => {
       async () => {
         try {
           const response = await designService.delete(id);
-          if (response.success) {
-            setDesigns(designs.filter(d => d.id !== id));
+          if (response?.success !== false) {
+            setDesigns(prev => prev.filter(d => d.id !== id));
           }
         } catch (err) {
           console.error('Failed to delete design', err);
         }
       },
       true
+    );
+  };
+
+  const handleDeleteTemplate = (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showConfirm(
+      'Pindahkan ke Sampah?',
+      'Template ini akan dipindahkan ke folder sampah. Anda masih dapat memulihkannya nanti.',
+      async () => {
+        try {
+          const response = await templateService.deleteTemplate(id);
+          if (response?.success !== false) {
+            setTemplates(prev => prev.filter(t => t.id !== id));
+          }
+        } catch (err) {
+          console.error('Failed to soft delete template:', err);
+          setError('Gagal menghapus template. Silakan coba lagi.');
+        }
+      },
+      true
+    );
+  };
+
+
+  const handleToggleVisibility = (id, isPublic) => {
+    const action = isPublic ? 'Make Public' : 'Make Private';
+    const message = isPublic
+      ? 'Template ini akan dapat diakses secara publik oleh seluruh pengguna. Apakah Anda yakin?'
+      : 'Template ini hanya akan dapat diakses secara privat oleh pemiliknya. Apakah Anda yakin?';
+
+    showConfirm(
+      `${action}?`,
+      message,
+      async () => {
+        try {
+          const response = await templateService.setVisibility(id, isPublic);
+          if (response?.success !== false) {
+            setTemplates(prev => prev.map(t => t.id === id ? { ...t, isPublic } : t));
+          }
+        } catch (err) {
+          console.error('Failed to toggle visibility:', err);
+          setError('Gagal mengubah visibilitas template.');
+        }
+      },
+      false
     );
   };
 
@@ -158,11 +237,20 @@ const Dashboard = () => {
   };
 
   const tools = [
-    { name: 'Projects', label: 'Projects', icon: <LayoutDashboard size={20} /> },
-    { name: 'Templates', label: 'Templates', icon: <Palette size={20} /> },
-    { name: 'Assets', label: 'Assets', icon: <FolderOpen size={20} /> },
-    ...(isAdmin ? [{ name: 'Users', label: 'Users', icon: <Grid size={20} /> }] : []),
+    { name: 'design', label: 'Projects', icon: <LayoutDashboard size={20} />, path: 'design' },
+    { name: 'template', label: 'Templates', icon: <Palette size={20} />, path: 'template' },
+    { name: 'asset', label: 'Assets', icon: <FolderOpen size={20} />, path: 'asset' },
+    { name: 'element', label: 'Elements', icon: <Component size={20} />, path: 'element' },
+    ...(isAdmin ? [{ name: 'user', label: 'Users', icon: <Grid size={20} />, path: 'user' }] : []),
   ];
+
+  const dashboardContext = {
+    designs, loading, error, fetchDesigns, handleCreateNew, handleDeleteDesign,
+    templates, loadingTemplates, fetchTemplates, handleDeleteTemplate, handleToggleVisibility,
+    showConfirm,
+    users, loadingUsers, fetchUserStats, handlePromote,
+    user, isAdmin
+  };
 
   return (
     <div className="flex h-screen bg-[var(--bg-main)] font-['DM_Sans'] overflow-hidden relative">
@@ -179,7 +267,6 @@ const Dashboard = () => {
       <Sidebar
         tools={tools}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
         logout={logout}
       />
 
@@ -187,26 +274,7 @@ const Dashboard = () => {
         <DashboardHeader user={user} />
 
         <div className="flex-1 overflow-y-auto px-10 pb-10 custom-scrollbar">
-          {activeTab === 'Users' && isAdmin ? (
-            <UsersView
-              users={users}
-              loadingUsers={loadingUsers}
-              fetchUserStats={fetchUserStats}
-              handlePromote={handlePromote}
-            />
-          ) : activeTab === 'Assets' ? (
-            <AssetsView user={user} />
-          ) : (
-            <ProjectsView
-              designs={designs}
-              loading={loading}
-              error={error}
-              fetchDesigns={fetchDesigns}
-              handleCreateNew={handleCreateNew}
-              handleDeleteDesign={handleDeleteDesign}
-              user={user}
-            />
-          )}
+          <Outlet context={dashboardContext} />
         </div>
       </main>
 

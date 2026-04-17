@@ -140,7 +140,7 @@ const SmartDropdown = ({ trigger, children, isOpen, onClose, triggerClassName = 
                     onWheel={(e) => e.stopPropagation()}
                     className={`fixed z-[9999] animate-in fade-in zoom-in-95 duration-200 ${className}`}
                 >
-                    <div className="bg-[var(--bg-surface)] border border-[var(--border-light)] shadow-[var(--shadow-md)] rounded-xl p-1.5 overflow-hidden">
+                    <div className="mus-context-menu overflow-hidden">
                         {children}
                     </div>
                 </div>,

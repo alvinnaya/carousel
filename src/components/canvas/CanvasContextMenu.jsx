@@ -6,6 +6,10 @@ import {
     groupSelectedObjects,
     ungroupSelectedObjects
 } from '../Helper/FabricGroupHelper';
+import TemplateSaveModal from '../modals/TemplateSaveModal';
+import Toast from '../shared/Toast';
+import textTemplateService from '../../api/textTemplateService';
+import { captureObjectAsHDImage, getDeepPresetCategory } from '../../utils/typographyCapture';
 
 const CanvasContextMenu = () => {
     const { canvas, isVisible, setIsVisible, position, setPosition, handleAction, activeObject, isSelection, isGroup, clipboard } = useCanvasActions();
@@ -52,11 +56,83 @@ const CanvasContextMenu = () => {
     }, [canvas, setPosition, setIsVisible]);
 
     const handleActionWithClose = async (action) => {
-        await handleAction(action);
         setIsVisible(false);
+        if (action === 'saveAsTemplate') {
+            handleSaveAsTemplateClick();
+            return;
+        }
+        await handleAction(action);
+    };
+
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+    const [templateApiError, setTemplateApiError] = useState('');
+    const [toastState, setToastState] = useState({ message: '', type: 'success' });
+    const [currentPreviewUrl, setCurrentPreviewUrl] = useState(null);
+    const [captureData, setCaptureData] = useState(null);
+    const [detectedCategory, setDetectedCategory] = useState(null);
+
+    const handleSaveAsTemplateClick = async () => {
+        if (!activeObject) return;
+
+        try {
+            const preset = getDeepPresetCategory(activeObject);
+            if (!preset) {
+                setToastState({ message: 'Could not determine element category.', type: 'error' });
+                return;
+            }
+
+            setDetectedCategory(preset.category);
+
+            const data = await captureObjectAsHDImage(activeObject);
+            if (data) {
+                setCaptureData(data);
+                setCurrentPreviewUrl(data.dataUrl);
+                setIsTemplateModalOpen(true);
+            }
+        } catch (error) {
+            console.error('Failed to capture high quality preview:', error);
+            setToastState({ message: 'Failed to generate preview for template.', type: 'error' });
+        }
+    };
+
+    const handleSaveTemplate = async (templateName) => {
+        if (!captureData) return;
+
+        setIsSavingTemplate(true);
+        setTemplateApiError('');
+        try {
+            const formData = new FormData();
+            formData.append('name', templateName);
+            formData.append('canvasJson', JSON.stringify(captureData.json));
+            formData.append('previewImage', captureData.file);
+            formData.append('category', detectedCategory || 'Group');
+            formData.append('type', 'JSON');
+
+            const response = await textTemplateService.createTextTemplate(formData);
+
+            if (response && response.success !== false) {
+                setIsTemplateModalOpen(false);
+                setCaptureData(null);
+                setCurrentPreviewUrl(null);
+                setDetectedCategory(null);
+                setToastState({ message: 'Style saved successfully!', type: 'success' });
+            } else {
+                const errorMsg = response?.message || 'Failed to save template.';
+                console.error(errorMsg);
+                setTemplateApiError(errorMsg);
+            }
+        } catch (error) {
+            console.error('Error saving template:', error);
+            const errorMsg = error.response?.data?.message || error.message || 'An unexpected error occurred.';
+            setTemplateApiError(errorMsg);
+        } finally {
+            setIsSavingTemplate(false);
+        }
     };
 
     return (
+        <>
         <ContextMenu
             x={position.x}
             y={position.y}
@@ -85,6 +161,7 @@ const CanvasContextMenu = () => {
                     <MenuSection>
                         {isSelection && <MenuButton label="Group" icon="⌘G" onClick={() => handleActionWithClose('group')} />}
                         {isGroup && <MenuButton label="Ungroup" icon="⇧⌘G" onClick={() => handleActionWithClose('ungroup')} />}
+                        <MenuButton label="Save as Element Preset" onClick={() => handleActionWithClose('saveAsTemplate')} />
                         <MenuButton label="Delete" icon="⌫" onClick={() => handleActionWithClose('delete')} variant="danger" />
                     </MenuSection>
                 </>
@@ -100,6 +177,32 @@ const CanvasContextMenu = () => {
                 </MenuSection>
             )}
         </ContextMenu>
+
+        <TemplateSaveModal
+            isOpen={isTemplateModalOpen}
+            onClose={() => {
+                if (!isSavingTemplate) {
+                    setIsTemplateModalOpen(false);
+                    setCaptureData(null);
+                    setCurrentPreviewUrl(null);
+                    setTemplateApiError('');
+                }
+            }}
+            onSave={handleSaveTemplate}
+            isLoading={isSavingTemplate}
+            previewUrl={currentPreviewUrl}
+            apiError={templateApiError}
+            detectedCategory={detectedCategory}
+        />
+
+        {toastState.message && (
+            <Toast
+                message={toastState.message}
+                type={toastState.type}
+                onClose={() => setToastState({ message: '', type: 'success' })}
+            />
+        )}
+        </>
     );
 };
 
@@ -224,7 +327,7 @@ export const useCanvasActions = () => {
 };
 
 export const MenuSection = ({ children }) => (
-    <div className="flex flex-col gap-0.5">
+    <div className="mus-menu-container">
         {children}
     </div>
 );

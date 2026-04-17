@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom';
  * @param {React.ReactNode} props.footer - Optional footer content (e.g., action buttons)
  * @param {string} props.className - Optional additional classes for the modal container
  */
-const Modal = ({ isOpen, onClose, title, children, footer, className = "" }) => {
+const Modal = ({ isOpen, onClose, title, children, footer, className = "", maxWidthClass = "max-w-md" }) => {
     // Handle escape key to close
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -46,7 +46,7 @@ const Modal = ({ isOpen, onClose, title, children, footer, className = "" }) => 
 
             {/* Modal Content container */}
             <div 
-                className={`relative mus-modal-container w-full max-w-md mx-4 animate-in zoom-in-95 duration-200 ${className}`}
+                className={`relative mus-modal-container w-full ${maxWidthClass} mx-4 animate-in zoom-in-95 duration-200 ${className}`}
                 onClick={(e) => e.stopPropagation()}
                 onWheel={(e) => e.stopPropagation()}
             >
